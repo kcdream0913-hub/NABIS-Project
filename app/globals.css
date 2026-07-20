@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/*
+  BridgeLink design tokens — the corridor palette.
+  pine  = brand / Bridge context (Himalayan pine)
+  denim = US context
+  rhodo = Nepal context (rhododendron, Nepal's national flower)
+  The three view colors are informational: they mark country context
+  everywhere it appears (toggle, context rail, post chips).
+*/
+@theme {
+  --color-pine: #0f5c55;
+  --color-pine-ink: #0a3f3a;
+  --color-pine-soft: #e3eeec;
+  --color-mist: #f6f8f7;
+  --color-ink: #16211f;
+  --color-ink-soft: #5b6b67;
+  --color-line: #e2e8e6;
+  --color-denim: #2b4c8c;
+  --color-denim-soft: #e7edf7;
+  --color-rhodo: #c2412f;
+  --color-rhodo-soft: #f9e9e6;
+  --color-gold: #9a7222;
+  --color-gold-soft: #f7efdd;
+}
+
+html { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+body { background: #f6f8f7; color: #16211f; -webkit-font-smoothing: antialiased; }
+
+:focus-visible { outline: 2px solid #0f5c55; outline-offset: 2px; border-radius: 2px; }
+
+.eyebrow { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
