@@ -1,24 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { routing } from "@/i18n/routing";
-
-const PUBLIC_PATHS = ["/login", "/signup", "/auth/callback"];
-
-// "/ne/signup" -> { locale: "ne", path: "/signup" }; "/signup" -> { locale: "en", path: "/signup" }
-function stripLocale(pathname: string): { locale: string; path: string } {
-  for (const locale of routing.locales) {
-    if (locale === routing.defaultLocale) continue; // unprefixed, nothing to strip
-    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
-      return { locale, path: pathname.slice(`/${locale}`.length) || "/" };
-    }
-  }
-  return { locale: routing.defaultLocale, path: pathname };
-}
-
-function withLocalePrefix(locale: string, path: string): string {
-  if (locale === routing.defaultLocale) return path;
-  return `/${locale}${path === "/" ? "" : path}`;
-}
+import { stripLocale, withLocalePrefix, isPublicPath } from "@/lib/authRouting";
 
 export async function updateSession(request: NextRequest, response: NextResponse) {
   // Reuse the response next-intl already produced (it carries the locale
@@ -47,11 +29,10 @@ export async function updateSession(request: NextRequest, response: NextResponse
   } = await supabase.auth.getUser();
 
   const { locale, path } = stripLocale(request.nextUrl.pathname);
-  const isPublicPath = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
   // Signup is the front door: unauthenticated visitors land there first,
   // never on the app itself. Redirect keeps whatever locale they were on.
-  if (!user && !isPublicPath) {
+  if (!user && !isPublicPath(path)) {
     const url = request.nextUrl.clone();
     url.pathname = withLocalePrefix(locale, "/signup");
     return NextResponse.redirect(url);

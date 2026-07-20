@@ -10,6 +10,7 @@ import { useInterests } from "@/lib/useInterests";
 import type { InterestSlug } from "@/lib/interests";
 import {
   recommendationsFor,
+  budgetBreakdown as computeBudgetBreakdown,
   type RecommendationCategory,
   type RecommendationTemplate,
 } from "@/lib/tripPlannerData";
@@ -43,14 +44,6 @@ type SavedItem = {
   day: number;
 };
 
-const BUDGET_SPLIT: Record<RecommendationCategory, number> = {
-  stay: 0.25,
-  activity: 0.25,
-  transport: 0.2,
-  food: 0.2,
-  other: 0.1,
-};
-
 export default function TripPlannerPage() {
   const t = useTranslations("tripPlanner");
   const supabase = createClient();
@@ -78,12 +71,7 @@ export default function TripPlannerPage() {
     [view, selectedInterests]
   );
 
-  const budgetBreakdown = useMemo(() => {
-    return (Object.keys(BUDGET_SPLIT) as RecommendationCategory[]).map((cat) => ({
-      category: cat,
-      amount: Math.round(budgetAmount * BUDGET_SPLIT[cat]),
-    }));
-  }, [budgetAmount]);
+  const budgetBreakdown = useMemo(() => computeBudgetBreakdown(budgetAmount), [budgetAmount]);
 
   async function loadSavedItineraries() {
     setLoadingSaved(true);

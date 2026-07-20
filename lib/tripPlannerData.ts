@@ -40,3 +40,20 @@ export function recommendationsFor(view: View, interests: InterestSlug[]): Recom
     return r.interests.length === 0 || r.interests.some((i) => interests.includes(i));
   });
 }
+
+export const BUDGET_SPLIT: Record<RecommendationCategory, number> = {
+  stay: 0.25,
+  activity: 0.25,
+  transport: 0.2,
+  food: 0.2,
+  other: 0.1,
+};
+
+export function budgetBreakdown(
+  budgetAmount: number
+): { category: RecommendationCategory; amount: number }[] {
+  return (Object.keys(BUDGET_SPLIT) as RecommendationCategory[]).map((cat) => ({
+    category: cat,
+    amount: Math.round(budgetAmount * BUDGET_SPLIT[cat]),
+  }));
+}

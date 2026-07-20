@@ -123,6 +123,42 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-21 (later) — Real test suite, closing the biggest gap of the day:**
+  - Reason this happened: today's session had multiple "it works" claims that
+    turned out wrong on the user's machine (missing NextIntlClientProvider,
+    merged stale folders, workspace-root confusion). `npm run verify` was
+    literally just `next build` — zero automated tests existed anywhere,
+    despite this file's own workflow rules promising unit + E2E coverage.
+  - **Vitest** (26 tests, 3 files, all passing — verified by deliberately
+    injecting a bug into `withLocalePrefix` and confirming the suite actually
+    failed before reverting; not just "ran once, looked green"):
+    - `lib/__tests__/authRouting.test.ts` — the locale-redirect logic
+      (`stripLocale`/`withLocalePrefix`/`isPublicPath`), extracted from
+      `lib/supabase/middleware.ts` into `lib/authRouting.ts` for testability.
+      Behavior unchanged, just now covered.
+    - `lib/__tests__/tripPlannerData.test.ts` — recommendation filtering and
+      the budget-split math (also extracted into pure functions in
+      `lib/tripPlannerData.ts`, `budgetBreakdown()`/`BUDGET_SPLIT`).
+    - `messages/__tests__/parity.test.ts` — turns the ad-hoc Python
+      key-parity check (run by hand ~6 times this session) into a permanent,
+      committed test. Would have caught every "translated half the app"
+      mistake before a build ever ran.
+  - **Playwright** (`e2e/smoke.spec.ts`, unauthenticated-only smoke tests):
+    written but **NOT verified to pass** — this sandbox's network allowlist
+    blocks `cdn.playwright.dev`, so browser binaries can't be downloaded here.
+    Caught two real mistakes while writing them regardless (a wrong assumption
+    that signup has no topbar — it does, AppShell wraps every route — and a
+    text-match bug, "Create an account" vs. the actual rendered "Create
+    account"), which is itself evidence for why this suite is worth having.
+    **Run `npx playwright install && npm run test:e2e` locally/in CI before
+    trusting these** — do not treat them as verified until that's done.
+  - `package.json`: `verify` is now `next build && vitest run` (was just
+    `next build`). Added `test`, `test:watch`, `test:e2e`, `typecheck`.
+  - Scope, deliberately: no auth-flow E2E tests (no seeded test account exists
+    against the live Supabase project, and creating one wasn't in scope here).
+    Extending `e2e/smoke.spec.ts` to log in with real or fake credentials
+    against production data should be its own considered decision, not an
+    incidental addition.
 - **2026-07-21 — Trip Planner made functional (Phase 2, not Phase 3):**
   - Founder decision: Marketplace/Vendor is explicitly Phase 3 per
     `docs/PHASE1_ATOMIC_NETWORK.md` ("No marketplace or payments yet") and
