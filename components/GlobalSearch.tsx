@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -71,7 +71,7 @@ export default function GlobalSearch() {
   }
 
   return (
-    <div ref={boxRef} className="relative ml-auto hidden max-w-xs flex-1 sm:block">
+    <div ref={boxRef} className="relative hidden max-w-xs flex-1 sm:block">
       <Search
         size={15}
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"

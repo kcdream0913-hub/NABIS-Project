@@ -1,31 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import {
   Home, ContactRound, Hash, CalendarDays, Building2, Settings, LogOut, Map, ShieldAlert,
 } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 
-const MAIN = [
-  { href: "/", label: "Feed / Messages", icon: Home },
-  { href: "/members", label: "Directory", icon: ContactRound },
-  { href: "/channels", label: "Channels", icon: Hash },
-  { href: "/events", label: "Events", icon: CalendarDays },
-  { href: "/business/new", label: "Register business", icon: Building2 },
-];
-
-const LATER = [{ href: "/trip-planner", label: "Trip Planner", icon: Map, tag: "Phase 2" }];
-
 export default function Sidebar() {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
   const { setSidebarOpen } = useApp();
   const supabase = createClient();
   const [name, setName] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const MAIN = [
+    { href: "/", label: t("feed"), icon: Home },
+    { href: "/members", label: t("directory"), icon: ContactRound },
+    { href: "/channels", label: t("channels"), icon: Hash },
+    { href: "/events", label: t("events"), icon: CalendarDays },
+    { href: "/business/new", label: t("registerBusiness"), icon: Building2 },
+  ];
+
+  const LATER = [{ href: "/trip-planner", label: t("tripPlanner"), icon: Map, tag: t("phaseTag") }];
 
   useEffect(() => {
     async function load() {
@@ -85,10 +86,10 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         <div className="space-y-0.5">{MAIN.map((i) => item(i.href, i.label, i.icon))}</div>
         {isAdmin && (
-          <div className="space-y-0.5">{item("/admin", "Admin queue", ShieldAlert)}</div>
+          <div className="space-y-0.5">{item("/admin", t("adminQueue"), ShieldAlert)}</div>
         )}
         <div>
-          <p className="eyebrow px-3 pb-2 text-ink-soft">Coming next</p>
+          <p className="eyebrow px-3 pb-2 text-ink-soft">{t("comingNext")}</p>
           <div className="space-y-0.5">{LATER.map((i) => item(i.href, i.label, i.icon, i.tag))}</div>
         </div>
       </nav>
@@ -103,8 +104,8 @@ export default function Sidebar() {
             {(name ?? "?").slice(0, 2).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold">{name ?? "Loading…"}</span>
-            <span className="block truncate text-xs text-ink-soft">View profile</span>
+            <span className="block truncate text-sm font-semibold">{name ?? t("loading")}</span>
+            <span className="block truncate text-xs text-ink-soft">{t("viewProfile")}</span>
           </span>
           <Settings size={16} className="text-ink-soft" />
         </Link>
@@ -112,7 +113,7 @@ export default function Sidebar() {
           onClick={signOut}
           className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-mist"
         >
-          <LogOut size={16} /> Sign out
+          <LogOut size={16} /> {t("signOut")}
         </button>
       </div>
     </div>

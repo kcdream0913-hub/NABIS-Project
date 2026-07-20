@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "feed": "फिड / म्यासेज",
+    "directory": "डाइरेक्टरी",
+    "channels": "च्यानलहरू",
+    "events": "कार्यक्रमहरू",
+    "registerBusiness": "व्यवसाय दर्ता गर्नुहोस्",
+    "adminQueue": "प्रशासन क्यू",
+    "comingNext": "चाँडै आउँदै",
+    "tripPlanner": "यात्रा योजनाकार",
+    "phaseTag": "चरण २",
+    "viewProfile": "प्रोफाइल हेर्नुहोस्",
+    "loading": "लोड हुँदैछ…",
+    "signOut": "साइन आउट"
+  },
+  "topbar": {
+    "openNavigation": "नेभिगेसन खोल्नुहोस्",
+    "searchPlaceholder": "मानिस, व्यवसाय, च्यानल खोज्नुहोस्",
+    "notifications": "सूचनाहरू",
+    "assistant": "सहायक",
+    "assistantTooltip": "AI सहायक 'युटिलिटी' चरणमा आउनेछ"
+  },
+  "view": {
+    "us": "US दृश्य",
+    "usShort": "US",
+    "nepal": "नेपाल दृश्य",
+    "nepalShort": "नेपाल",
+    "bridge": "ब्रिज दृश्य",
+    "bridgeShort": "ब्रिज",
+    "label": "देश दृश्य"
+  },
+  "language": {
+    "label": "भाषा",
+    "en": "English",
+    "ne": "नेपाली"
+  },
+  "common": {
+    "cancel": "रद्द गर्नुहोस्",
+    "save": "सेभ गर्नुहोस्",
+    "loading": "लोड हुँदैछ…"
+  }
+}

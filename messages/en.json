@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "feed": "Feed / Messages",
+    "directory": "Directory",
+    "channels": "Channels",
+    "events": "Events",
+    "registerBusiness": "Register business",
+    "adminQueue": "Admin queue",
+    "comingNext": "Coming next",
+    "tripPlanner": "Trip Planner",
+    "phaseTag": "Phase 2",
+    "viewProfile": "View profile",
+    "loading": "Loading…",
+    "signOut": "Sign out"
+  },
+  "topbar": {
+    "openNavigation": "Open navigation",
+    "searchPlaceholder": "Search people, businesses, channels",
+    "notifications": "Notifications",
+    "assistant": "Assistant",
+    "assistantTooltip": "The AI assistant arrives with the Utility phase"
+  },
+  "view": {
+    "us": "US View",
+    "usShort": "US",
+    "nepal": "Nepal View",
+    "nepalShort": "Nepal",
+    "bridge": "Bridge View",
+    "bridgeShort": "Bridge",
+    "label": "Country view"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ne": "नेपाली"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading…"
+  }
+}

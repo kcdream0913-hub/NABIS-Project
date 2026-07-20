@@ -119,6 +119,28 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   context rail, Home feed (view-filtered), 7 community sections, members directory
   (search + filters), events + RSVP, messages (mock), composer, 6-step onboarding,
   profile/settings with invite link, locked Marketplace/Vendor, Trip Planner preview.
+- **2026-07-20 — View toggle confirmed + i18n foundation added:**
+  - Confirmed the US/Nepal/Bridge `ViewToggle` was already live (`lib/store.tsx`,
+    `lib/data.ts` VIEW_META, wired into `Topbar`) — not rebuilt, per founder direction.
+  - Added `next-intl` (locales: `en` unprefixed, `ne` at `/ne`). Moved all routes
+    under `app/[locale]/`; `app/auth/callback` deliberately stays outside the
+    locale tree (fixed OAuth redirect URI). Supabase session middleware now
+    composes with the intl rewrite instead of discarding it, and its
+    login/signup redirects are locale-aware.
+  - Added `LanguageToggle` (native names, no flags) in the Topbar next to
+    ViewToggle. Devanagari renders via self-hosted `@fontsource/noto-sans-devanagari`
+    (not `next/font/google` — no external fetch at build time).
+  - **Translated so far:** sidebar nav, topbar (search/notifications/assistant),
+    ViewToggle, LanguageToggle. **Not yet translated:** page-level content —
+    member bios, event/business/onboarding forms, admin dashboard, messages UI.
+    Treat this as the i18n foundation, not full coverage; do the remaining
+    string-extraction pass page-by-page next.
+  - Fixed a real Topbar alignment bug: `GlobalSearch` carried `ml-auto` but is
+    `hidden` below `sm`, so on mobile the whole right-hand cluster (search/
+    bell/assistant) collapsed to the left with nothing pinning it right.
+    `ml-auto` now lives on a wrapper div that's never conditionally hidden.
+  - Verified with a real `next build` (not just read-through): 28/28 routes
+    generate for both `en` and `ne`, `/auth/callback` untouched.
 - **Mocked (by design, this pass):** auth/invites (UI only), image upload, message
   delivery, persistence (in-memory + localStorage for view pref).
 - **Next up (in order):**
