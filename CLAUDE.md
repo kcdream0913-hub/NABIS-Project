@@ -2,21 +2,73 @@
 
 You are the primary AI developer for BridgeLink. Read fully before acting.
 
-## ⭐ STATUS (2026-07-20) — real app, not a mockup
+## ⭐ STATUS (2026-07-20, updated) — real app, not a mockup
 
-Auth (email/password + Google/Apple SSO), profile + real "Verify your profile" flow
-(country-first, camera capture, writes to `verification_records`), business
-registration (KYB fields + paid-access pricing), channels-as-business-directories,
-business team display, global directory (people + businesses, search/filter), events
-+ real RSVP, and the Feed/Messages toggle on the main screen are all built and wired
-to the live Supabase project — `npm run build` passes clean, 14 real routes.
-Security advisor is clean (only the intentional audit_logs deny-by-default remains).
+Auth (email/password + Google/Apple SSO, **route-gated: unauthenticated visitors land
+on /signup, not the app**), profile + real "Verify your profile" flow (country-first,
+camera capture), business registration (**tiered KYB — Tier 1 "Listed" needs no
+registration number; Tier 2 "Verified Business" adds it and unlocks paid access**,
+D-015), channels-as-business-directories, business team display **+ team management
+(owner adds/removes members by email, auto-verified under the owner, per-member
+posting rights)**, global directory (people + businesses, search/filter, **working
+Message buttons**), events + real RSVP, the Feed/Messages toggle **with a working
+post composer (verification-gated)**, and **real 1:1 direct messaging** (secure
+`get_or_create_direct_thread()` DB function, live via Supabase Realtime) are all built
+and wired to the live Supabase project. Paid-provider contact is gated behind an
+honest "payment not yet wired" stub rather than a fake bypass. `npm run build` passes
+clean, 15 real routes. Security advisor reviewed — two SECURITY DEFINER warnings are
+intentional (narrow, validated RPCs for thread-creation and email lookup).
 
 **Not yet built:** onboarding flow (removed, needs a rewrite for the new model),
-messaging DMs and channel posting UI, admin review/reports queue, Shufti Pro
-integration (verification currently writes a `pending_integration` placeholder
-record — the interface is already correct so wiring the real provider is a drop-in),
-Stripe/payment processing for paid access, audit logging on writes.
+channel-level posting/group discussion (channels are directory-only per spec default),
+admin review/reports queue, Shufti Pro integration (verification writes a
+`pending_integration` placeholder — interface is correct so wiring the real provider
+is a drop-in), Stripe/payment processing for paid access (UI gate exists, no charge
+flow yet), audit logging on writes, global search bar (directory has search; no
+cross-entity top-bar search yet).
+
+## ⭐ STATUS (2026-07-20, updated again) — real app, not a mockup
+
+All of the above, PLUS this batch: **real onboarding** (profile basics → sector
+selection → guidelines, writes to `profiles`, new signups land here first), a
+**report/flag system** (working Report button on posts and businesses, writes to
+`reports`), and an **admin review queue** at `/admin` (business verification
+approve/reject, personal verification approve/reject, reports dismiss/action) —
+gated by a dedicated `admin_users` table (never a column on `profiles`, since that
+table's own "update your row" policy would otherwise let anyone self-grant admin).
+`npm run build` passes clean, **17 real routes**. Security advisor re-checked — same
+three reviewed/intentional findings, nothing new.
+
+**To grant the founder (or anyone) admin access:** no UI for this yet by design —
+insert a row directly via the Supabase SQL editor or ask Claude Code to do it:
+`insert into public.admin_users (user_id) select id from auth.users where email = '<their email>';`
+
+**Not yet built:** channel-level posting/group discussion (channels are
+directory-only per spec default), Shufti Pro integration (verification writes a
+`pending_integration` placeholder — interface is correct so wiring the real
+provider is a drop-in), Stripe/payment processing for paid access (UI gate exists,
+no charge flow yet), audit logging on writes (reports/verification actions aren't
+yet mirrored into `audit_logs`), global search bar (directory has search; no
+cross-entity top-bar search yet).
+
+## ⭐ STATUS (2026-07-20, third update) — real app, not a mockup
+
+All of the above, PLUS: **global search** in the top bar (real, debounced, searches
+profiles/businesses/channels together, dropdown navigates to results), a **public
+profile view at `/people/[id]`** (view + message any other member — `/profile`
+remains the current user's own editor), and **audit logging** wired into every
+admin decision (business/profile verification approve+reject, report
+dismiss/action) and report submissions, closing the `audit_logs` gap the spec
+requires (§5.10/§7.1). `npm run build` passes clean, **18 real routes**. Security
+advisor re-checked — only the same two pre-reviewed intentional RPC warnings
+remain; the audit_logs "no policy" finding is now resolved.
+
+**Not yet built:** channel-level posting/group discussion (channels are
+directory-only per spec default — channel owners adding a group discussion is a
+documented future option, D-012), Shufti Pro integration (verification writes a
+`pending_integration` placeholder), Stripe/payment processing for paid access (UI
+gate exists, no charge flow yet — both need the founder's provider API keys before
+they can be real).
 
 ## ⭐ BUILD HANDOFF — START HERE
 - **Authoritative spec:** `docs/SPECIFICATION.md` (v1). It supersedes all other docs for *what to build*; its decision log (D-001…D-014) captures every product decision. `docs/PHASE0_FOUNDATION.md` is supporting narrative; `SPEC_v3.md` / `TASK_BREAKDOWN.md` are historical only. Also read `BUILD.md`.

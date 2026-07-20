@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home, ContactRound, Hash, CalendarDays, Building2, Settings, LogOut, Map,
+  Home, ContactRound, Hash, CalendarDays, Building2, Settings, LogOut, Map, ShieldAlert,
 } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +25,7 @@ export default function Sidebar() {
   const { setSidebarOpen } = useApp();
   const supabase = createClient();
   const [name, setName] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -34,6 +35,13 @@ export default function Sidebar() {
       if (!user) return;
       const { data } = await supabase.from("profiles").select("name").eq("id", user.id).single();
       setName(data?.name ?? user.email ?? "You");
+
+      const { data: admin } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setIsAdmin(!!admin);
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,6 +84,9 @@ export default function Sidebar() {
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         <div className="space-y-0.5">{MAIN.map((i) => item(i.href, i.label, i.icon))}</div>
+        {isAdmin && (
+          <div className="space-y-0.5">{item("/admin", "Admin queue", ShieldAlert)}</div>
+        )}
         <div>
           <p className="eyebrow px-3 pb-2 text-ink-soft">Coming next</p>
           <div className="space-y-0.5">{LATER.map((i) => item(i.href, i.label, i.icon, i.tag))}</div>

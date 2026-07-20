@@ -53,9 +53,13 @@ export default async function ChannelPage({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold">{b.name}</p>
-                  {b.verification_status === "verified" && (
+                  {b.verification_status === "verified" ? (
                     <span className="rounded bg-bg-success px-1.5 py-0.5 text-[10px] font-semibold text-text-success">
                       Verified Business
+                    </span>
+                  ) : (
+                    <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-soft">
+                      Listed
                     </span>
                   )}
                   {b.is_paid_provider && (

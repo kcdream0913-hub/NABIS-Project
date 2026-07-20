@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, Menu, Search, Sparkles } from "lucide-react";
+import { Bell, Menu, Sparkles } from "lucide-react";
 import ViewToggle from "./ViewToggle";
+import GlobalSearch from "./GlobalSearch";
 import { VIEW_META } from "@/lib/data";
 import { useApp } from "@/lib/store";
 
@@ -20,13 +21,7 @@ export default function Topbar() {
 
         <ViewToggle />
 
-        <div className="relative ml-auto hidden max-w-xs flex-1 sm:block">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
-          <input
-            placeholder="Search members, posts, events"
-            className="w-full rounded-md border border-line bg-mist py-1.5 pl-9 pr-3 text-sm placeholder:text-ink-soft focus:border-pine focus:bg-white"
-          />
-        </div>
+        <GlobalSearch />
 
         <button className="relative rounded-md p-2 text-ink-soft hover:bg-mist" aria-label="Notifications">
           <Bell size={17} />
@@ -46,3 +41,4 @@ export default function Topbar() {
     </header>
   );
 }
+

@@ -38,9 +38,13 @@ export default function NewBusinessPage() {
         name,
         country_of_registration: country,
         sector,
-        registration_number: regNumber,
+        registration_number: regNumber || null,
         bio,
         owner_user_id: user.id,
+        // Tier 1 "Listed" (no number) vs Tier 2 pending registry check — never
+        // auto-marked "verified" client-side either way; that comes from the
+        // verification job. See spec §5.3 (D-015).
+        verification_status: "unverified",
         is_paid_provider: isPaidProvider,
         access_price_amount: isPaidProvider ? Number(price) : null,
         access_price_currency: currency,
@@ -117,13 +121,18 @@ export default function NewBusinessPage() {
         </div>
 
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Registration / tax number</span>
+          <span className="eyebrow text-ink-soft">Registration / tax number (optional)</span>
           <input
             value={regNumber}
             onChange={(e) => setRegNumber(e.target.value)}
-            placeholder="PAN-VAT, EIN, or company no."
+            placeholder="PAN-VAT, EIN, or company no. — leave blank to join as Listed"
             className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
           />
+          <span className="mt-1 block text-xs text-ink-soft">
+            Not required to join. Adding it earns the green "Verified Business" badge
+            and unlocks charging for access below. Never shown to anyone — only the
+            verification outcome is displayed.
+          </span>
         </label>
 
         <label className="block text-sm">
@@ -136,21 +145,22 @@ export default function NewBusinessPage() {
           />
         </label>
 
-        {/* Paid access — spec §5.13. Opt-in, per-provider. */}
+        {/* Paid access — spec §5.13. Requires Tier 2 (registration number). */}
         <div className="rounded-md border border-line bg-mist p-3">
           <label className="flex items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
               checked={isPaidProvider}
+              disabled={!regNumber}
               onChange={(e) => setIsPaidProvider(e.target.checked)}
-              className="h-4 w-4 accent-pine"
+              className="h-4 w-4 accent-pine disabled:opacity-40"
             />
             Charge an upfront fee to contact this business
           </label>
           <p className="mt-1 text-xs text-ink-soft">
-            Common for service providers — legal, freelancers, outsourcing, advisory.
-            Browsing your bio stays free; paying unlocks contacting you. The platform
-            takes a revenue-share commission on each payment.
+            {regNumber
+              ? "Common for service providers — legal, freelancers, outsourcing, advisory. Browsing your bio stays free; paying unlocks contacting you. The platform takes a revenue-share commission on each payment."
+              : "Add a registration number above to unlock paid access — it requires Verified Business status."}
           </p>
           {isPaidProvider && (
             <div className="mt-2 flex gap-2">

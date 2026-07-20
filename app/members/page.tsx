@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { findOrCreateThread } from "@/lib/threads";
 import { SECTORS } from "@/lib/sectors";
 
 type PersonRow = {
@@ -24,6 +26,7 @@ type BusinessRow = {
 
 export default function DirectoryPage() {
   const supabase = createClient();
+  const router = useRouter();
   const [tab, setTab] = useState<"people" | "businesses">("people");
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("All sectors");
@@ -106,7 +109,7 @@ export default function DirectoryPage() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPeople.map((m) => (
             <div key={m.id} className="rounded-lg border border-line bg-white p-4">
-              <div className="flex items-center gap-3">
+              <Link href={`/people/${m.id}`} className="flex items-center gap-3 hover:opacity-80">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-pine-soft text-sm font-bold text-pine">
                   {(m.name ?? "?").slice(0, 2).toUpperCase()}
                 </span>
@@ -114,13 +117,24 @@ export default function DirectoryPage() {
                   <p className="truncate text-sm font-semibold">{m.name ?? "Member"}</p>
                   <p className="truncate text-xs text-ink-soft">{m.city}</p>
                 </div>
-              </div>
+              </Link>
               {m.bio && <p className="mt-3 line-clamp-2 text-sm text-ink-soft">{m.bio}</p>}
-              {m.verification_status === "verified" && (
-                <span className="mt-2 inline-block rounded bg-bg-success px-1.5 py-0.5 text-[10px] font-semibold text-text-success">
-                  Verified
-                </span>
-              )}
+              <div className="mt-2 flex items-center justify-between">
+                {m.verification_status === "verified" && (
+                  <span className="inline-block rounded bg-bg-success px-1.5 py-0.5 text-[10px] font-semibold text-text-success">
+                    Verified
+                  </span>
+                )}
+                <button
+                  onClick={async () => {
+                    const threadId = await findOrCreateThread(m.id);
+                    if (threadId) router.push(`/messages/${threadId}`);
+                  }}
+                  className="ml-auto rounded-md border border-line px-2.5 py-1 text-xs font-medium hover:bg-mist"
+                >
+                  Message
+                </button>
+              </div>
             </div>
           ))}
         </div>

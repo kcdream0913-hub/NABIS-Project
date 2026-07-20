@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
+import Composer from "./composer";
 import { Compass, MessagesSquare } from "lucide-react";
+import ReportButton from "@/components/ReportButton";
 
 type Post = {
   id: string;
@@ -15,29 +17,74 @@ type Post = {
 };
 type Channel = { id: string; slug: string; name: string; description: string | null };
 
+type Thread = { id: string; otherName: string };
+
 export default function HomePage() {
   const supabase = createClient();
   const [mode, setMode] = useState<"feed" | "messages">("feed");
   const [posts, setPosts] = useState<Post[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  async function loadFeed() {
+    const { data } = await supabase
+      .from("posts")
+      .select("id, body, created_at, posted_as, profiles:author_id ( name )")
+      .order("created_at", { ascending: false })
+      .limit(30);
+    setPosts(data ?? []);
+  }
 
   useEffect(() => {
     async function load() {
       setLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("verification_status")
+          .eq("id", user.id)
+          .single();
+        setIsVerified(profile?.verification_status === "verified");
+      }
+
       if (mode === "feed") {
-        const { data } = await supabase
-          .from("posts")
-          .select("id, body, created_at, posted_as, profiles:author_id ( name )")
-          .order("created_at", { ascending: false })
-          .limit(30);
-        setPosts(data ?? []);
+        await loadFeed();
       } else {
-        const { data } = await supabase
+        const { data: chans } = await supabase
           .from("channels")
           .select("id, slug, name, description")
           .order("name");
-        setChannels(data ?? []);
+        setChannels(chans ?? []);
+
+        if (user) {
+          const { data: mine } = await supabase
+            .from("direct_thread_participants")
+            .select("thread_id")
+            .eq("user_id", user.id);
+          const threadIds = (mine ?? []).map((r) => r.thread_id);
+
+          if (threadIds.length > 0) {
+            const { data: others } = await supabase
+              .from("direct_thread_participants")
+              .select("thread_id, profiles:user_id ( name )")
+              .in("thread_id", threadIds)
+              .neq("user_id", user.id);
+            setThreads(
+              (others ?? []).map((o) => {
+                const p = Array.isArray(o.profiles) ? o.profiles[0] : o.profiles;
+                return { id: o.thread_id, otherName: p?.name ?? "Member" };
+              })
+            );
+          } else {
+            setThreads([]);
+          }
+        }
       }
       setLoading(false);
     }
@@ -67,7 +114,9 @@ export default function HomePage() {
         </button>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 space-y-3">
+        {mode === "feed" && <Composer isVerified={isVerified} onPosted={loadFeed} />}
+
         {loading ? (
           <p className="text-sm text-ink-soft">Loading…</p>
         ) : mode === "feed" ? (
@@ -76,43 +125,67 @@ export default function HomePage() {
               icon={Compass}
               title="Quiet in the feed so far"
               body="Verified members and businesses can post opportunities and updates here."
-              actionHref="/create"
-              actionLabel="Create the first post"
             />
           ) : (
-            <div className="space-y-3">
-              {posts.map((p) => {
-                const author = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
-                return (
-                  <article key={p.id} className="rounded-lg border border-line bg-white p-4">
+            posts.map((p) => {
+              const author = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+              return (
+                <article key={p.id} className="rounded-lg border border-line bg-white p-4">
+                  <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold">{author?.name ?? "Member"}</p>
-                    <p className="mt-1 text-sm leading-relaxed">{p.body}</p>
-                  </article>
-                );
-              })}
-            </div>
+                    <ReportButton targetType="post" targetId={p.id} />
+                  </div>
+                  <p className="mt-1 text-sm leading-relaxed">{p.body}</p>
+                </article>
+              );
+            })
           )
-        ) : channels.length === 0 ? (
+        ) : channels.length === 0 && threads.length === 0 ? (
           <EmptyState
             icon={MessagesSquare}
             title="No channels yet"
             body="Sector channels appear here once seeded."
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {channels.map((c) => (
-              <Link
-                key={c.id}
-                href={`/channels/${c.slug}`}
-                className="rounded-lg border border-line bg-white p-4 hover:border-pine"
-              >
-                <p className="text-sm font-semibold"># {c.name}</p>
-                <p className="mt-1 text-xs text-ink-soft">{c.description}</p>
-              </Link>
-            ))}
+          <div className="space-y-4">
+            {threads.length > 0 && (
+              <div>
+                <p className="eyebrow mb-2 text-ink-soft">Direct messages</p>
+                <div className="space-y-2">
+                  {threads.map((t) => (
+                    <Link
+                      key={t.id}
+                      href={`/messages/${t.id}`}
+                      className="flex items-center gap-3 rounded-lg border border-line bg-white p-3 hover:border-pine"
+                    >
+                      <span className="grid h-9 w-9 place-items-center rounded-full bg-pine-soft text-xs font-bold text-pine">
+                        {t.otherName.slice(0, 2).toUpperCase()}
+                      </span>
+                      <span className="text-sm font-medium">{t.otherName}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="eyebrow mb-2 text-ink-soft">Channels</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {channels.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/channels/${c.slug}`}
+                    className="rounded-lg border border-line bg-white p-4 hover:border-pine"
+                  >
+                    <p className="text-sm font-semibold"># {c.name}</p>
+                    <p className="mt-1 text-xs text-ink-soft">{c.description}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+

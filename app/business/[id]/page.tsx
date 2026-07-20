@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import ContactBusiness from "./contact-business";
+import TeamManager from "./team-manager";
+import RemoveMemberButton from "./remove-member-button";
+import ReportButton from "@/components/ReportButton";
 
 const ROLE_LABEL: Record<string, string> = {
   owner: "Owner",
@@ -44,6 +48,9 @@ export default async function BusinessPage({
                   Verified Business
                 </span>
               )}
+              <span className="ml-auto">
+                <ReportButton targetType="business" targetId={business.id} />
+              </span>
             </div>
             <p className="mt-0.5 text-sm text-ink-soft">
               {business.sector} · {business.country_of_registration}
@@ -56,6 +63,14 @@ export default async function BusinessPage({
           </div>
         </div>
         {business.bio && <p className="mt-4 text-sm leading-relaxed">{business.bio}</p>}
+        <div className="mt-4">
+          <ContactBusiness
+            ownerUserId={business.owner_user_id}
+            isPaidProvider={business.is_paid_provider}
+            priceAmount={business.access_price_amount}
+            priceCurrency={business.access_price_currency}
+          />
+        </div>
       </div>
 
       <div className="mt-5">
@@ -79,10 +94,12 @@ export default async function BusinessPage({
                     {m.can_post ? " · can post" : ""}
                   </p>
                 </div>
+                <RemoveMemberButton businessId={id} memberRowId={m.id} role={m.role} />
               </div>
             );
           })}
         </div>
+        <TeamManager businessId={id} />
       </div>
     </div>
   );

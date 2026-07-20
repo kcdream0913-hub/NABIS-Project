@@ -148,8 +148,24 @@ hosted URL.
 - **Provider:** Shufti Pro (primary — US + Nepal + 240+ countries + PEP + KYB + liveness); ID Analyzer for early testing. Records store outcomes, not raw media where avoidable (§7.2).
 
 ### 5.3 Business registration, teams & channel directory (KYB)
+
+**Tiered by design — registration number is not required to join (D-015):**
+- **Tier 1 — Listed (default):** name, sector, bio, country only. No registration number.
+  Appears in the directory with a neutral "Listed" tag. Zero friction to join.
+- **Tier 2 — Verified Business:** adds the registration/tax number (PAN-VAT / EIN /
+  company no.), checked against the national registry. Earns the green "Verified
+  Business" badge, better directory placement, and is **required to enable paid access**
+  (§5.13) — you cannot charge for contact unless verified. This is the incentive that
+  makes disclosure worth it, rather than mandatory at the door.
+- **Data handling for the registration number (security):** submitted directly to the
+  verification check; the raw number is never displayed anywhere in the app (not to
+  other members, not in the admin UI) — only the verification *outcome* is shown.
+  Encrypted at rest; readable only by the automated verification job and, if ever
+  needed, an admin action that is itself audit-logged. Same data-minimization principle
+  as personal KYC (§7.2), applied to businesses.
+
 - **A business joins through an authorized person** who verifies their own identity first, then registers the business.
-- **KYB:** business name, country of registration (full dropdown), sector (= channel), registration/tax number (PAN-VAT / EIN / company no.), checked against the national registry — **in parallel** with the rep's verification (never block on paperwork). Invite fast-track: a vouch from a verified member skips any review.
+- **KYB:** business name, country of registration (full dropdown), sector (= channel), registration/tax number (Tier 2 only) — checked against the national registry **in parallel** with the rep's verification (never block on paperwork). Invite fast-track: a vouch from a verified member skips any review.
 - **Businesses have teams.** A business has a **bio/profile** and affiliated people with roles: **owner, professional, assistant, employee.** **Only the business owner adds/removes team members.** Added employees are **auto-verified under the owner's authority — the owner takes responsibility for them** (no separate KYC per employee); they appear as "verified via [business]." Nobody self-attaches, which prevents false "I work here" claims.
 - **Posting rights are per-business.** Each business decides which of its people may post. A post shows the **poster's avatar** — the **business logo** when posted as the business, or the **employee's photo** when posted as themselves.
 - **Channels are sector directories of businesses.** Clicking a channel shows the registered **business bios** in that sector; opening a business bio shows its **team** (owners, professionals, assistants, employees), each contactable per the messaging rules.
@@ -207,7 +223,7 @@ In-app notifications, with email/SMS for key events: new direct message, verific
 
 ### 5.13 Paid access & service pricing (monetization)
 Not all businesses are the same — some are **service providers** who charge for access.
-- **Opt-in paid access.** A verified business or individual can set an **upfront access price** on their bio to become a paid provider. Common for service categories — **Immigration & Legal, Freelancers, Outsourcing (IT teams/companies), Founders (advisory / pitch access)** — but it's per-provider: each decides whether to charge and how much.
+- **Opt-in paid access.** A verified business or individual can set an **upfront access price** on their bio to become a paid provider. Common for service categories — **Immigration & Legal, Freelancers, Outsourcing (IT teams/companies), Founders (advisory / pitch access)** — but it's per-provider: each decides whether to charge and how much. **Requires Tier 2 — Verified Business** (§5.3); Tier 1 "Listed" businesses cannot charge for access, which is the incentive to complete registry verification.
 - **Paywall on engagement, not browsing.** Anyone verified can see a provider's bio; **paying the upfront fee unlocks contacting and engaging** them. Free-to-contact businesses remain the default.
 - **Platform revenue share.** The platform takes a **commission (%)** of each payment; the provider receives the remainder as a payout. (Recommend a fixed rate, e.g. 10–20%.)
 - **Payment rails.** Requires **Stripe (US) + a Nepal gateway (eSewa / Khalti / connectIPS)**, provider payouts, and **NRB compliance** on the Nepal side. This makes paid access the platform's first revenue mechanism and pulls part of the transaction layer forward.
@@ -333,3 +349,4 @@ Not all businesses are the same — some are **service providers** who charge fo
 - D-012 (2026-07-18): Unverified = **browse-only**; post/message require verification (exclusivity enforced post-signup). **Two verification types: Person and Business.** For a business, **only the owner adds/removes team members; employees are auto-verified under the owner's responsibility** (no per-employee KYC; badged "verified via business"). **Each business configures who can post;** posts show the poster's avatar (business logo or employee photo). **Channels are directories; channel owners can add a group discussion and have their own group.** Added **channel-owner** role.
 - D-013 (2026-07-18): **Auth = Supabase (locked).**
 - D-014 (2026-07-18): **Paid access & service pricing** — verified providers (Immigration/Legal, Freelancers, Outsourcing IT, Founders, and any service business) can set an upfront access fee; paying unlocks contacting/engaging them; **platform takes a revenue-share commission** (rec. 10–20%). First monetization layer; requires Stripe + Nepal gateway + NRB compliance. GitHub repo for the project: `kcdream0913-hub/NABIS-Project`.
+- D-015 (2026-07-20): **Tiered KYB** — registration number is NOT required to join; Tier 1 "Listed" businesses need only name/sector/bio/country. Tier 2 "Verified Business" adds the registry number, is required to enable paid access, and the raw number is never displayed anywhere (encrypted at rest, outcome-only display) — resolves founder security concern about businesses being asked for EIN/tax numbers.
