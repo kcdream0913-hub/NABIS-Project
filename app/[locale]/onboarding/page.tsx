@@ -1,21 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { SECTORS } from "@/lib/sectors";
+import { useSectors } from "@/lib/useSectors";
 
-const STEPS = ["Welcome", "Profile", "Sectors", "Guidelines"] as const;
-
-const GUIDELINES = [
-  "Be specific. Real asks and real offers — this is a working room, not a broadcast channel.",
-  "Vouch carefully. Every business you add to your team reflects on you as the owner.",
-  "Keep deals honest. Misrepresenting a business or listing gets one warning, then removal.",
-  "Respect both sides of the corridor. Two countries, one community.",
-];
+const STEP_COUNT = 4;
 
 export default function OnboardingPage() {
+  const t = useTranslations("onboarding");
+  const guidelines = [t("guideline1"), t("guideline2"), t("guideline3"), t("guideline4")];
+  const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
   const [step, setStep] = useState(0);
@@ -23,7 +20,7 @@ export default function OnboardingPage() {
   const [name, setName] = useState("");
   const [country, setCountry] = useState<"us" | "nepal">("us");
   const [city, setCity] = useState("");
-  const [sectors, setSectors] = useState<string[]>([]);
+  const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -46,7 +43,7 @@ export default function OnboardingPage() {
         setName(data.name ?? "");
         setCity(data.city ?? "");
         setCountry((data.country as "us" | "nepal") ?? "us");
-        setSectors(data.sectors ?? []);
+        setSelectedSectors(data.sectors ?? []);
       }
     }
     load();
@@ -54,7 +51,7 @@ export default function OnboardingPage() {
   }, []);
 
   function toggleSector(slug: string) {
-    setSectors((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+    setSelectedSectors((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
   }
 
   const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? agreed : true;
@@ -62,7 +59,7 @@ export default function OnboardingPage() {
   async function finish() {
     if (!userId) return;
     setSaving(true);
-    await supabase.from("profiles").update({ name, city, country, sectors }).eq("id", userId);
+    await supabase.from("profiles").update({ name, city, country, sectors: selectedSectors }).eq("id", userId);
     setSaving(false);
     router.push("/");
     router.refresh();
@@ -72,15 +69,15 @@ export default function OnboardingPage() {
     <div className="mx-auto max-w-xl">
       <div className="mb-5">
         <div className="flex items-center justify-between">
-          <p className="eyebrow text-ink-soft">Getting started</p>
+          <p className="eyebrow text-ink-soft">{t("gettingStarted")}</p>
           <p className="text-xs text-ink-soft">
-            Step {step + 1} of {STEPS.length}
+            {t("step", { current: step + 1, total: STEP_COUNT })}
           </p>
         </div>
         <div className="mt-2 h-1 overflow-hidden rounded-full bg-line">
           <div
             className="h-full rounded-full bg-pine transition-all"
-            style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+            style={{ width: `${((step + 1) / STEP_COUNT) * 100}%` }}
           />
         </div>
       </div>
@@ -89,50 +86,47 @@ export default function OnboardingPage() {
         {step === 0 && (
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
-              You&apos;re in. Welcome to BridgeLink.
+              {t("welcomeTitle")}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              The verified network of the US–Nepal corridor — business owners,
-              investors, diplomats, and senior professionals. Three quick steps and
-              you&apos;re set up. You can browse right away; verifying your profile
-              later unlocks posting and messaging.
+{t("welcomeBody")}
             </p>
           </div>
         )}
 
         {step === 1 && (
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">Set up your profile</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{t("profileTitle")}</h1>
             <p className="mt-1 text-sm text-ink-soft">
-              This is how members recognize you. Real names work best here.
+              {t("profileSubtitle")}
             </p>
             <div className="mt-4 space-y-3">
               <label className="block text-sm">
-                <span className="eyebrow text-ink-soft">Full name</span>
+                <span className="eyebrow text-ink-soft">{t("fullName")}</span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder={t("yourNamePlaceholder")}
                   className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
                 />
               </label>
               <label className="block text-sm">
-                <span className="eyebrow text-ink-soft">Country</span>
+                <span className="eyebrow text-ink-soft">{t("country")}</span>
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as "us" | "nepal")}
                   className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
                 >
-                  <option value="us">United States</option>
-                  <option value="nepal">Nepal</option>
+                  <option value="us">{t("unitedStates")}</option>
+                  <option value="nepal">{t("nepal")}</option>
                 </select>
               </label>
               <label className="block text-sm">
-                <span className="eyebrow text-ink-soft">City</span>
+                <span className="eyebrow text-ink-soft">{t("city")}</span>
                 <input
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="City"
+                  placeholder={t("cityPlaceholder")}
                   className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
                 />
               </label>
@@ -142,25 +136,25 @@ export default function OnboardingPage() {
 
         {step === 2 && (
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">What describes you?</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{t("describeTitle")}</h1>
             <p className="mt-1 text-sm text-ink-soft">
-              Pick every channel that fits — you can belong to more than one, and
-              change this later from your profile.
+{t("describeSubtitle")}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {SECTORS.map((s) => {
-                const active = sectors.includes(s.slug);
+              {sectors.map((sec) => {
+                const active = selectedSectors.includes(sec.slug);
                 return (
                   <button
-                    key={s.slug}
-                    onClick={() => toggleSector(s.slug)}
+                    key={sec.slug}
+                    onClick={() => toggleSector(sec.slug)}
+                    title={sec.description}
                     className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
                       active
                         ? "border-pine bg-pine-soft text-pine-ink"
                         : "border-line text-ink-soft hover:bg-mist"
                     }`}
                   >
-                    {s.name}
+                    {sec.name}
                   </button>
                 );
               })}
@@ -170,9 +164,9 @@ export default function OnboardingPage() {
 
         {step === 3 && (
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">How this room works</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{t("guidelinesTitle")}</h1>
             <ul className="mt-3 space-y-2.5">
-              {GUIDELINES.map((g, i) => (
+              {guidelines.map((g, i) => (
                 <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-soft">
                   <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-pine-soft text-[10px] font-bold text-pine">
                     {i + 1}
@@ -188,7 +182,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setAgreed(e.target.checked)}
                 className="h-4 w-4 accent-pine"
               />
-              I&apos;ve read these and I&apos;m in.
+              {t("agree")}
             </label>
           </div>
         )}
@@ -200,15 +194,15 @@ export default function OnboardingPage() {
           disabled={step === 0}
           className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-white disabled:opacity-0"
         >
-          <ArrowLeft size={15} /> Back
+          <ArrowLeft size={15} /> {t("back")}
         </button>
-        {step < STEPS.length - 1 ? (
+        {step < STEP_COUNT - 1 ? (
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext}
             className="flex items-center gap-1 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-40"
           >
-            Continue <ArrowRight size={15} />
+            {t("continue")} <ArrowRight size={15} />
           </button>
         ) : (
           <button
@@ -216,7 +210,7 @@ export default function OnboardingPage() {
             disabled={!canNext || saving}
             className="rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Enter BridgeLink"}
+            {saving ? t("saving") : t("enter")}
           </button>
         )}
       </div>

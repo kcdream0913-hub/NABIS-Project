@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContactBusiness from "@/app/[locale]/business/[id]/contact-business";
@@ -9,6 +10,7 @@ export default async function PersonPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("person");
   const supabase = await createClient();
 
   const { data: person } = await supabase.from("profiles").select("*").eq("id", id).single();
@@ -23,10 +25,10 @@ export default async function PersonPage({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-lg font-semibold">{person.name ?? "Member"}</h1>
+              <h1 className="text-lg font-semibold">{person.name ?? t("member")}</h1>
               {person.verification_status === "verified" && (
                 <span className="rounded bg-bg-success px-2 py-0.5 text-[11px] font-semibold text-text-success">
-                  Verified
+                  {t("verified")}
                 </span>
               )}
               <span className="ml-auto">

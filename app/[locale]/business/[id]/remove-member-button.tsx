@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +15,7 @@ export default function RemoveMemberButton({
   memberRowId: string;
   role: string;
 }) {
+  const t = useTranslations("business");
   const supabase = createClient();
   const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
@@ -46,7 +48,7 @@ export default function RemoveMemberButton({
   return (
     <button
       onClick={remove}
-      aria-label="Remove from team"
+      aria-label={t("removeFromTeam")}
       className="rounded-md p-1.5 text-ink-soft hover:bg-mist hover:text-rhodo"
     >
       <X size={15} />

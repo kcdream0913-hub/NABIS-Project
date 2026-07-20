@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 export default function Composer({
@@ -10,6 +11,7 @@ export default function Composer({
   isVerified: boolean;
   onPosted: () => void;
 }) {
+  const t = useTranslations("composer");
   const supabase = createClient();
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
@@ -37,9 +39,9 @@ export default function Composer({
   if (!isVerified) {
     return (
       <div className="rounded-lg border border-dashed border-line bg-mist p-3 text-sm text-ink-soft">
-        Verify your profile to post to the feed.{" "}
+        {t("verifyToPost")}{" "}
         <a href="/profile/verify" className="font-medium text-pine hover:text-pine-ink">
-          Verify now
+          {t("verifyNow")}
         </a>
       </div>
     );
@@ -51,7 +53,7 @@ export default function Composer({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={2}
-        placeholder="Share an opportunity or update…"
+        placeholder={t("placeholder")}
         className="w-full resize-none border-none p-0 text-sm outline-none placeholder:text-ink-soft"
       />
       <div className="mt-2 flex justify-end">
@@ -60,7 +62,7 @@ export default function Composer({
           disabled={!body.trim() || posting}
           className="rounded-md bg-pine px-3.5 py-1.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-40"
         >
-          {posting ? "Posting…" : "Post"}
+          {posting ? t("posting") : t("post")}
         </button>
       </div>
     </div>

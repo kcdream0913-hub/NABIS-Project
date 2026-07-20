@@ -37,6 +37,283 @@
   "common": {
     "cancel": "Cancel",
     "save": "Save",
+    "loading": "Loading…",
+    "message": "Message",
+    "verified": "Verified",
+    "verifiedBusiness": "Verified Business"
+  },
+  "auth": {
+    "joinTitle": "Join BridgeLink",
+    "joinSubtitle": "The verified network of the US–Nepal corridor.",
+    "welcomeBack": "Welcome back",
+    "continueGoogle": "Continue with Google",
+    "continueApple": "Continue with Apple",
+    "or": "or",
+    "emailOrPhone": "Email or phone",
+    "password": "Password",
+    "creatingAccount": "Creating account…",
+    "createAccount": "Create account",
+    "loggingIn": "Logging in…",
+    "logIn": "Log in",
+    "alreadyMember": "Already a member?",
+    "newHere": "New here?",
+    "browseHint": "You can browse right away. Posting and messaging unlock once you verify your profile."
+  },
+  "home": {
+    "feed": "Feed",
+    "messages": "Messages",
+    "feedEmptyTitle": "Quiet in the feed so far",
+    "feedEmptyBody": "Verified members and businesses can post opportunities and updates here.",
+    "channelsEmptyTitle": "No channels yet",
+    "channelsEmptyBody": "Sector channels appear here once seeded.",
+    "directMessages": "Direct messages",
+    "channels": "Channels",
+    "member": "Member",
     "loading": "Loading…"
+  },
+  "composer": {
+    "verifyToPost": "Verify your profile to post to the feed.",
+    "verifyNow": "Verify now",
+    "placeholder": "Share an opportunity or update…",
+    "posting": "Posting…",
+    "post": "Post"
+  },
+  "directory": {
+    "eyebrow": "Directory",
+    "title": "Members & businesses",
+    "people": "People",
+    "businesses": "Businesses",
+    "searchPlaceholder": "Search by name, business, or city",
+    "allSectors": "All sectors",
+    "member": "Member",
+    "message": "Message",
+    "loading": "Loading…"
+  },
+  "events": {
+    "eyebrow": "Calendar",
+    "title": "Events",
+    "subtitle": "Online and in-person gatherings across the corridor. RSVP so hosts can plan.",
+    "empty": "No events yet.",
+    "going": "Going",
+    "rsvp": "RSVP",
+    "loading": "Loading…"
+  },
+  "channels": {
+    "eyebrow": "Messages",
+    "title": "Channels",
+    "subtitle": "Each channel is a directory of registered businesses in that sector.",
+    "channelEyebrow": "Channel",
+    "detailSubtitle": "Businesses in this sector will appear here once verified.",
+    "emptyTitle": "No registered businesses yet",
+    "registerCta": "Register a business",
+    "listed": "Listed",
+    "verifiedBusiness": "Verified Business"
+  },
+  "thread": {
+    "conversation": "Conversation",
+    "member": "Member",
+    "messagePrefix": "Message {name}",
+    "sendMessage": "Send message",
+    "loading": "Loading…"
+  },
+  "tripPlanner": {
+    "phaseEyebrow": "Phase 2 · Utility layer",
+    "title": "Trip Planner",
+    "body": "Budget estimates, itinerary building, and recommendations tuned to Nepal are next after the community reaches critical mass. It will draw on what members share here — real operators, real prices, real routes.",
+    "previewEyebrow": "Preview of the inputs",
+    "dates": "Dates",
+    "budget": "Budget (USD)",
+    "groupSize": "Group size",
+    "interests": "Interests",
+    "postHintPrefix": "Planning a trip now? Post it in",
+    "travelPlans": "Travel Plans",
+    "postHintSuffix": "— members are already coordinating around each other's dates."
+  },
+  "businessNew": {
+    "eyebrow": "Register",
+    "title": "Your business",
+    "subtitle": "You verify as the owner; the entity is checked against its national registry in parallel — you're never blocked on paperwork.",
+    "businessName": "Business name",
+    "businessNamePlaceholder": "e.g. Himalaya Freight Co.",
+    "countryOfRegistration": "Country of registration",
+    "sector": "Sector",
+    "regNumber": "Registration / tax number (optional)",
+    "regNumberPlaceholder": "PAN-VAT, EIN, or company no. — leave blank to join as Listed",
+    "regNumberHint": "Not required to join. Adding it earns the green \"Verified Business\" badge and unlocks charging for access below. Never shown to anyone — only the verification outcome is displayed.",
+    "bio": "Bio",
+    "chargeFee": "Charge an upfront fee to contact this business",
+    "chargeFeeHintUnlocked": "Common for service providers — legal, freelancers, outsourcing, advisory. Browsing your bio stays free; paying unlocks contacting you. The platform takes a revenue-share commission on each payment.",
+    "chargeFeeHintLocked": "Add a registration number above to unlock paid access — it requires Verified Business status.",
+    "amount": "Amount",
+    "registering": "Registering…",
+    "register": "Register business",
+    "genericError": "Could not register the business."
+  },
+  "profile": {
+    "eyebrow": "Account",
+    "title": "Profile & settings",
+    "verifiedTitle": "Verified profile",
+    "notVerifiedTitle": "Not yet verified",
+    "verifiedBody": "You can post and message across BridgeLink.",
+    "notVerifiedBody": "Verify to unlock posting and messaging.",
+    "verifyCta": "Verify your profile",
+    "profileHeading": "Profile",
+    "name": "Name",
+    "country": "Country",
+    "unitedStates": "United States",
+    "nepal": "Nepal",
+    "city": "City",
+    "bio": "Bio",
+    "describeHeading": "What describes you",
+    "describeHint": "Select every channel that fits — you can belong to more than one.",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "saveChanges": "Save changes"
+  },
+  "verify": {
+    "submittedTitle": "Verification submitted",
+    "submittedBody": "Your document is under review. This is currently a placeholder pending the Shufti Pro integration — once wired, this step completes automatically.",
+    "backToProfile": "Back to profile",
+    "eyebrow": "Profile verification",
+    "title": "Verify your identity",
+    "subtitle": "Top-grade check, every country supported. Select your country — the right documents follow automatically.",
+    "countryOfId": "Country of your ID",
+    "document": "Document",
+    "turnOnCamera": "Turn on camera",
+    "documentCaptured": "Document captured.",
+    "cameraError": "Couldn't access the camera. Check your browser's camera permission and try again.",
+    "capture": "Capture",
+    "submitting": "Submitting…",
+    "submit": "Submit for verification",
+    "footnote": "Document, face match, and business/role checks — no manual bypass."
+  },
+  "admin": {
+    "adminsOnlyTitle": "Admins only",
+    "adminsOnlyBody": "This area is restricted. If you believe you should have access, ask an existing admin to grant it.",
+    "eyebrow": "Admin",
+    "title": "Review queue",
+    "businessVerification": "Business verification",
+    "profileVerification": "Profile verification",
+    "reports": "Reports",
+    "nothingPending": "Nothing pending.",
+    "noOpenReports": "No open reports.",
+    "member": "Member",
+    "reject": "Reject",
+    "approve": "Approve",
+    "dismiss": "Dismiss",
+    "takeAction": "Take action",
+    "regNumberLabel": "Reg #",
+    "loading": "Loading…"
+  },
+  "report": {
+    "sent": "Report sent — thank you.",
+    "placeholder": "What's wrong? (optional)",
+    "cancel": "Cancel",
+    "submit": "Submit report",
+    "report": "Report"
+  },
+  "business": {
+    "verifiedBusiness": "Verified Business",
+    "access": "Access",
+    "team": "Team",
+    "pending": "Pending",
+    "verifiedViaBusiness": "verified via business",
+    "canPost": "can post",
+    "message": "Message",
+    "payToContact": "Pay {currency} {amount} to contact",
+    "payTooltip": "Payment processing isn't wired up yet — coming with the Stripe integration",
+    "roleOwner": "Owner",
+    "roleProfessional": "Professional",
+    "roleAssistant": "Assistant",
+    "roleEmployee": "Employee",
+    "addMemberTitle": "Add a team member (owner only)",
+    "addMemberHint": "They're added as verified under your responsibility — no separate ID check. You're accountable for who you add.",
+    "memberEmailPlaceholder": "Their BridgeLink email",
+    "canPostAsBusiness": "Can post as this business",
+    "add": "Add",
+    "noMemberFound": "No BridgeLink member found with that email.",
+    "alreadyOnTeam": "That person is already on the team.",
+    "removeFromTeam": "Remove from team"
+  },
+  "person": {
+    "member": "Member",
+    "verified": "Verified"
+  },
+  "onboarding": {
+    "step": "Step {current} of {total}",
+    "gettingStarted": "Getting started",
+    "welcomeTitle": "You're in. Welcome to BridgeLink.",
+    "welcomeBody": "The verified network of the US–Nepal corridor — business owners, investors, diplomats, and senior professionals. Three quick steps and you're set up. You can browse right away; verifying your profile later unlocks posting and messaging.",
+    "profileTitle": "Set up your profile",
+    "profileSubtitle": "This is how members recognize you. Real names work best here.",
+    "fullName": "Full name",
+    "yourNamePlaceholder": "Your name",
+    "country": "Country",
+    "unitedStates": "United States",
+    "nepal": "Nepal",
+    "city": "City",
+    "cityPlaceholder": "City",
+    "describeTitle": "What describes you?",
+    "describeSubtitle": "Pick every channel that fits — you can belong to more than one, and change this later from your profile.",
+    "guidelinesTitle": "How this room works",
+    "guideline1": "Be specific. Real asks and real offers — this is a working room, not a broadcast channel.",
+    "guideline2": "Vouch carefully. Every business you add to your team reflects on you as the owner.",
+    "guideline3": "Keep deals honest. Misrepresenting a business or listing gets one warning, then removal.",
+    "guideline4": "Respect both sides of the corridor. Two countries, one community.",
+    "agree": "I've read these and I'm in.",
+    "back": "Back",
+    "continue": "Continue",
+    "saving": "Saving…",
+    "enter": "Enter BridgeLink"
+  },
+  "sectors": {
+    "technology-ai": {
+      "name": "Technology & AI",
+      "description": "Software development, artificial intelligence, digital products, IT services, SaaS, cybersecurity, and technology entrepreneurship connecting the US and Nepal."
+    },
+    "energy-hydropower": {
+      "name": "Energy & Hydropower",
+      "description": "Hydropower development, renewable energy, power infrastructure, and energy-related investment and project development."
+    },
+    "investment-finance": {
+      "name": "Investment & Finance",
+      "description": "Venture capital, private equity, banking, fintech, diaspora investment, fund management, and capital markets activity."
+    },
+    "innovation-rd": {
+      "name": "Innovation & R&D",
+      "description": "Research and development, deep technology, product development, strategic innovation, fundraising, mergers & acquisitions, go-to-market work, and national-interest collaboration between the US and Nepal."
+    },
+    "tourism-hospitality": {
+      "name": "Tourism & Hospitality",
+      "description": "Travel, hospitality, adventure tourism, wellness, hotels, and experience-based businesses."
+    },
+    "healthcare-life-sciences": {
+      "name": "Healthcare & Life Sciences",
+      "description": "Healthcare delivery, biotechnology, medical devices, pharmaceuticals, diagnostics, and digital health."
+    },
+    "agriculture-food-systems": {
+      "name": "Agriculture & Food Systems",
+      "description": "Agribusiness, food processing, sustainable agriculture, and value-added agricultural products."
+    },
+    "infrastructure-logistics": {
+      "name": "Infrastructure & Logistics",
+      "description": "Infrastructure development, construction, transportation, supply chain, and logistics services."
+    },
+    "education-human-capital": {
+      "name": "Education & Human Capital",
+      "description": "Educational institutions, edtech, professional training, skills development, and talent pipeline initiatives."
+    },
+    "manufacturing-industry": {
+      "name": "Manufacturing & Industry",
+      "description": "Light manufacturing, industrial production, export-oriented manufacturing, and related activities."
+    },
+    "policy-immigration-legal": {
+      "name": "Policy, Immigration & Legal",
+      "description": "Public policy, government relations, diplomacy, immigration services, legal practice, regulatory affairs, and compliance work relevant to the US–Nepal corridor. Includes immigration lawyers, consultants, and professionals helping with visas, cross-border movement, and legal frameworks."
+    },
+    "media-creative-industries": {
+      "name": "Media & Creative Industries",
+      "description": "Journalism, media platforms, content creation, branding, storytelling, and creative industries."
+    }
   }
 }

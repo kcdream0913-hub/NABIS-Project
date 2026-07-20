@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, MapPin, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -15,6 +16,7 @@ type EventRow = {
 };
 
 export default function EventsPage() {
+  const t = useTranslations("events");
   const supabase = createClient();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [rsvps, setRsvps] = useState<Set<string>>(new Set());
@@ -61,16 +63,16 @@ export default function EventsPage() {
 
   return (
     <div className="max-w-3xl">
-      <p className="eyebrow text-ink-soft">Calendar</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Events</h1>
+      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        Online and in-person gatherings across the corridor. RSVP so hosts can plan.
+        {t("subtitle")}
       </p>
 
       {loading ? (
-        <p className="mt-5 text-sm text-ink-soft">Loading…</p>
+        <p className="mt-5 text-sm text-ink-soft">{t("loading")}</p>
       ) : events.length === 0 ? (
-        <p className="mt-5 text-sm text-ink-soft">No events yet.</p>
+        <p className="mt-5 text-sm text-ink-soft">{t("empty")}</p>
       ) : (
         <div className="mt-5 space-y-3">
           {events.map((e) => {
@@ -96,10 +98,10 @@ export default function EventsPage() {
                 >
                   {going ? (
                     <span className="flex items-center gap-1">
-                      <Check size={14} /> Going
+                      <Check size={14} /> {t("going")}
                     </span>
                   ) : (
-                    "RSVP"
+                    t("rsvp")
                   )}
                 </button>
               </article>

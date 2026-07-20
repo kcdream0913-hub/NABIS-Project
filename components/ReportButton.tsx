@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Flag } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { logAction } from "@/lib/audit";
@@ -12,6 +13,7 @@ export default function ReportButton({
   targetType: "post" | "business" | "profile" | "message";
   targetId: string;
 }) {
+  const t = useTranslations("report");
   const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -44,21 +46,21 @@ export default function ReportButton({
         onClick={(e) => e.stopPropagation()}
       >
         {sent ? (
-          <p className="text-text-success">Report sent — thank you.</p>
+          <p className="text-text-success">{t("sent")}</p>
         ) : (
           <>
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="What's wrong? (optional)"
+              placeholder={t("placeholder")}
               className="w-full rounded border border-line px-2 py-1 text-xs focus:border-pine"
             />
             <div className="mt-1.5 flex justify-end gap-2">
               <button onClick={() => setOpen(false)} className="text-ink-soft hover:underline">
-                Cancel
+                {t("cancel")}
               </button>
               <button onClick={submit} className="font-medium text-rhodo hover:underline">
-                Submit report
+                {t("submit")}
               </button>
             </div>
           </>
@@ -73,8 +75,8 @@ export default function ReportButton({
         e.stopPropagation();
         setOpen(true);
       }}
-      aria-label="Report"
-      title="Report"
+      aria-label={t("report")}
+      title={t("report")}
       className="rounded p-1 text-ink-soft hover:bg-mist hover:text-rhodo"
     >
       <Flag size={13} />

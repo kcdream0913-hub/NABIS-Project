@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES } from "@/lib/countries";
-import { SECTORS } from "@/lib/sectors";
+import { useSectors } from "@/lib/useSectors";
 
 export default function NewBusinessPage() {
+  const t = useTranslations("businessNew");
+  const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("United States");
-  const [sector, setSector] = useState<string>(SECTORS[0].name);
+  const [sector, setSector] = useState<string>(sectors[0]?.slug ?? "");
   const [regNumber, setRegNumber] = useState("");
   const [bio, setBio] = useState("");
   const [isPaidProvider, setIsPaidProvider] = useState(false);
@@ -53,7 +56,7 @@ export default function NewBusinessPage() {
       .single();
 
     if (insertError || !business) {
-      setError(insertError?.message ?? "Could not register the business.");
+      setError(insertError?.message ?? t("genericError"));
       setSubmitting(false);
       return;
     }
@@ -75,27 +78,26 @@ export default function NewBusinessPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <p className="eyebrow text-ink-soft">Register</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Your business</h1>
+      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        You verify as the owner; the entity is checked against its national registry in
-        parallel — you're never blocked on paperwork.
+        {t("subtitle")}
       </p>
 
       <div className="mt-5 space-y-3 rounded-lg border border-line bg-white p-4">
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Business name</span>
+          <span className="eyebrow text-ink-soft">{t("businessName")}</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Himalaya Freight Co."
+            placeholder={t("businessNamePlaceholder")}
             className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
           />
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="eyebrow text-ink-soft">Country of registration</span>
+            <span className="eyebrow text-ink-soft">{t("countryOfRegistration")}</span>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
@@ -107,36 +109,37 @@ export default function NewBusinessPage() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="eyebrow text-ink-soft">Sector</span>
+            <span className="eyebrow text-ink-soft">{t("sector")}</span>
             <select
               value={sector}
               onChange={(e) => setSector(e.target.value)}
               className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
             >
-              {SECTORS.map((s) => (
-                <option key={s.slug}>{s.name}</option>
+              {sectors.map((s) => (
+                <option key={s.slug} value={s.slug}>{s.name}</option>
               ))}
             </select>
+            <span className="mt-1 block text-xs text-ink-soft">
+              {sectors.find((s) => s.slug === sector)?.description}
+            </span>
           </label>
         </div>
 
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Registration / tax number (optional)</span>
+          <span className="eyebrow text-ink-soft">{t("regNumber")}</span>
           <input
             value={regNumber}
             onChange={(e) => setRegNumber(e.target.value)}
-            placeholder="PAN-VAT, EIN, or company no. — leave blank to join as Listed"
+            placeholder={t("regNumberPlaceholder")}
             className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
           />
           <span className="mt-1 block text-xs text-ink-soft">
-            Not required to join. Adding it earns the green "Verified Business" badge
-            and unlocks charging for access below. Never shown to anyone — only the
-            verification outcome is displayed.
+            {t("regNumberHint")}
           </span>
         </label>
 
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Bio</span>
+          <span className="eyebrow text-ink-soft">{t("bio")}</span>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -155,12 +158,12 @@ export default function NewBusinessPage() {
               onChange={(e) => setIsPaidProvider(e.target.checked)}
               className="h-4 w-4 accent-pine disabled:opacity-40"
             />
-            Charge an upfront fee to contact this business
+            {t("chargeFee")}
           </label>
           <p className="mt-1 text-xs text-ink-soft">
             {regNumber
-              ? "Common for service providers — legal, freelancers, outsourcing, advisory. Browsing your bio stays free; paying unlocks contacting you. The platform takes a revenue-share commission on each payment."
-              : "Add a registration number above to unlock paid access — it requires Verified Business status."}
+              ? t("chargeFeeHintUnlocked")
+              : t("chargeFeeHintLocked")}
           </p>
           {isPaidProvider && (
             <div className="mt-2 flex gap-2">
@@ -170,7 +173,7 @@ export default function NewBusinessPage() {
                 step="0.01"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="Amount"
+                placeholder={t("amount")}
                 className="w-32 rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
               />
               <select
@@ -192,7 +195,7 @@ export default function NewBusinessPage() {
           disabled={submitting || !name}
           className="w-full rounded-md bg-pine px-4 py-2.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
         >
-          {submitting ? "Registering…" : "Register business"}
+          {submitting ? t("registering") : t("register")}
         </button>
       </div>
     </div>

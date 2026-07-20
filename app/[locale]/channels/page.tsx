@@ -1,7 +1,9 @@
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ChannelsPage() {
+  const t = await getTranslations("channels");
   const supabase = await createClient();
   const { data: channels } = await supabase
     .from("channels")
@@ -10,11 +12,9 @@ export default async function ChannelsPage() {
 
   return (
     <div>
-      <p className="eyebrow text-ink-soft">Messages</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Channels</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        Each channel is a directory of registered businesses in that sector.
-      </p>
+      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
+      <p className="mt-1 text-sm text-ink-soft">{t("subtitle")}</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {(channels ?? []).map((c) => (
           <Link

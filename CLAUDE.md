@@ -119,6 +119,64 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   context rail, Home feed (view-filtered), 7 community sections, members directory
   (search + filters), events + RSVP, messages (mock), composer, 6-step onboarding,
   profile/settings with invite link, locked Marketplace/Vendor, Trip Planner preview.
+- **2026-07-20 (later still) — Sector taxonomy replaced (12 refined sectors):**
+  - Replaced the 8 launch sectors with the founder's refined 12-sector list.
+    Immigration now has its own explicit sector ("Policy, Immigration & Legal")
+    rather than being buried — per founder direction, this is a key engagement
+    driver.
+  - **New slugs, not a relabel** (founder's call): technology-ai,
+    energy-hydropower, investment-finance, innovation-rd, tourism-hospitality,
+    healthcare-life-sciences, agriculture-food-systems,
+    infrastructure-logistics, education-human-capital, manufacturing-industry,
+    policy-immigration-legal, media-creative-industries.
+  - **DB migration applied** (`replace_launch_sectors_with_refined_12`, live on
+    nabis-bridgelink): old 8 channel rows deleted, new 12 inserted with name +
+    description. Verified before running: `businesses` table was empty (0
+    rows) and no `posts` referenced a channel — zero data-loss risk. Exactly
+    one `profiles` row referenced old slugs; migrated `tech-ai` →
+    `technology-ai`, dropped `entrepreneurs` (no equivalent in the new 12 —
+    flagging in case that founder profile needs a manual re-pick).
+  - **Fixed a latent bug while in here**: `businesses.sector` was storing the
+    display *name* ("Tech & AI") while `profiles.sectors` stored *slugs* —
+    two different conventions for the same concept. Both now consistently
+    store slugs; the members-directory sector filter and channel-detail join
+    both now compare slug-to-slug instead of name-string matching.
+  - Sector names + descriptions are translatable (`messages/{en,ne}.json`
+    "sectors" namespace) via a new `lib/useSectors()` hook, consumed by
+    business registration, profile editor, onboarding, and the members
+    directory filter — replacing the old static `SECTORS` export from
+    `lib/sectors.ts` (now slugs-only).
+  - Descriptions render as native `title` tooltips on the sector chips
+    (profile editor, onboarding) and as helper text under the sector `<select>`
+    on business registration (native `<option>` tooltips aren't reliable
+    cross-browser, so a description line was used there instead).
+  - **Scope note**: the Channels list/detail pages read `name`/`description`
+    directly from the `channels` DB rows (English-only, seeded by the
+    migration above) — this is DB content, same category as member bios/posts
+    that we already scoped out of translation. The *sector picker UI* (what
+    was actually asked for) is fully translatable; the channels page mirror of
+    that data is not, unless it's rebuilt to read from the same message keys.
+  - Verified with a real `next build`: 28/28 routes, both locales, green.
+- **2026-07-20 (later) — Full static-UI translation pass:**
+  - Extracted every user-facing UI string across all ~20 pages/components into
+    `messages/{en,ne}.json` (225 keys, exact parity — verified programmatically).
+  - Translated: auth (login/signup), home feed + composer, directory, events,
+    channels (list + detail), thread/messages, trip-planner, business
+    registration form, profile editor, identity verification, admin dashboard,
+    business detail + team manager + contact + remove-member, people detail,
+    onboarding (all 4 steps), EmptyState, ReportButton, GlobalSearch.
+  - Nepali strings are a usable first draft — **FLAG: needs native-speaker
+    review before launch** (esp. domain terms: "करिडोर", verification/KYC
+    wording, "प्रमाणित व्यवसाय").
+  - Scope decision (founder): static UI only. User-generated content (member
+    bios, post bodies, event descriptions — all DB rows) is deliberately left
+    as-typed; next-intl cannot translate it. A runtime content-translator is a
+    separate future feature, not attempted here.
+  - Server Components use `getTranslations` (async); Client Components use
+    `useTranslations`. Fixed one variable-shadowing bug (tab loop `t` vs
+    translation `t`) and moved two module-level string arrays
+    (onboarding GUIDELINES, business ROLE_LABEL) into components so they localize.
+  - Verified with a real `next build`: 28/28 routes, both locales, still green.
 - **2026-07-20 — View toggle confirmed + i18n foundation added:**
   - Confirmed the US/Nepal/Bridge `ViewToggle` was already live (`lib/store.tsx`,
     `lib/data.ts` VIEW_META, wired into `Topbar`) — not rebuilt, per founder direction.

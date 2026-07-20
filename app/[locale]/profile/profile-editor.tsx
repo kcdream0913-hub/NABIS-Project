@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { ShieldCheck, ShieldQuestion } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { SECTORS } from "@/lib/sectors";
+import { useSectors } from "@/lib/useSectors";
 
 type Profile = {
   id: string;
@@ -25,6 +26,8 @@ export default function ProfileEditor({
   email: string;
   profile: Profile;
 }) {
+  const t = useTranslations("profile");
+  const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
 
@@ -32,14 +35,14 @@ export default function ProfileEditor({
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [city, setCity] = useState(profile?.city ?? "");
   const [country, setCountry] = useState<"us" | "nepal">(profile?.country ?? "us");
-  const [sectors, setSectors] = useState<string[]>(profile?.sectors ?? []);
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(profile?.sectors ?? []);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const isVerified = profile?.verification_status === "verified";
 
   function toggleSector(slug: string) {
-    setSectors((prev) =>
+    setSelectedSectors((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
   }
@@ -48,7 +51,7 @@ export default function ProfileEditor({
     setSaving(true);
     await supabase
       .from("profiles")
-      .update({ name, bio, city, country, sectors })
+      .update({ name, bio, city, country, sectors: selectedSectors })
       .eq("id", userId);
     setSaving(false);
     setSaved(true);
@@ -58,8 +61,8 @@ export default function ProfileEditor({
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <p className="eyebrow text-ink-soft">Account</p>
-        <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Profile &amp; settings</h1>
+        <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+        <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-ink-soft">{email}</p>
       </div>
 
@@ -77,12 +80,12 @@ export default function ProfileEditor({
           )}
           <div className="flex-1">
             <p className="text-sm font-semibold">
-              {isVerified ? "Verified profile" : "Not yet verified"}
+              {isVerified ? t("verifiedTitle") : t("notVerifiedTitle")}
             </p>
             <p className="text-xs text-ink-soft">
               {isVerified
-                ? "You can post and message across BridgeLink."
-                : "Verify to unlock posting and messaging."}
+                ? t("verifiedBody")
+                : t("notVerifiedBody")}
             </p>
           </div>
           {!isVerified && (
@@ -90,17 +93,17 @@ export default function ProfileEditor({
               onClick={() => router.push("/profile/verify")}
               className="shrink-0 rounded-md bg-pine px-3.5 py-2 text-sm font-medium text-white hover:bg-pine-ink"
             >
-              Verify your profile
+              {t("verifyCta")}
             </button>
           )}
         </div>
       </section>
 
       <section className="rounded-lg border border-line bg-white p-4">
-        <h2 className="text-sm font-semibold">Profile</h2>
+        <h2 className="text-sm font-semibold">{t("profileHeading")}</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="eyebrow text-ink-soft">Name</span>
+            <span className="eyebrow text-ink-soft">{t("name")}</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -108,18 +111,18 @@ export default function ProfileEditor({
             />
           </label>
           <label className="block text-sm">
-            <span className="eyebrow text-ink-soft">Country</span>
+            <span className="eyebrow text-ink-soft">{t("country")}</span>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value as "us" | "nepal")}
               className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
             >
-              <option value="us">United States</option>
-              <option value="nepal">Nepal</option>
+              <option value="us">{t("unitedStates")}</option>
+              <option value="nepal">{t("nepal")}</option>
             </select>
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="eyebrow text-ink-soft">City</span>
+            <span className="eyebrow text-ink-soft">{t("city")}</span>
             <input
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -127,7 +130,7 @@ export default function ProfileEditor({
             />
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="eyebrow text-ink-soft">Bio</span>
+            <span className="eyebrow text-ink-soft">{t("bio")}</span>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -140,24 +143,25 @@ export default function ProfileEditor({
 
       {/* "What describes you" = sector/channel names, per spec §5.2 */}
       <section className="rounded-lg border border-line bg-white p-4">
-        <h2 className="text-sm font-semibold">What describes you</h2>
+        <h2 className="text-sm font-semibold">{t("describeHeading")}</h2>
         <p className="mt-1 text-xs text-ink-soft">
-          Select every channel that fits — you can belong to more than one.
+          {t("describeHint")}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {SECTORS.map((s) => {
-            const active = sectors.includes(s.slug);
+          {sectors.map((sec) => {
+            const active = selectedSectors.includes(sec.slug);
             return (
               <button
-                key={s.slug}
-                onClick={() => toggleSector(s.slug)}
+                key={sec.slug}
+                onClick={() => toggleSector(sec.slug)}
+                title={sec.description}
                 className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
                   active
                     ? "border-pine bg-pine-soft text-pine-ink"
                     : "border-line text-ink-soft hover:bg-mist"
                 }`}
               >
-                {s.name}
+                {sec.name}
               </button>
             );
           })}
@@ -169,7 +173,7 @@ export default function ProfileEditor({
         disabled={saving}
         className="rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
       >
-        {saved ? "Saved" : saving ? "Saving…" : "Save changes"}
+        {saved ? t("saved") : saving ? t("saving") : t("saveChanges")}
       </button>
     </div>
   );

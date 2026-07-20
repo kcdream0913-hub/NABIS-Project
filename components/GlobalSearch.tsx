@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 type Result = { type: "person" | "business" | "channel"; id: string; label: string; sub: string };
 
 export default function GlobalSearch() {
+  const t = useTranslations("topbar");
   const supabase = createClient();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -80,7 +82,7 @@ export default function GlobalSearch() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
-        placeholder="Search people, businesses, channels"
+        placeholder={t("searchPlaceholder")}
         className="w-full rounded-md border border-line bg-mist py-1.5 pl-9 pr-3 text-sm placeholder:text-ink-soft focus:border-pine focus:bg-white"
       />
       {open && results.length > 0 && (

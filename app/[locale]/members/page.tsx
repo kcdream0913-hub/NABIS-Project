@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { findOrCreateThread } from "@/lib/threads";
-import { SECTORS } from "@/lib/sectors";
+import { useSectors } from "@/lib/useSectors";
 
 type PersonRow = {
   id: string;
@@ -24,11 +25,13 @@ type BusinessRow = {
 };
 
 export default function DirectoryPage() {
+  const t = useTranslations("directory");
+  const sectors = useSectors();
   const supabase = createClient();
   const router = useRouter();
   const [tab, setTab] = useState<"people" | "businesses">("people");
   const [q, setQ] = useState("");
-  const [sector, setSector] = useState("All sectors");
+  const [sector, setSector] = useState("all");
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,25 +61,25 @@ export default function DirectoryPage() {
     `${m.name ?? ""} ${m.bio ?? ""} ${m.city ?? ""}`.toLowerCase().includes(q.toLowerCase())
   );
   const filteredBusinesses = businesses.filter((b) => {
-    if (sector !== "All sectors" && b.sector !== sector) return false;
+    if (sector !== "all" && b.sector !== sector) return false;
     return `${b.name} ${b.bio ?? ""}`.toLowerCase().includes(q.toLowerCase());
   });
 
   return (
     <div>
-      <p className="eyebrow text-ink-soft">Directory</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Members &amp; businesses</h1>
+      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
 
       <div className="mt-3 flex gap-1 border-b border-line">
-        {(["people", "businesses"] as const).map((t) => (
+        {(["people", "businesses"] as const).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`border-b-2 px-3 py-2 text-sm font-medium ${
-              tab === t ? "border-pine text-pine-ink" : "border-transparent text-ink-soft"
+              tab === tabKey ? "border-pine text-pine-ink" : "border-transparent text-ink-soft"
             }`}
           >
-            {t === "people" ? "People" : "Businesses"}
+            {tabKey === "people" ? t("people") : t("businesses")}
           </button>
         ))}
       </div>
@@ -85,7 +88,7 @@ export default function DirectoryPage() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, business, or city"
+          placeholder={t("searchPlaceholder")}
           className="flex-1 rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
         />
         {tab === "businesses" && (
@@ -94,16 +97,16 @@ export default function DirectoryPage() {
             onChange={(e) => setSector(e.target.value)}
             className="rounded-md border border-line bg-white px-3 py-2 text-sm"
           >
-            <option>All sectors</option>
-            {SECTORS.map((s) => (
-              <option key={s.slug}>{s.name}</option>
+            <option value="all">{t("allSectors")}</option>
+            {sectors.map((s) => (
+              <option key={s.slug} value={s.slug}>{s.name}</option>
             ))}
           </select>
         )}
       </div>
 
       {loading ? (
-        <p className="mt-6 text-sm text-ink-soft">Loading…</p>
+        <p className="mt-6 text-sm text-ink-soft">{t("loading")}</p>
       ) : tab === "people" ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPeople.map((m) => (
@@ -113,7 +116,7 @@ export default function DirectoryPage() {
                   {(m.name ?? "?").slice(0, 2).toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{m.name ?? "Member"}</p>
+                  <p className="truncate text-sm font-semibold">{m.name ?? t("member")}</p>
                   <p className="truncate text-xs text-ink-soft">{m.city}</p>
                 </div>
               </Link>
@@ -131,7 +134,7 @@ export default function DirectoryPage() {
                   }}
                   className="ml-auto rounded-md border border-line px-2.5 py-1 text-xs font-medium hover:bg-mist"
                 >
-                  Message
+                  {t("message")}
                 </button>
               </div>
             </div>

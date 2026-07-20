@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Camera, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES, documentsFor } from "@/lib/countries";
 
 export default function VerifyProfilePage() {
+  const t = useTranslations("verify");
   const router = useRouter();
   const supabase = createClient();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -44,7 +46,7 @@ export default function VerifyProfilePage() {
       setCameraOn(true);
     } catch {
       setCameraError(
-        "Couldn't access the camera. Check your browser's camera permission and try again."
+        t("cameraError")
       );
     }
   }
@@ -89,16 +91,15 @@ export default function VerifyProfilePage() {
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-bg-success text-text-success">
           <ShieldCheck size={26} />
         </span>
-        <h1 className="mt-4 text-xl font-semibold tracking-tight">Verification submitted</h1>
+        <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("submittedTitle")}</h1>
         <p className="mt-2 text-sm text-ink-soft">
-          Your document is under review. This is currently a placeholder pending the
-          Shufti Pro integration — once wired, this step completes automatically.
+          {t("submittedBody")}
         </p>
         <button
           onClick={() => router.push("/profile")}
           className="mt-6 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink"
         >
-          Back to profile
+          {t("backToProfile")}
         </button>
       </div>
     );
@@ -106,16 +107,15 @@ export default function VerifyProfilePage() {
 
   return (
     <div className="mx-auto max-w-md">
-      <p className="eyebrow text-ink-soft">Profile verification</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Verify your identity</h1>
+      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        Top-grade check, every country supported. Select your country — the right
-        documents follow automatically.
+        {t("subtitle")}
       </p>
 
       <div className="mt-5 space-y-3">
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Country of your ID</span>
+          <span className="eyebrow text-ink-soft">{t("countryOfId")}</span>
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
@@ -128,7 +128,7 @@ export default function VerifyProfilePage() {
         </label>
 
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Document</span>
+          <span className="eyebrow text-ink-soft">{t("document")}</span>
           <select
             value={docType}
             onChange={(e) => setDocType(e.target.value)}
@@ -147,7 +147,7 @@ export default function VerifyProfilePage() {
                 onClick={startCamera}
                 className="flex items-center gap-2 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink"
               >
-                <Camera size={16} /> Turn on camera
+                <Camera size={16} /> {t("turnOnCamera")}
               </button>
             </div>
           )}
@@ -160,7 +160,7 @@ export default function VerifyProfilePage() {
           />
           {captured && (
             <div className="grid h-full place-items-center text-sm text-ink-soft">
-              Document captured.
+              {t("documentCaptured")}
             </div>
           )}
         </div>
@@ -170,7 +170,7 @@ export default function VerifyProfilePage() {
             onClick={capture}
             className="w-full rounded-md bg-pine px-4 py-2.5 text-sm font-medium text-white hover:bg-pine-ink"
           >
-            Capture
+            {t("capture")}
           </button>
         )}
 
@@ -179,10 +179,10 @@ export default function VerifyProfilePage() {
           disabled={!captured || submitting}
           className="w-full rounded-md bg-fill-accent px-4 py-2.5 text-sm font-medium text-on-accent disabled:opacity-40"
         >
-          {submitting ? "Submitting…" : "Submit for verification"}
+          {submitting ? t("submitting") : t("submit")}
         </button>
         <p className="text-center text-xs text-ink-soft">
-          Document, face match, and business/role checks — no manual bypass.
+          {t("footnote")}
         </p>
       </div>
     </div>

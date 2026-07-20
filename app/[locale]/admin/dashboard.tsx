@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logAction } from "@/lib/audit";
 import { Building2, Flag, UserCheck } from "lucide-react";
@@ -30,6 +31,7 @@ type Report = {
 };
 
 export default function AdminDashboard() {
+  const t = useTranslations("admin");
   const supabase = createClient();
   const [tab, setTab] = useState<"businesses" | "people" | "reports">("businesses");
   const [businesses, setBusinesses] = useState<PendingBusiness[]>([]);
@@ -105,15 +107,15 @@ export default function AdminDashboard() {
   }
 
   const TABS = [
-    { id: "businesses" as const, label: "Business verification", icon: Building2, count: businesses.length },
-    { id: "people" as const, label: "Profile verification", icon: UserCheck, count: verifications.length },
-    { id: "reports" as const, label: "Reports", icon: Flag, count: reports.length },
+    { id: "businesses" as const, label: t("businessVerification"), icon: Building2, count: businesses.length },
+    { id: "people" as const, label: t("profileVerification"), icon: UserCheck, count: verifications.length },
+    { id: "reports" as const, label: t("reports"), icon: Flag, count: reports.length },
   ];
 
   return (
     <div>
-      <p className="eyebrow text-ink-soft">Admin</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Review queue</h1>
+      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
 
       <div className="mt-3 flex gap-1 border-b border-line">
         {TABS.map((t) => (
@@ -135,27 +137,27 @@ export default function AdminDashboard() {
       </div>
 
       {loading ? (
-        <p className="mt-5 text-sm text-ink-soft">Loading…</p>
+        <p className="mt-5 text-sm text-ink-soft">{t("loading")}</p>
       ) : (
         <div className="mt-4 space-y-3">
           {tab === "businesses" &&
             (businesses.length === 0 ? (
-              <p className="text-sm text-ink-soft">Nothing pending.</p>
+              <p className="text-sm text-ink-soft">{t("nothingPending")}</p>
             ) : (
               businesses.map((b) => (
                 <div key={b.id} className="flex items-center justify-between rounded-lg border border-line bg-white p-3">
                   <div>
                     <p className="text-sm font-semibold">{b.name}</p>
                     <p className="text-xs text-ink-soft">
-                      {b.sector} · {b.country_of_registration} · Reg #: {b.registration_number}
+                      {b.sector} · {b.country_of_registration} · {t("regNumberLabel")}: {b.registration_number}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => rejectBusiness(b.id)} className="rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-mist">
-                      Reject
+                      {t("reject")}
                     </button>
                     <button onClick={() => approveBusiness(b.id)} className="rounded-md bg-pine px-3 py-1.5 text-xs font-medium text-white hover:bg-pine-ink">
-                      Approve
+                      {t("approve")}
                     </button>
                   </div>
                 </div>
@@ -164,24 +166,24 @@ export default function AdminDashboard() {
 
           {tab === "people" &&
             (verifications.length === 0 ? (
-              <p className="text-sm text-ink-soft">Nothing pending.</p>
+              <p className="text-sm text-ink-soft">{t("nothingPending")}</p>
             ) : (
               verifications.map((v) => {
                 const person = Array.isArray(v.profiles) ? v.profiles[0] : v.profiles;
                 return (
                   <div key={v.id} className="flex items-center justify-between rounded-lg border border-line bg-white p-3">
                     <div>
-                      <p className="text-sm font-semibold">{person?.name ?? "Member"}</p>
+                      <p className="text-sm font-semibold">{person?.name ?? t("member")}</p>
                       <p className="text-xs text-ink-soft">
                         {v.document_type} · {v.document_country}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => rejectPerson(v)} className="rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-mist">
-                        Reject
+                        {t("reject")}
                       </button>
                       <button onClick={() => approvePerson(v)} className="rounded-md bg-pine px-3 py-1.5 text-xs font-medium text-white hover:bg-pine-ink">
-                        Approve
+                        {t("approve")}
                       </button>
                     </div>
                   </div>
@@ -191,7 +193,7 @@ export default function AdminDashboard() {
 
           {tab === "reports" &&
             (reports.length === 0 ? (
-              <p className="text-sm text-ink-soft">No open reports.</p>
+              <p className="text-sm text-ink-soft">{t("noOpenReports")}</p>
             ) : (
               reports.map((r) => (
                 <div key={r.id} className="flex items-center justify-between rounded-lg border border-line bg-white p-3">
@@ -203,10 +205,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => dismissReport(r.id)} className="rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-mist">
-                      Dismiss
+                      {t("dismiss")}
                     </button>
                     <button onClick={() => actionReport(r.id)} className="rounded-md bg-rhodo px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">
-                      Take action
+                      {t("takeAction")}
                     </button>
                   </div>
                 </div>

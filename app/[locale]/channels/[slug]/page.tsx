@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { Building2 } from "lucide-react";
@@ -10,6 +11,7 @@ export default async function ChannelPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const t = await getTranslations("channels");
   const supabase = await createClient();
 
   const { data: channel } = await supabase
@@ -27,7 +29,7 @@ export default async function ChannelPage({
 
   return (
     <div>
-      <p className="eyebrow text-ink-soft">Channel</p>
+      <p className="eyebrow text-ink-soft">{t("channelEyebrow")}</p>
       <h1 className="mt-0.5 text-xl font-semibold tracking-tight"># {channel.name}</h1>
       <p className="mt-1 text-sm text-ink-soft">{channel.description}</p>
 
@@ -35,10 +37,10 @@ export default async function ChannelPage({
         {!businesses || businesses.length === 0 ? (
           <EmptyState
             icon={Building2}
-            title="No registered businesses yet"
-            body="Businesses in this sector will appear here once verified."
+            title={t("emptyTitle")}
+            body={t("detailSubtitle")}
             actionHref="/business/new"
-            actionLabel="Register a business"
+            actionLabel={t("registerCta")}
           />
         ) : (
           businesses.map((b) => (
@@ -55,11 +57,11 @@ export default async function ChannelPage({
                   <p className="text-sm font-semibold">{b.name}</p>
                   {b.verification_status === "verified" ? (
                     <span className="rounded bg-bg-success px-1.5 py-0.5 text-[10px] font-semibold text-text-success">
-                      Verified Business
+                      {t("verifiedBusiness")}
                     </span>
                   ) : (
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-soft">
-                      Listed
+                      {t("listed")}
                     </span>
                   )}
                   {b.is_paid_provider && (

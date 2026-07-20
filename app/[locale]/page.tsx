@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
@@ -20,6 +21,7 @@ type Channel = { id: string; slug: string; name: string; description: string | n
 type Thread = { id: string; otherName: string };
 
 export default function HomePage() {
+  const t = useTranslations("home");
   const supabase = createClient();
   const [mode, setMode] = useState<"feed" | "messages">("feed");
   const [posts, setPosts] = useState<Post[]>([]);
@@ -102,7 +104,7 @@ export default function HomePage() {
             mode === "feed" ? "bg-pine-soft text-pine-ink" : "text-ink-soft"
           }`}
         >
-          <Compass size={15} /> Feed
+          <Compass size={15} /> {t("feed")}
         </button>
         <button
           onClick={() => setMode("messages")}
@@ -110,7 +112,7 @@ export default function HomePage() {
             mode === "messages" ? "bg-pine-soft text-pine-ink" : "text-ink-soft"
           }`}
         >
-          <MessagesSquare size={15} /> Messages
+          <MessagesSquare size={15} /> {t("messages")}
         </button>
       </div>
 
@@ -118,13 +120,13 @@ export default function HomePage() {
         {mode === "feed" && <Composer isVerified={isVerified} onPosted={loadFeed} />}
 
         {loading ? (
-          <p className="text-sm text-ink-soft">Loading…</p>
+          <p className="text-sm text-ink-soft">{t("loading")}</p>
         ) : mode === "feed" ? (
           posts.length === 0 ? (
             <EmptyState
               icon={Compass}
-              title="Quiet in the feed so far"
-              body="Verified members and businesses can post opportunities and updates here."
+              title={t("feedEmptyTitle")}
+              body={t("feedEmptyBody")}
             />
           ) : (
             posts.map((p) => {
@@ -132,7 +134,7 @@ export default function HomePage() {
               return (
                 <article key={p.id} className="rounded-lg border border-line bg-white p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold">{author?.name ?? "Member"}</p>
+                    <p className="text-sm font-semibold">{author?.name ?? t("member")}</p>
                     <ReportButton targetType="post" targetId={p.id} />
                   </div>
                   <p className="mt-1 text-sm leading-relaxed">{p.body}</p>
@@ -143,14 +145,14 @@ export default function HomePage() {
         ) : channels.length === 0 && threads.length === 0 ? (
           <EmptyState
             icon={MessagesSquare}
-            title="No channels yet"
-            body="Sector channels appear here once seeded."
+            title={t("channelsEmptyTitle")}
+            body={t("channelsEmptyBody")}
           />
         ) : (
           <div className="space-y-4">
             {threads.length > 0 && (
               <div>
-                <p className="eyebrow mb-2 text-ink-soft">Direct messages</p>
+                <p className="eyebrow mb-2 text-ink-soft">{t("directMessages")}</p>
                 <div className="space-y-2">
                   {threads.map((t) => (
                     <Link
@@ -168,7 +170,7 @@ export default function HomePage() {
               </div>
             )}
             <div>
-              <p className="eyebrow mb-2 text-ink-soft">Channels</p>
+              <p className="eyebrow mb-2 text-ink-soft">{t("channels")}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {channels.map((c) => (
                   <Link

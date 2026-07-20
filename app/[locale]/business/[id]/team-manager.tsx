@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { UserMinus, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 type Role = "professional" | "assistant" | "employee";
 
 export default function TeamManager({ businessId }: { businessId: string }) {
+  const t = useTranslations("business");
   const supabase = createClient();
   const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
@@ -43,7 +45,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
     });
 
     if (lookupError || !foundId) {
-      setError("No BridgeLink member found with that email.");
+      setError(t("noMemberFound"));
       setBusy(false);
       return;
     }
@@ -67,7 +69,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
     if (insertError) {
       setError(
         insertError.message.includes("duplicate")
-          ? "That person is already on the team."
+          ? t("alreadyOnTeam")
           : insertError.message
       );
     } else {
@@ -81,16 +83,15 @@ export default function TeamManager({ businessId }: { businessId: string }) {
 
   return (
     <div className="mt-3 rounded-lg border border-dashed border-line bg-mist p-3">
-      <p className="eyebrow text-ink-soft">Add a team member (owner only)</p>
+      <p className="eyebrow text-ink-soft">{t("addMemberTitle")}</p>
       <p className="mt-1 text-xs text-ink-soft">
-        They're added as verified under your responsibility — no separate ID check.
-        You're accountable for who you add.
+        {t("addMemberHint")}
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Their BridgeLink email"
+          placeholder={t("memberEmailPlaceholder")}
           className="min-w-[180px] flex-1 rounded-md border border-line px-3 py-1.5 text-sm focus:border-pine"
         />
         <select
@@ -98,9 +99,9 @@ export default function TeamManager({ businessId }: { businessId: string }) {
           onChange={(e) => setRole(e.target.value as Role)}
           className="rounded-md border border-line bg-white px-2 py-1.5 text-sm"
         >
-          <option value="professional">Professional</option>
-          <option value="assistant">Assistant</option>
-          <option value="employee">Employee</option>
+          <option value="professional">{t("roleProfessional")}</option>
+          <option value="assistant">{t("roleAssistant")}</option>
+          <option value="employee">{t("roleEmployee")}</option>
         </select>
         <label className="flex items-center gap-1.5 text-xs text-ink-soft">
           <input
@@ -109,14 +110,14 @@ export default function TeamManager({ businessId }: { businessId: string }) {
             onChange={(e) => setCanPost(e.target.checked)}
             className="h-3.5 w-3.5 accent-pine"
           />
-          Can post as this business
+          {t("canPostAsBusiness")}
         </label>
         <button
           onClick={addMember}
           disabled={!email.trim() || busy}
           className="flex items-center gap-1 rounded-md bg-pine px-3 py-1.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
         >
-          <UserPlus size={14} /> Add
+          <UserPlus size={14} /> {t("add")}
         </button>
       </div>
       {error && <p className="mt-1.5 text-xs text-rhodo">{error}</p>}

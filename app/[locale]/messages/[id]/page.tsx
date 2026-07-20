@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Send } from "lucide-react";
@@ -14,11 +15,12 @@ type Message = {
 };
 
 export default function ThreadPage() {
+  const t = useTranslations("thread");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const supabase = createClient();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [otherName, setOtherName] = useState("Conversation");
+  const [otherName, setOtherName] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
@@ -86,12 +88,12 @@ export default function ThreadPage() {
     await supabase.from("messages").insert({ thread_id: id, sender_id: userId, body: text });
   }
 
-  if (loading) return <p className="text-sm text-ink-soft">Loading…</p>;
+  if (loading) return <p className="text-sm text-ink-soft">{t("loading")}</p>;
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-2xl flex-col rounded-lg border border-line bg-white">
       <header className="border-b border-line px-4 py-3">
-        <p className="text-sm font-semibold">{otherName}</p>
+        <p className="text-sm font-semibold">{otherName || t("conversation")}</p>
       </header>
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m) => (
@@ -114,12 +116,12 @@ export default function ThreadPage() {
           onKeyDown={(e) => {
             if (e.key === "Enter") send();
           }}
-          placeholder={`Message ${otherName.split(" ")[0]}`}
+          placeholder={t("messagePrefix", { name: (otherName || t("member")).split(" ")[0] })}
           className="flex-1 rounded-md border border-line bg-mist px-3 py-2 text-sm placeholder:text-ink-soft focus:border-pine focus:bg-white"
         />
         <button
           onClick={send}
-          aria-label="Send message"
+          aria-label={t("sendMessage")}
           className="grid h-9 w-9 place-items-center rounded-md bg-pine text-white hover:bg-pine-ink"
         >
           <Send size={15} />

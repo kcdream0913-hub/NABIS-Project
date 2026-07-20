@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { findOrCreateThread } from "@/lib/threads";
@@ -16,6 +17,7 @@ export default function ContactBusiness({
   priceAmount: number | null;
   priceCurrency: string;
 }) {
+  const t = useTranslations("business");
   const supabase = createClient();
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -56,10 +58,10 @@ export default function ContactBusiness({
     return (
       <button
         disabled
-        title="Payment processing isn't wired up yet — coming with the Stripe integration (spec §5.13)"
+        title={t("payTooltip")}
         className="w-full cursor-not-allowed rounded-md bg-gold px-4 py-2 text-sm font-medium text-white opacity-60"
       >
-        Pay {priceCurrency} {priceAmount} to contact
+        {t("payToContact", { currency: priceCurrency, amount: priceAmount ?? "" })}
       </button>
     );
   }
@@ -69,7 +71,7 @@ export default function ContactBusiness({
       onClick={message}
       className="w-full rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink"
     >
-      Message
+      {t("message")}
     </button>
   );
 }

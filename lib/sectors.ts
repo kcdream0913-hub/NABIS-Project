@@ -1,19 +1,21 @@
-// Single source of truth for sector/channel names. "What describes you" on the
-// profile and the channel list in Messages both read from this — so they can
-// never drift apart. Matches the slugs seeded in supabase/schema.sql.
-export const SECTORS = [
-  { slug: "investment-policy", name: "Investment & Policy" },
-  { slug: "logistics-supply-chain", name: "Logistics & Supply Chain" },
-  { slug: "tourism-hospitality", name: "Tourism & Hospitality" },
-  { slug: "tech-ai", name: "Tech & AI" },
-  { slug: "immigration-legal", name: "Immigration & Legal" },
-  { slug: "media-journalism", name: "Media & Journalism" },
-  { slug: "entrepreneurs", name: "Entrepreneurs" },
-  { slug: "freelancers-outsourcing", name: "Freelancers / Outsourcing" },
+// Single source of truth for sector slugs. Names and descriptions live in
+// messages/{locale}.json under the "sectors" namespace so they translate —
+// use the useSectors() hook below, not this array directly, to get display
+// text. Matches the 12 channels seeded in Supabase (migration:
+// replace_launch_sectors_with_refined_12).
+export const SECTOR_SLUGS = [
+  "technology-ai",
+  "energy-hydropower",
+  "investment-finance",
+  "innovation-rd",
+  "tourism-hospitality",
+  "healthcare-life-sciences",
+  "agriculture-food-systems",
+  "infrastructure-logistics",
+  "education-human-capital",
+  "manufacturing-industry",
+  "policy-immigration-legal",
+  "media-creative-industries",
 ] as const;
 
-export type SectorSlug = (typeof SECTORS)[number]["slug"];
-
-export function sectorName(slug: string): string {
-  return SECTORS.find((s) => s.slug === slug)?.name ?? slug;
-}
+export type SectorSlug = (typeof SECTOR_SLUGS)[number];

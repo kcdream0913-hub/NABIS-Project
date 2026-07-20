@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState("");
@@ -41,7 +43,7 @@ export default function LoginPage() {
         <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-pine text-sm font-bold text-white">
           B
         </span>
-        <h1 className="mt-4 text-xl font-semibold tracking-tight">Welcome back</h1>
+        <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("welcomeBack")}</h1>
       </div>
 
       <div className="space-y-2">
@@ -49,23 +51,23 @@ export default function LoginPage() {
           onClick={() => handleOAuth("google")}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-2.5 text-sm font-medium hover:bg-mist"
         >
-          Continue with Google
+          {t("continueGoogle")}
         </button>
         <button
           onClick={() => handleOAuth("apple")}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-2.5 text-sm font-medium hover:bg-mist"
         >
-          Continue with Apple
+          {t("continueApple")}
         </button>
       </div>
 
       <div className="my-5 flex items-center gap-3 text-xs text-ink-soft">
-        <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+        <span className="h-px flex-1 bg-line" /> {t("or")} <span className="h-px flex-1 bg-line" />
       </div>
 
       <form onSubmit={handleLogin} className="space-y-3">
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Email or phone</span>
+          <span className="eyebrow text-ink-soft">{t("emailOrPhone")}</span>
           <input
             type="email"
             required
@@ -75,7 +77,7 @@ export default function LoginPage() {
           />
         </label>
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">Password</span>
+          <span className="eyebrow text-ink-soft">{t("password")}</span>
           <input
             type="password"
             required
@@ -90,14 +92,14 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full rounded-md bg-pine px-4 py-2.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
         >
-          {loading ? "Logging in…" : "Log in"}
+          {loading ? t("loggingIn") : t("logIn")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-ink-soft">
-        New here?{" "}
+        {t("newHere")}{" "}
         <Link href="/signup" className="font-medium text-pine hover:text-pine-ink">
-          Create an account
+          {t("createAccount")}
         </Link>
       </p>
     </div>
