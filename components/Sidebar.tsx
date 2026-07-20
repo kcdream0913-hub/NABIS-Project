@@ -1,32 +1,49 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  Home, Users2, ContactRound, CalendarDays, MessageSquare, PenSquare,
-  Map, Store, Building2, Settings, Lock,
+  Home, ContactRound, Hash, CalendarDays, Building2, Settings, LogOut, Map,
 } from "lucide-react";
-import { CURRENT_USER, initials } from "@/lib/data";
 import { useApp } from "@/lib/store";
+import { createClient } from "@/lib/supabase/client";
 
 const MAIN = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/community", label: "Community", icon: Users2 },
-  { href: "/members", label: "Members", icon: ContactRound },
+  { href: "/", label: "Feed / Messages", icon: Home },
+  { href: "/members", label: "Directory", icon: ContactRound },
+  { href: "/channels", label: "Channels", icon: Hash },
   { href: "/events", label: "Events", icon: CalendarDays },
-  { href: "/messages", label: "Messages", icon: MessageSquare },
-  { href: "/create", label: "Create post", icon: PenSquare },
+  { href: "/business/new", label: "Register business", icon: Building2 },
 ];
 
-const LATER = [
-  { href: "/trip-planner", label: "Trip Planner", icon: Map, tag: "Preview" },
-  { href: "/vendor", label: "Vendor Dashboard", icon: Building2, tag: "Phase 3" },
-  { href: "/marketplace", label: "Marketplace", icon: Store, tag: "Phase 3" },
-];
+const LATER = [{ href: "/trip-planner", label: "Trip Planner", icon: Map, tag: "Phase 2" }];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { setSidebarOpen } = useApp();
+  const supabase = createClient();
+  const [name, setName] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+      setName(data?.name ?? user.email ?? "You");
+    }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   const item = (href: string, label: string, Icon: typeof Home, tag?: string) => {
     const active = pathname === href;
@@ -42,9 +59,7 @@ export default function Sidebar() {
         <Icon size={17} strokeWidth={2} className={active ? "text-pine" : "text-ink-soft group-hover:text-ink"} />
         <span className="flex-1">{label}</span>
         {tag ? (
-          <span className="flex items-center gap-1 rounded bg-gold-soft px-1.5 py-0.5 text-[10px] font-semibold text-gold">
-            {tag === "Preview" ? null : <Lock size={9} />} {tag}
-          </span>
+          <span className="rounded bg-gold-soft px-1.5 py-0.5 text-[10px] font-semibold text-gold">{tag}</span>
         ) : null}
       </Link>
     );
@@ -74,14 +89,20 @@ export default function Sidebar() {
           className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-mist"
         >
           <span className="grid h-9 w-9 place-items-center rounded-full bg-pine-soft text-xs font-bold text-pine">
-            {initials(CURRENT_USER.name)}
+            {(name ?? "?").slice(0, 2).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold">{CURRENT_USER.name}</span>
-            <span className="block truncate text-xs text-ink-soft">{CURRENT_USER.role} · Founder</span>
+            <span className="block truncate text-sm font-semibold">{name ?? "Loading…"}</span>
+            <span className="block truncate text-xs text-ink-soft">View profile</span>
           </span>
           <Settings size={16} className="text-ink-soft" />
         </Link>
+        <button
+          onClick={signOut}
+          className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-mist"
+        >
+          <LogOut size={16} /> Sign out
+        </button>
       </div>
     </div>
   );

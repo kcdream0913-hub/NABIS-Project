@@ -2,6 +2,22 @@
 
 You are the primary AI developer for BridgeLink. Read fully before acting.
 
+## ⭐ STATUS (2026-07-20) — real app, not a mockup
+
+Auth (email/password + Google/Apple SSO), profile + real "Verify your profile" flow
+(country-first, camera capture, writes to `verification_records`), business
+registration (KYB fields + paid-access pricing), channels-as-business-directories,
+business team display, global directory (people + businesses, search/filter), events
++ real RSVP, and the Feed/Messages toggle on the main screen are all built and wired
+to the live Supabase project — `npm run build` passes clean, 14 real routes.
+Security advisor is clean (only the intentional audit_logs deny-by-default remains).
+
+**Not yet built:** onboarding flow (removed, needs a rewrite for the new model),
+messaging DMs and channel posting UI, admin review/reports queue, Shufti Pro
+integration (verification currently writes a `pending_integration` placeholder
+record — the interface is already correct so wiring the real provider is a drop-in),
+Stripe/payment processing for paid access, audit logging on writes.
+
 ## ⭐ BUILD HANDOFF — START HERE
 - **Authoritative spec:** `docs/SPECIFICATION.md` (v1). It supersedes all other docs for *what to build*; its decision log (D-001…D-014) captures every product decision. `docs/PHASE0_FOUNDATION.md` is supporting narrative; `SPEC_v3.md` / `TASK_BREAKDOWN.md` are historical only. Also read `BUILD.md`.
 - **Backend is already provisioned (Supabase — LIVE):**
