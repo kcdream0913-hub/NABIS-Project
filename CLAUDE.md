@@ -116,9 +116,13 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
 - **Phase:** 1 (Atomic Network)
 - **Done:** Full dashboard app built and verified (`next build` passes): shell
   (sidebar/topbar/mobile drawer), color-coded US/Nepal/Bridge view system with
-  context rail, Home feed (view-filtered), 7 community sections, members directory
-  (search + filters), events + RSVP, messages (mock), composer, 6-step onboarding,
-  profile/settings with invite link, locked Marketplace/Vendor, Trip Planner preview.
+  context rail, Home feed (view-filtered), 7 community sections, members
+  directory (search + filters), events + RSVP, real-time messages (Supabase
+  Realtime), composer, 6-step onboarding, profile/settings, i18n (en/ne, static
+  UI), 12-sector taxonomy. Locked: Marketplace/Vendor, Trip Planner (preview
+  only). Auth, admin review queue, and reporting are live against Supabase —
+  **not mocked** (this line was stale until 2026-07-20; correcting it here so
+  the next session doesn't re-learn that the hard way).
 - **2026-07-20 (later still) — Sector taxonomy replaced (12 refined sectors):**
   - Replaced the 8 launch sectors with the founder's refined 12-sector list.
     Immigration now has its own explicit sector ("Policy, Immigration & Legal")
