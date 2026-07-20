@@ -127,7 +127,38 @@
     "interests": "Interests",
     "postHintPrefix": "Planning a trip now? Post it in",
     "travelPlans": "Travel Plans",
-    "postHintSuffix": "— members are already coordinating around each other's dates."
+    "postHintSuffix": "— members are already coordinating around each other's dates.",
+    "myItineraries": "My itineraries",
+    "titleLabel": "Itinerary name",
+    "titlePlaceholder": "e.g. Autumn Nepal trip",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "currency": "Currency",
+    "budgetBreakdown": "Budget breakdown",
+    "categoryStay": "Accommodation",
+    "categoryActivity": "Activities",
+    "categoryTransport": "Transport",
+    "categoryFood": "Food",
+    "categoryOther": "Buffer / misc",
+    "perDay": "Per day",
+    "perPerson": "Per person",
+    "recommendationsTitle": "Suggested starting points",
+    "recommendationsHint": "Curated examples, not live vendor listings — ask in the directory for current operators.",
+    "addToItinerary": "Add",
+    "added": "Added",
+    "stagedTitle": "Building your itinerary",
+    "stagedEmpty": "Add suggestions above, or they'll show up here once you do.",
+    "removeItem": "Remove",
+    "saveItinerary": "Save itinerary",
+    "savingItinerary": "Saving…",
+    "titleRequired": "Give your itinerary a name before saving.",
+    "noItinerariesYet": "No saved itineraries yet.",
+    "itemsCount": "{count} items",
+    "deleteItinerary": "Delete",
+    "confirmDelete": "Delete this itinerary? This can't be undone.",
+    "totalEstimated": "Total estimated cost",
+    "bookingNotice": "Booking and payments aren't available yet — save your plan and coordinate directly with members in the meantime.",
+    "loading": "Loading…"
   },
   "businessNew": {
     "eyebrow": "Register",
@@ -315,5 +346,15 @@
       "name": "Media & Creative Industries",
       "description": "Journalism, media platforms, content creation, branding, storytelling, and creative industries."
     }
+  },
+  "interests": {
+    "trekking-outdoors": "Trekking & Outdoors",
+    "culture-heritage": "Culture & Heritage",
+    "food-culinary": "Food & Culinary",
+    "wildlife-nature": "Wildlife & Nature",
+    "wellness-retreat": "Wellness & Retreat",
+    "business-networking": "Business & Networking",
+    "shopping-crafts": "Shopping & Crafts",
+    "festivals-events": "Festivals & Events"
   }
 }

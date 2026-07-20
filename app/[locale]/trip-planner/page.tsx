@@ -1,31 +1,483 @@
-import { getTranslations } from "next-intl/server";
-import { Map } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+"use client";
 
-export default async function TripPlannerPage() {
-  const t = await getTranslations("tripPlanner");
+import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { Map, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useApp } from "@/lib/store";
+import { useInterests } from "@/lib/useInterests";
+import type { InterestSlug } from "@/lib/interests";
+import {
+  recommendationsFor,
+  type RecommendationCategory,
+  type RecommendationTemplate,
+} from "@/lib/tripPlannerData";
+
+type StagedItem = {
+  key: string;
+  title: string;
+  category: RecommendationCategory;
+  estimated_cost: number;
+  notes: string;
+};
+
+type SavedItinerary = {
+  id: string;
+  title: string;
+  start_date: string | null;
+  end_date: string | null;
+  group_size: number | null;
+  budget_amount: number | null;
+  budget_currency: string;
+  created_at: string;
+};
+
+type SavedItem = {
+  id: string;
+  title: string;
+  category: string | null;
+  estimated_cost: number | null;
+  currency: string;
+  notes: string | null;
+  day: number;
+};
+
+const BUDGET_SPLIT: Record<RecommendationCategory, number> = {
+  stay: 0.25,
+  activity: 0.25,
+  transport: 0.2,
+  food: 0.2,
+  other: 0.1,
+};
+
+export default function TripPlannerPage() {
+  const t = useTranslations("tripPlanner");
+  const supabase = createClient();
+  const { view } = useApp();
+  const interests = useInterests();
+
+  const [title, setTitle] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [groupSize, setGroupSize] = useState(2);
+  const [budgetAmount, setBudgetAmount] = useState(1000);
+  const [budgetCurrency, setBudgetCurrency] = useState<"USD" | "NPR">("USD");
+  const [selectedInterests, setSelectedInterests] = useState<InterestSlug[]>([]);
+  const [staged, setStaged] = useState<StagedItem[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [savedItineraries, setSavedItineraries] = useState<SavedItinerary[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Record<string, SavedItem[]>>({});
+
+  const recommendations = useMemo(
+    () => recommendationsFor(view, selectedInterests),
+    [view, selectedInterests]
+  );
+
+  const budgetBreakdown = useMemo(() => {
+    return (Object.keys(BUDGET_SPLIT) as RecommendationCategory[]).map((cat) => ({
+      category: cat,
+      amount: Math.round(budgetAmount * BUDGET_SPLIT[cat]),
+    }));
+  }, [budgetAmount]);
+
+  async function loadSavedItineraries() {
+    setLoadingSaved(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setLoadingSaved(false);
+      return;
+    }
+    const { data } = await supabase
+      .from("itineraries")
+      .select("id, title, start_date, end_date, group_size, budget_amount, budget_currency, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setSavedItineraries(data ?? []);
+    setLoadingSaved(false);
+  }
+
+  useEffect(() => {
+    loadSavedItineraries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function toggleInterest(slug: InterestSlug) {
+    setSelectedInterests((prev) =>
+      prev.includes(slug) ? prev.filter((i) => i !== slug) : [...prev, slug]
+    );
+  }
+
+  function addRecommendation(rec: RecommendationTemplate) {
+    if (staged.some((s) => s.key === rec.id)) return;
+    setStaged((prev) => [
+      ...prev,
+      {
+        key: rec.id,
+        title: rec.title,
+        category: rec.category,
+        estimated_cost: rec.estimatedCostUSD,
+        notes: rec.note,
+      },
+    ]);
+  }
+
+  function removeStaged(key: string) {
+    setStaged((prev) => prev.filter((s) => s.key !== key));
+  }
+
+  async function saveItinerary() {
+    if (!title.trim()) {
+      setError(t("titleRequired"));
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+
+    const { data: itinerary, error: insertError } = await supabase
+      .from("itineraries")
+      .insert({
+        user_id: user.id,
+        title: title.trim(),
+        view,
+        start_date: startDate || null,
+        end_date: endDate || null,
+        group_size: groupSize,
+        budget_amount: budgetAmount,
+        budget_currency: budgetCurrency,
+        interests: selectedInterests,
+      })
+      .select()
+      .single();
+
+    if (insertError || !itinerary) {
+      setError(insertError?.message ?? "Could not save the itinerary.");
+      setSaving(false);
+      return;
+    }
+
+    if (staged.length > 0) {
+      await supabase.from("itinerary_items").insert(
+        staged.map((s, idx) => ({
+          itinerary_id: itinerary.id,
+          day: 1,
+          title: s.title,
+          category: s.category,
+          estimated_cost: s.estimated_cost,
+          currency: "USD",
+          notes: s.notes,
+          sort_order: idx,
+        }))
+      );
+    }
+
+    setStaged([]);
+    setTitle("");
+    setSaving(false);
+    await loadSavedItineraries();
+  }
+
+  async function toggleExpand(id: string) {
+    if (expanded === id) {
+      setExpanded(null);
+      return;
+    }
+    setExpanded(id);
+    if (!expandedItems[id]) {
+      const { data } = await supabase
+        .from("itinerary_items")
+        .select("id, title, category, estimated_cost, currency, notes, day")
+        .eq("itinerary_id", id)
+        .order("day")
+        .order("sort_order");
+      setExpandedItems((prev) => ({ ...prev, [id]: data ?? [] }));
+    }
+  }
+
+  async function deleteItinerary(id: string) {
+    if (!window.confirm(t("confirmDelete"))) return;
+    await supabase.from("itineraries").delete().eq("id", id);
+    setSavedItineraries((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  const categoryLabel = (cat: string) =>
+    ({
+      stay: t("categoryStay"),
+      activity: t("categoryActivity"),
+      transport: t("categoryTransport"),
+      food: t("categoryFood"),
+      other: t("categoryOther"),
+    })[cat] ?? cat;
+
   return (
-    <div className="mx-auto max-w-xl">
-      <div className="rounded-lg border border-line bg-white p-8">
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-pine-soft text-pine"><Map size={20} /></span>
-        <p className="eyebrow mt-4 text-pine">{t("phaseEyebrow")}</p>
-        <h1 className="mt-1 text-xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">{t("body")}</p>
-        <div className="mt-5 space-y-2 rounded-md border border-dashed border-line bg-mist p-4">
-          <p className="eyebrow text-ink-soft">{t("previewEyebrow")}</p>
-          <div className="grid grid-cols-2 gap-2 opacity-60">
-            <input disabled placeholder={t("dates")} className="rounded-md border border-line bg-white px-3 py-2 text-sm" />
-            <input disabled placeholder={t("budget")} className="rounded-md border border-line bg-white px-3 py-2 text-sm" />
-            <input disabled placeholder={t("groupSize")} className="rounded-md border border-line bg-white px-3 py-2 text-sm" />
-            <input disabled placeholder={t("interests")} className="rounded-md border border-line bg-white px-3 py-2 text-sm" />
+    <div className="mx-auto max-w-3xl space-y-5">
+      <div className="flex items-start gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-pine-soft text-pine">
+          <Map size={20} />
+        </span>
+        <div>
+          <p className="eyebrow text-pine">{t("phaseEyebrow")}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
+        </div>
+      </div>
+
+      <p className="rounded-md border border-dashed border-line bg-mist p-3 text-sm text-ink-soft">
+        {t("bookingNotice")}
+      </p>
+
+      {/* Inputs */}
+      <div className="rounded-lg border border-line bg-white p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm sm:col-span-2">
+            <span className="eyebrow text-ink-soft">{t("titleLabel")}</span>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t("titlePlaceholder")}
+              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="eyebrow text-ink-soft">{t("startDate")}</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="eyebrow text-ink-soft">{t("endDate")}</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="eyebrow text-ink-soft">{t("groupSize")}</span>
+            <input
+              type="number"
+              min={1}
+              value={groupSize}
+              onChange={(e) => setGroupSize(Math.max(1, Number(e.target.value)))}
+              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+            />
+          </label>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <label className="block text-sm">
+              <span className="eyebrow text-ink-soft">{t("budget")}</span>
+              <input
+                type="number"
+                min={0}
+                value={budgetAmount}
+                onChange={(e) => setBudgetAmount(Math.max(0, Number(e.target.value)))}
+                className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="eyebrow text-ink-soft">{t("currency")}</span>
+              <select
+                value={budgetCurrency}
+                onChange={(e) => setBudgetCurrency(e.target.value as "USD" | "NPR")}
+                className="mt-1 rounded-md border border-line bg-white px-2 py-2 text-sm"
+              >
+                <option>USD</option>
+                <option>NPR</option>
+              </select>
+            </label>
           </div>
         </div>
-        <p className="mt-4 text-sm text-ink-soft">
-          {t("postHintPrefix")}{" "}
-          <Link href="/channels" className="font-medium text-pine hover:text-pine-ink">{t("travelPlans")}</Link>{" "}
-          {t("postHintSuffix")}
-        </p>
+
+        <div className="mt-3">
+          <span className="eyebrow text-ink-soft">{t("interests")}</span>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {interests.map((i) => {
+              const active = selectedInterests.includes(i.slug);
+              return (
+                <button
+                  key={i.slug}
+                  onClick={() => toggleInterest(i.slug)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
+                    active ? "border-pine bg-pine-soft text-pine-ink" : "border-line text-ink-soft hover:bg-mist"
+                  }`}
+                >
+                  {i.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
+      {/* Budget breakdown */}
+      <div className="rounded-lg border border-line bg-white p-4">
+        <h2 className="text-sm font-semibold">{t("budgetBreakdown")}</h2>
+        <div className="mt-3 space-y-2">
+          {budgetBreakdown.map((b) => (
+            <div key={b.category} className="flex items-center justify-between text-sm">
+              <span className="text-ink-soft">{categoryLabel(b.category)}</span>
+              <span className="font-medium">
+                {budgetCurrency} {b.amount.toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-line pt-2 text-xs text-ink-soft">
+          <span>
+            {t("perDay")}: {budgetCurrency}{" "}
+            {startDate && endDate
+              ? Math.round(
+                  budgetAmount /
+                    Math.max(1, (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000)
+                ).toLocaleString()
+              : budgetAmount.toLocaleString()}
+          </span>
+          <span>
+            {t("perPerson")}: {budgetCurrency} {Math.round(budgetAmount / groupSize).toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      {/* Recommendations */}
+      <div className="rounded-lg border border-line bg-white p-4">
+        <h2 className="text-sm font-semibold">{t("recommendationsTitle")}</h2>
+        <p className="mt-0.5 text-xs text-ink-soft">{t("recommendationsHint")}</p>
+        <div className="mt-3 space-y-2">
+          {recommendations.map((r) => {
+            const isAdded = staged.some((s) => s.key === r.id);
+            return (
+              <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border border-line p-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{r.title}</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    {categoryLabel(r.category)} · ~USD {r.estimatedCostUSD}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-soft">{r.note}</p>
+                </div>
+                <button
+                  onClick={() => addRecommendation(r)}
+                  disabled={isAdded}
+                  className="flex shrink-0 items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium hover:bg-mist disabled:opacity-40"
+                >
+                  {isAdded ? t("added") : <><Plus size={12} /> {t("addToItinerary")}</>}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Staged itinerary */}
+      <div className="rounded-lg border border-line bg-white p-4">
+        <h2 className="text-sm font-semibold">{t("stagedTitle")}</h2>
+        {staged.length === 0 ? (
+          <p className="mt-2 text-sm text-ink-soft">{t("stagedEmpty")}</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {staged.map((s) => (
+              <div key={s.key} className="flex items-center justify-between rounded-md bg-mist px-3 py-2 text-sm">
+                <span>{s.title}</span>
+                <button onClick={() => removeStaged(s.key)} className="text-ink-soft hover:text-rhodo">
+                  {t("removeItem")}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {error && <p className="mt-2 text-sm text-rhodo">{error}</p>}
+        <button
+          onClick={saveItinerary}
+          disabled={saving}
+          className="mt-3 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
+        >
+          {saving ? t("savingItinerary") : t("saveItinerary")}
+        </button>
+      </div>
+
+      {/* Saved itineraries */}
+      <div>
+        <h2 className="mb-2 text-sm font-semibold">{t("myItineraries")}</h2>
+        {loadingSaved ? (
+          <p className="text-sm text-ink-soft">{t("loading")}</p>
+        ) : savedItineraries.length === 0 ? (
+          <p className="text-sm text-ink-soft">{t("noItinerariesYet")}</p>
+        ) : (
+          <div className="space-y-2">
+            {savedItineraries.map((it) => {
+              const items = expandedItems[it.id] ?? [];
+              const total = items.reduce((sum, i) => sum + (i.estimated_cost ?? 0), 0);
+              return (
+                <div key={it.id} className="rounded-lg border border-line bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => toggleExpand(it.id)}
+                      className="flex flex-1 items-center gap-2 text-left"
+                    >
+                      {expanded === it.id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                      <span className="text-sm font-semibold">{it.title}</span>
+                      <span className="text-xs text-ink-soft">
+                        {it.start_date ?? ""} {it.end_date ? `– ${it.end_date}` : ""}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => deleteItinerary(it.id)}
+                      aria-label={t("deleteItinerary")}
+                      className="rounded p-1.5 text-ink-soft hover:bg-mist hover:text-rhodo"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  {expanded === it.id && (
+                    <div className="mt-2 space-y-1.5 border-t border-line pt-2">
+                      {items.length === 0 ? (
+                        <p className="text-xs text-ink-soft">{t("stagedEmpty")}</p>
+                      ) : (
+                        <>
+                          {items.map((i) => (
+                            <div key={i.id} className="flex items-center justify-between text-xs">
+                              <span>{i.title}</span>
+                              <span className="text-ink-soft">
+                                {i.currency} {i.estimated_cost}
+                              </span>
+                            </div>
+                          ))}
+                          <div className="flex items-center justify-between border-t border-line pt-1.5 text-xs font-medium">
+                            <span>{t("totalEstimated")}</span>
+                            <span>USD {total}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <p className="text-sm text-ink-soft">
+        {t("postHintPrefix")}{" "}
+        <Link href="/channels" className="font-medium text-pine hover:text-pine-ink">
+          {t("travelPlans")}
+        </Link>{" "}
+        {t("postHintSuffix")}
+      </p>
     </div>
   );
 }

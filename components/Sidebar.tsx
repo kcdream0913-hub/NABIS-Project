@@ -23,10 +23,9 @@ export default function Sidebar() {
     { href: "/members", label: t("directory"), icon: ContactRound },
     { href: "/channels", label: t("channels"), icon: Hash },
     { href: "/events", label: t("events"), icon: CalendarDays },
+    { href: "/trip-planner", label: t("tripPlanner"), icon: Map },
     { href: "/business/new", label: t("registerBusiness"), icon: Building2 },
   ];
-
-  const LATER = [{ href: "/trip-planner", label: t("tripPlanner"), icon: Map, tag: t("phaseTag") }];
 
   useEffect(() => {
     async function load() {
@@ -88,10 +87,6 @@ export default function Sidebar() {
         {isAdmin && (
           <div className="space-y-0.5">{item("/admin", t("adminQueue"), ShieldAlert)}</div>
         )}
-        <div>
-          <p className="eyebrow px-3 pb-2 text-ink-soft">{t("comingNext")}</p>
-          <div className="space-y-0.5">{LATER.map((i) => item(i.href, i.label, i.icon, i.tag))}</div>
-        </div>
       </nav>
 
       <div className="border-t border-line p-3">

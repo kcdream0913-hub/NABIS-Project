@@ -123,6 +123,37 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-21 — Trip Planner made functional (Phase 2, not Phase 3):**
+  - Founder decision: Marketplace/Vendor is explicitly Phase 3 per
+    `docs/PHASE1_ATOMIC_NETWORK.md` ("No marketplace or payments yet") and
+    requires a payments provider — a human-checkpoint item per this file's own
+    safety rails. Deferred; picked Trip Planner instead (Phase 2, the next
+    phase in sequence, not a skip).
+  - **New tables, additive only**: `itineraries` + `itinerary_items`
+    (migration `add_trip_planner_tables`, applied to nabis-bridgelink). RLS is
+    owner-only (`user_id = auth.uid()`, unlike profiles/rsvps which are
+    browsable) — trip plans are private. Verified with a live insert →
+    read → cascade-delete round trip before calling it done, not just a
+    passing TypeScript build.
+  - Real feature, not a mock: date/budget/group-size/interests form, rule-based
+    budget breakdown (25/25/20/20/10 split — stay/activity/transport/
+    food/buffer — transparent, not AI-driven), curated recommendation
+    templates filtered by view + interest, add-to-itinerary staging, save/
+    list/expand/delete against the real tables.
+  - **Recommendations are explicitly labeled as curated examples, not live
+    vendor listings** — surfaced in the UI itself (`recommendationsHint`), not
+    just in code comments, so the gap to real Phase 3 marketplace data is
+    honest to the end user too.
+  - No booking/payment step — a banner in the UI says so explicitly
+    (`bookingNotice`). This is the correct Phase 2 boundary; do not wire
+    payments here without the same human-checkpoint conversation Marketplace
+    would need.
+  - Moved Trip Planner from Sidebar's "Coming next" into the main nav (no
+    longer a preview) and removed its "Phase 2" tag.
+  - New `lib/interests.ts` / `lib/useInterests.ts` — a separate small taxonomy
+    from business sectors (`lib/sectors.ts`), fully translatable (en/ne),
+    following the same pattern as `useSectors()`.
+  - Verified with a real `next build`: 28/28 routes, both locales, green.
 - **2026-07-20 (later still) — Sector taxonomy replaced (12 refined sectors):**
   - Replaced the 8 launch sectors with the founder's refined 12-sector list.
     Immigration now has its own explicit sector ("Policy, Immigration & Legal")

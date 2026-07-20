@@ -127,7 +127,38 @@
     "interests": "रुचिहरू",
     "postHintPrefix": "अहिले यात्रा योजना गर्दै हुनुहुन्छ? यसमा पोस्ट गर्नुहोस्",
     "travelPlans": "यात्रा योजनाहरू",
-    "postHintSuffix": "— सदस्यहरू पहिले नै एकअर्काका मितिहरू मिलाउँदैछन्।"
+    "postHintSuffix": "— सदस्यहरू पहिले नै एकअर्काका मितिहरू मिलाउँदैछन्।",
+    "myItineraries": "मेरा यात्रा योजनाहरू",
+    "titleLabel": "योजनाको नाम",
+    "titlePlaceholder": "जस्तै शरद ऋतु नेपाल यात्रा",
+    "startDate": "सुरु मिति",
+    "endDate": "अन्त्य मिति",
+    "currency": "मुद्रा",
+    "budgetBreakdown": "बजेट विभाजन",
+    "categoryStay": "बसोबास",
+    "categoryActivity": "क्रियाकलाप",
+    "categoryTransport": "यातायात",
+    "categoryFood": "खाना",
+    "categoryOther": "बफर / विविध",
+    "perDay": "प्रति दिन",
+    "perPerson": "प्रति व्यक्ति",
+    "recommendationsTitle": "सुझाव गरिएका सुरुवात बिन्दुहरू",
+    "recommendationsHint": "छानिएका उदाहरणहरू, प्रत्यक्ष विक्रेता सूची होइन — हालका अपरेटरहरूका लागि डाइरेक्टरीमा सोध्नुहोस्।",
+    "addToItinerary": "थप्नुहोस्",
+    "added": "थपियो",
+    "stagedTitle": "तपाईंको योजना बनाउँदै",
+    "stagedEmpty": "माथिबाट सुझाव थप्नुहोस्, त्यसपछि तिनीहरू यहाँ देखिनेछन्।",
+    "removeItem": "हटाउनुहोस्",
+    "saveItinerary": "योजना सेभ गर्नुहोस्",
+    "savingItinerary": "सेभ हुँदैछ…",
+    "titleRequired": "सेभ गर्नुअघि आफ्नो योजनालाई नाम दिनुहोस्।",
+    "noItinerariesYet": "अहिलेसम्म कुनै सेभ गरिएको योजना छैन।",
+    "itemsCount": "{count} वस्तुहरू",
+    "deleteItinerary": "मेटाउनुहोस्",
+    "confirmDelete": "यो योजना मेटाउने? यो फिर्ता गर्न सकिँदैन।",
+    "totalEstimated": "कुल अनुमानित लागत",
+    "bookingNotice": "बुकिङ र भुक्तानी अझै उपलब्ध छैन — आफ्नो योजना सेभ गर्नुहोस् र यसैबीच सदस्यहरूसँग सिधै समन्वय गर्नुहोस्।",
+    "loading": "लोड हुँदैछ…"
   },
   "businessNew": {
     "eyebrow": "दर्ता",
@@ -315,5 +346,15 @@
       "name": "मिडिया र सिर्जनशील उद्योग",
       "description": "पत्रकारिता, मिडिया प्लेटफर्म, सामग्री सिर्जना, ब्रान्डिङ, कथावाचन, र सिर्जनशील उद्योगहरू।"
     }
+  },
+  "interests": {
+    "trekking-outdoors": "ट्रेकिङ र बाहिरी क्रियाकलाप",
+    "culture-heritage": "संस्कृति र सम्पदा",
+    "food-culinary": "खाना र पाककला",
+    "wildlife-nature": "वन्यजन्तु र प्रकृति",
+    "wellness-retreat": "वेलनेस र रिट्रिट",
+    "business-networking": "व्यवसाय र नेटवर्किङ",
+    "shopping-crafts": "किनमेल र हस्तकला",
+    "festivals-events": "पर्व र कार्यक्रम"
   }
 }
