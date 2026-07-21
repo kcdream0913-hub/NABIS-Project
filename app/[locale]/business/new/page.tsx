@@ -15,7 +15,8 @@ export default function NewBusinessPage() {
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("United States");
-  const [sector, setSector] = useState<string>(sectors[0]?.slug ?? "");
+  const [primarySector, setPrimarySector] = useState<string>(sectors[0]?.slug ?? "");
+  const [secondarySectors, setSecondarySectors] = useState<string[]>([]);
   const [regNumber, setRegNumber] = useState("");
   const [bio, setBio] = useState("");
   const [isPaidProvider, setIsPaidProvider] = useState(false);
@@ -40,7 +41,8 @@ export default function NewBusinessPage() {
       .insert({
         name,
         country_of_registration: country,
-        sector,
+        primary_sector: primarySector,
+        secondary_sectors: secondarySectors,
         registration_number: regNumber || null,
         bio,
         owner_user_id: user.id,
@@ -109,10 +111,15 @@ export default function NewBusinessPage() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="eyebrow text-ink-soft">{t("sector")}</span>
+            <span className="eyebrow text-ink-soft">{t("primarySector")}</span>
             <select
-              value={sector}
-              onChange={(e) => setSector(e.target.value)}
+              value={primarySector}
+              onChange={(e) => {
+                const next = e.target.value;
+                setPrimarySector(next);
+                // A sector can't be both primary and secondary at once.
+                setSecondarySectors((prev) => prev.filter((s) => s !== next));
+              }}
               className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
             >
               {sectors.map((s) => (
@@ -120,9 +127,43 @@ export default function NewBusinessPage() {
               ))}
             </select>
             <span className="mt-1 block text-xs text-ink-soft">
-              {sectors.find((s) => s.slug === sector)?.description}
+              {sectors.find((s) => s.slug === primarySector)?.description}
             </span>
           </label>
+        </div>
+
+        <div>
+          <span className="eyebrow text-ink-soft">{t("secondarySectors")}</span>
+          <p className="mt-0.5 text-xs text-ink-soft">{t("secondarySectorsHint")}</p>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {sectors
+              .filter((s) => s.slug !== primarySector)
+              .map((s) => {
+                const active = secondarySectors.includes(s.slug);
+                const atMax = secondarySectors.length >= 2;
+                return (
+                  <button
+                    key={s.slug}
+                    type="button"
+                    title={s.description}
+                    disabled={!active && atMax}
+                    onClick={() =>
+                      setSecondarySectors((prev) =>
+                        prev.includes(s.slug) ? prev.filter((x) => x !== s.slug) : [...prev, s.slug]
+                      )
+                    }
+                    className={`rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${
+                      active ? "border-pine bg-pine-soft text-pine-ink" : "border-line text-ink-soft hover:bg-mist"
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                );
+              })}
+          </div>
+          {secondarySectors.length >= 2 && (
+            <p className="mt-1.5 text-xs text-ink-soft">{t("secondaryMaxReached")}</p>
+          )}
         </div>
 
         <label className="block text-sm">

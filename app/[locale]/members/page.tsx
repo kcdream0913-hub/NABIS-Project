@@ -20,7 +20,8 @@ type BusinessRow = {
   name: string;
   bio: string | null;
   country_of_registration: string | null;
-  sector: string | null;
+  primary_sector: string | null;
+  secondary_sectors: string[];
   verification_status: string;
 };
 
@@ -46,7 +47,7 @@ export default function DirectoryPage() {
           .order("created_at", { ascending: false }),
         supabase
           .from("businesses")
-          .select("id, name, bio, country_of_registration, sector, verification_status")
+          .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status")
           .order("created_at", { ascending: false }),
       ]);
       setPeople(p ?? []);
@@ -61,7 +62,9 @@ export default function DirectoryPage() {
     `${m.name ?? ""} ${m.bio ?? ""} ${m.city ?? ""}`.toLowerCase().includes(q.toLowerCase())
   );
   const filteredBusinesses = businesses.filter((b) => {
-    if (sector !== "all" && b.sector !== sector) return false;
+    if (sector !== "all" && b.primary_sector !== sector && !(b.secondary_sectors ?? []).includes(sector)) {
+      return false;
+    }
     return `${b.name} ${b.bio ?? ""}`.toLowerCase().includes(q.toLowerCase());
   });
 
@@ -149,7 +152,17 @@ export default function DirectoryPage() {
               className="rounded-lg border border-line bg-white p-4 hover:border-pine"
             >
               <p className="text-sm font-semibold">{b.name}</p>
-              <p className="text-xs text-ink-soft">{b.sector} · {b.country_of_registration}</p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-ink-soft">
+                <span className="font-medium text-ink">
+                  {sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector}
+                </span>
+                {(b.secondary_sectors ?? []).map((slug) => (
+                  <span key={slug} className="rounded bg-mist px-1 py-0.5">
+                    {sectors.find((s) => s.slug === slug)?.name ?? slug}
+                  </span>
+                ))}
+                <span>· {b.country_of_registration}</span>
+              </p>
               {b.bio && <p className="mt-2 line-clamp-2 text-sm text-ink-soft">{b.bio}</p>}
             </Link>
           ))}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -9,6 +10,8 @@ export default function SignupPage() {
   const t = useTranslations("auth");
   const router = useRouter();
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const inviteId = searchParams.get("invite");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,14 +31,18 @@ export default function SignupPage() {
       setError(error.message);
       return;
     }
-    router.push("/onboarding");
+    // Carry the invite through to onboarding — redemption happens there,
+    // where an authenticated session is guaranteed (signup itself may still
+    // be pending email confirmation depending on project auth settings).
+    router.push(inviteId ? `/onboarding?invite=${inviteId}` : "/onboarding");
   }
 
   async function handleOAuth(providerName: "google" | "apple") {
     setError(null);
+    const next = inviteId ? `/onboarding?invite=${inviteId}` : "/onboarding";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: providerName,
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     if (error) setError(error.message);
   }

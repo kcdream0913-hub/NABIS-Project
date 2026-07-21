@@ -16,6 +16,9 @@ export const SECTOR_SLUGS = [
   "manufacturing-industry",
   "policy-immigration-legal",
   "media-creative-industries",
+  "real-estate-home-improvement",
+  "retail-consumer",
+  "food-beverage",
 ] as const;
 
 export type SectorSlug = (typeof SECTOR_SLUGS)[number];

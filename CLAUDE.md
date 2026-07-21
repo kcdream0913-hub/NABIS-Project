@@ -123,6 +123,43 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-21 (evening) — Team invites, multi-sector businesses, 15-sector list:**
+  - **Team invitation UX**: "email not found" is no longer a dead end — the
+    owner gets an "Invite to BridgeLink" action that creates a real `invites`
+    row and a shareable `/signup?invite=<id>` link. Redemption happens in
+    onboarding via new SECURITY DEFINER RPC `redeem_business_invite`
+    (validates email match + pending status + expiry, preserves the
+    owner-chosen role/can_post, marks invite accepted). No email sending —
+    no provider is wired; owner shares the link manually. That's a scoped-out
+    decision, not an oversight.
+  - **Verified live with real cross-user tests** (simulated JWTs against the
+    real RPC, then cleaned up): correct-target redemption works; replaying an
+    accepted invite fails; redeeming an invite addressed to someone else's
+    email fails. DB restored to exact pre-test state afterward.
+  - **Two more pre-existing RLS bugs fixed** (same class as the
+    verification_records one): `invites` had no INSERT policy at all, and the
+    new RPC was initially executable by `anon` — caught via Supabase advisor,
+    revoked, re-verified clean.
+  - **Multi-sector**: `businesses.sector` → `primary_sector` (required) +
+    `secondary_sectors` (0–2, DB-enforced: max-2 + not-equal-primary
+    constraints). One real business row migrated safely. Registration form:
+    primary select + up-to-2 secondary chip picker. Channel pages and the
+    directory filter match primary OR secondary; secondary appearances are
+    tagged "Secondary" in channel listings; directory cards show primary
+    prominently + secondary as small tags. Also fixed a display bug found on
+    the way: the directory was showing raw slugs instead of translated names.
+  - **Sectors now 15**: found live-DB drift — someone replaced
+    "Innovation & R&D" with "Real Estate & Home Improvement" directly in the
+    DB outside these sessions. Founder decision: keep both. Restored
+    innovation-rd, adopted real-estate-home-improvement (using its existing
+    well-written DB description verbatim, incl. NRN property rules), and
+    added the two requested new sectors: **Retail & Consumer** and
+    **Food & Beverage**. Code + en/ne translations synced; no separate
+    "Small Business" sector per founder direction (size filter/tag later).
+  - Migrations: `multi_sector_and_invites_fix`,
+    `restrict_redeem_invite_to_authenticated`, `restore_innovation_rd_sector`.
+  - Verified: full `next build` green (28/28 both locales), 31 Vitest tests
+    pass, message-bundle parity 320/320 keys.
 - **2026-07-21 (later still) — KYC: US and Nepal as separate policy tracks, Bridge = both:**
   - Founder decision, recorded here so it's never silently reversed: US View
     and Nepal View have independently regulated KYC requirements (different

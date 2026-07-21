@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +16,7 @@ export default function OnboardingPage() {
   const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -23,6 +25,7 @@ export default function OnboardingPage() {
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [inviteResult, setInviteResult] = useState<"none" | "joined" | "invalid">("none");
 
   useEffect(() => {
     async function load() {
@@ -34,6 +37,11 @@ export default function OnboardingPage() {
         return;
       }
       setUserId(user.id);
+      const invite = searchParams.get("invite");
+      if (invite) {
+        const { data: ok } = await supabase.rpc("redeem_business_invite", { invite_id: invite });
+        setInviteResult(ok ? "joined" : "invalid");
+      }
       const { data } = await supabase
         .from("profiles")
         .select("name, city, country, sectors")
@@ -91,6 +99,16 @@ export default function OnboardingPage() {
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
 {t("welcomeBody")}
             </p>
+            {inviteResult === "joined" && (
+              <p className="mt-3 rounded-md border border-line bg-bg-success p-3 text-sm text-text-success">
+                {t("inviteJoined")}
+              </p>
+            )}
+            {inviteResult === "invalid" && (
+              <p className="mt-3 rounded-md border border-dashed border-line bg-mist p-3 text-sm text-ink-soft">
+                {t("inviteInvalid")}
+              </p>
+            )}
           </div>
         )}
 

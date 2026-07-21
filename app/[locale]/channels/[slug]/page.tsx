@@ -24,8 +24,8 @@ export default async function ChannelPage({
 
   const { data: businesses } = await supabase
     .from("businesses")
-    .select("id, name, bio, country_of_registration, verification_status, is_paid_provider, access_price_amount, access_price_currency")
-    .eq("sector", channel.sector);
+    .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status, is_paid_provider, access_price_amount, access_price_currency")
+    .or(`primary_sector.eq.${channel.sector},secondary_sectors.cs.{${channel.sector}}`);
 
   return (
     <div>
@@ -62,6 +62,11 @@ export default async function ChannelPage({
                   ) : (
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-soft">
                       {t("listed")}
+                    </span>
+                  )}
+                  {b.primary_sector !== channel.sector && (
+                    <span className="rounded bg-mist px-1.5 py-0.5 text-[10px] font-medium text-ink-soft">
+                      {t("secondaryTag")}
                     </span>
                   )}
                   {b.is_paid_provider && (

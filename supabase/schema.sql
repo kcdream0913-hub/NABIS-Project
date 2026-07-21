@@ -29,7 +29,10 @@ create table public.businesses (
   logo_url text,
   bio text,
   country_of_registration text,
-  sector text,
+  primary_sector text not null,
+  secondary_sectors text[] not null default '{}',
+  -- max 2 secondary; a sector can't be both primary and secondary
+  -- (constraints secondary_sectors_max_2 / secondary_not_primary)
   registration_number text,
   verification_status text not null default 'unverified' check (verification_status in ('unverified','verified')),
   verified_at timestamptz,
@@ -40,7 +43,7 @@ create table public.businesses (
   payout_account_ref text,
   created_at timestamptz not null default now()
 );
-create index on public.businesses (sector);
+create index on public.businesses (primary_sector);
 create index on public.businesses (owner_user_id);
 
 create table public.business_members (
@@ -75,6 +78,8 @@ create table public.invites (
   target text,
   business_id uuid references public.businesses(id) on delete cascade,
   status text not null default 'pending' check (status in ('pending','accepted','expired')),
+  role text check (role in ('professional','assistant','employee')),
+  can_post boolean not null default false,
   expires_at timestamptz, used_at timestamptz,
   created_at timestamptz not null default now()
 );

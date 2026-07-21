@@ -107,7 +107,8 @@
     "emptyTitle": "No registered businesses yet",
     "registerCta": "Register a business",
     "listed": "Listed",
-    "verifiedBusiness": "Verified Business"
+    "verifiedBusiness": "Verified Business",
+    "secondaryTag": "Secondary"
   },
   "thread": {
     "conversation": "Conversation",
@@ -178,7 +179,11 @@
     "amount": "Amount",
     "registering": "Registering…",
     "register": "Register business",
-    "genericError": "Could not register the business."
+    "genericError": "Could not register the business.",
+    "primarySector": "Primary sector",
+    "secondarySectors": "Secondary sectors (optional, up to 2)",
+    "secondarySectorsHint": "Select up to 2 more sectors this business also operates in.",
+    "secondaryMaxReached": "Maximum 2 secondary sectors — remove one to add another."
   },
   "profile": {
     "eyebrow": "Account",
@@ -277,7 +282,13 @@
     "add": "Add",
     "noMemberFound": "No BridgeLink member found with that email.",
     "alreadyOnTeam": "That person is already on the team.",
-    "removeFromTeam": "Remove from team"
+    "removeFromTeam": "Remove from team",
+    "inviteToBridgeLink": "Invite to BridgeLink",
+    "inviteCreated": "Invite created. Share this link with them:",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "inviting": "Creating invite…",
+    "inviteHint": "They'll join your team automatically once they sign up with this link — no separate approval step needed."
   },
   "person": {
     "member": "Member",
@@ -308,7 +319,9 @@
     "back": "Back",
     "continue": "Continue",
     "saving": "Saving…",
-    "enter": "Enter BridgeLink"
+    "enter": "Enter BridgeLink",
+    "inviteJoined": "You've joined the team — check your profile's business page.",
+    "inviteInvalid": "That invite link is no longer valid. If you think this is a mistake, ask the business owner to resend it."
   },
   "sectors": {
     "technology-ai": {
@@ -358,6 +371,18 @@
     "media-creative-industries": {
       "name": "Media & Creative Industries",
       "description": "Journalism, media platforms, content creation, branding, storytelling, and creative industries."
+    },
+    "real-estate-home-improvement": {
+      "name": "Real Estate & Home Improvement",
+      "description": "Real estate agents and brokers, property investment in the US and Nepal, diaspora property purchases (NRN rules), home improvement contractors, construction trades, and related licensed services."
+    },
+    "retail-consumer": {
+      "name": "Retail & Consumer",
+      "description": "Retail shops, consumer goods, trading businesses, and local commerce."
+    },
+    "food-beverage": {
+      "name": "Food & Beverage",
+      "description": "Restaurants, cafes, food production, catering, and F&B businesses."
     }
   },
   "interests": {

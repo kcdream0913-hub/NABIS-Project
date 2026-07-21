@@ -13,6 +13,7 @@ export default async function BusinessPage({
 }) {
   const { id } = await params;
   const t = await getTranslations("business");
+  const tSectors = await getTranslations("sectors");
   const roleLabel: Record<string, string> = {
     owner: t("roleOwner"),
     professional: t("roleProfessional"),
@@ -28,6 +29,14 @@ export default async function BusinessPage({
     .single();
 
   if (!business) notFound();
+
+  const sectorName = (slug: string) => {
+    try {
+      return tSectors(`${slug}.name`);
+    } catch {
+      return slug;
+    }
+  };
 
   const { data: members } = await supabase
     .from("business_members")
@@ -53,9 +62,15 @@ export default async function BusinessPage({
                 <ReportButton targetType="business" targetId={business.id} />
               </span>
             </div>
-            <p className="mt-0.5 text-sm text-ink-soft">
-              {business.sector} · {business.country_of_registration}
-            </p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">
+              <span className="font-medium text-ink">{sectorName(business.primary_sector)}</span>
+              {(business.secondary_sectors ?? []).map((slug: string) => (
+                <span key={slug} className="rounded bg-mist px-1.5 py-0.5 text-xs">
+                  {sectorName(slug)}
+                </span>
+              ))}
+              <span>· {business.country_of_registration}</span>
+            </div>
             {business.is_paid_provider && (
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-gold-soft px-2.5 py-1 text-sm font-medium text-gold">
                 {t("access")}: {business.access_price_currency} {business.access_price_amount}
