@@ -18,6 +18,7 @@ type PendingVerification = {
   subject_id: string;
   document_type: string | null;
   document_country: string | null;
+  policy_track: "us" | "nepal";
   created_at: string;
   profiles: { name: string | null } | { name: string | null }[] | null;
 };
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
         .not("registration_number", "is", null),
       supabase
         .from("verification_records")
-        .select("id, subject_id, document_type, document_country, created_at, profiles:subject_id ( name )")
+        .select("id, subject_id, document_type, document_country, policy_track, created_at, profiles:subject_id ( name )")
         .eq("subject_type", "user")
         .eq("status", "pending"),
       supabase
@@ -175,6 +176,9 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm font-semibold">{person?.name ?? t("member")}</p>
                       <p className="text-xs text-ink-soft">
+                        <span className="mr-1.5 rounded bg-mist px-1.5 py-0.5 font-semibold uppercase tracking-wide">
+                          {v.policy_track}
+                        </span>
                         {v.document_type} · {v.document_country}
                       </p>
                     </div>

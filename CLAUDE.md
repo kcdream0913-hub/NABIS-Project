@@ -123,7 +123,43 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-21 (later still) — KYC: US and Nepal as separate policy tracks, Bridge = both:**
+  - Founder decision, recorded here so it's never silently reversed: US View
+    and Nepal View have independently regulated KYC requirements (different
+    documents, different rules). **Bridge View requires a PASSED US track AND
+    a PASSED Nepal track — not either, not a third combined check.** Locked
+    down with `lib/__tests__/kyc.test.ts` specifically to catch a future
+    "simplify to ||" mistake.
+  - **Real pre-existing bug found and fixed while building this**: there was
+    no RLS policy letting a regular (non-admin) user INSERT their own
+    `verification_records` row — only SELECT-own and admin-ALL existed. The
+    verify page's `insert()` call would have been silently rejected for every
+    real user who ever tried it. Added `verification_insert_own`, migration
+    `kyc_policy_tracks`.
+  - **Schema**: added `verification_records.policy_track` (`'us'|'nepal'`,
+    not null). Table was empty (0 rows) before this — verified before
+    running, zero data-loss risk. Verified live: insert, an invalid-track
+    value correctly rejected by the check constraint, query pattern
+    round-tripped, test rows cleaned up.
+  - **`lib/kyc.ts`**: `getVerificationTracks()` (latest status per track from
+    `verification_records`) and `isBridgeEligible()` (both passed) — the
+    single source of truth for this logic, not duplicated inline anywhere.
+  - **`app/[locale]/profile/verify/page.tsx` rewritten**: no more single
+    free-country picker disconnected from the View toggle. Now shows two
+    independent track cards (US, Nepal) each with their own status
+    (none/pending/passed/failed) and their own document-capture flow
+    (`documentsFor()` already had correct per-country document lists — that
+    part didn't need to change). In Bridge View, shows both tracks plus an
+    explicit banner stating Bridge eligibility requires both.
+  - **Admin dashboard**: pending-verification cards now show which policy
+    track a submission is for (reviewers were previously approving/rejecting
+    blind to this). `profiles.verification_status` still means "at least one
+    track passed" (used by the existing composer/posting gate) — Bridge
+    eligibility is deliberately NOT stored redundantly on `profiles`; it's
+    always computed fresh from `verification_records` via `isBridgeEligible()`.
+  - Verified: `npm run verify` (build + 31 Vitest tests, up from 26) green.
 - **2026-07-21 (later) — Real test suite, closing the biggest gap of the day:**
+
   - Reason this happened: today's session had multiple "it works" claims that
     turned out wrong on the user's machine (missing NextIntlClientProvider,
     merged stale folders, workspace-root confusion). `npm run verify` was

@@ -216,7 +216,20 @@
     "capture": "Capture",
     "submitting": "Submitting…",
     "submit": "Submit for verification",
-    "footnote": "Document, face match, and business/role checks — no manual bypass."
+    "footnote": "Document, face match, and business/role checks — no manual bypass.",
+    "bridgeExplainer": "Bridge View requires both a passed US verification and a passed Nepal verification — they're separate regulatory tracks, not one combined check.",
+    "usTrack": "United States",
+    "nepalTrack": "Nepal",
+    "statusNone": "Not started",
+    "statusPending": "Pending review",
+    "statusPassed": "Verified",
+    "statusFailed": "Not approved",
+    "startVerification": "Start verification",
+    "retry": "Try again",
+    "bridgeReady": "Bridge-eligible — both tracks verified.",
+    "back": "Back",
+    "trackSubmittedBody": "This track is under review. This is currently a placeholder pending the Shufti Pro integration — once wired, this step completes automatically.",
+    "loading": "Loading…"
   },
   "admin": {
     "adminsOnlyTitle": "Admins only",
