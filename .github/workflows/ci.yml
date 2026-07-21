@@ -38,6 +38,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Check secrets are actually present (never prints values)
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "::error::NEXT_PUBLIC_SUPABASE_URL is EMPTY/MISSING"; else echo "NEXT_PUBLIC_SUPABASE_URL is set, length ${#NEXT_PUBLIC_SUPABASE_URL}"; fi
+          if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then echo "::error::NEXT_PUBLIC_SUPABASE_ANON_KEY is EMPTY/MISSING"; else echo "NEXT_PUBLIC_SUPABASE_ANON_KEY is set, length ${#NEXT_PUBLIC_SUPABASE_ANON_KEY}"; fi
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
