@@ -178,6 +178,19 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     `budgetBreakdown` untouched. +2 i18n keys. tsc 0 · vitest 31/31 · build green.
     NOTE (out of scope, tracked): item `day` still hardcoded 1 and item currency
     USD though schema supports multi-day + per-item currency.
+  - **Messages: timestamps + two-pane inbox + last_read_at — DONE.** Migration
+    `messages_last_read_at`: `direct_thread_participants.last_read_at` + a
+    self-scoped UPDATE policy (`dtp_update_own`) + a BEFORE-UPDATE trigger
+    (`protect_dtp_identity`, SECURITY INVOKER) pinning `thread_id`/`user_id` so
+    an update can ONLY change `last_read_at` — **adversarially verified** (own
+    read set; thread_id repoint blocked; other participant's row untouchable),
+    advisor clean, no new SECURITY-DEFINER surface. New reusable
+    `components/ThreadConversation.tsx` (realtime + send + per-message
+    timestamps + marks-read-on-open); `/messages/[id]` now just renders it. Home
+    "messages" mode rebuilt as a **two-pane inbox** (list + conversation on
+    desktop, stacked on mobile) with last-message previews, relative times, and
+    **unread indicators** derived from `last_read_at`. +3 i18n keys. tsc 0 ·
+    vitest 31/31 · build green.
 - **2026-07-22 — Design Batch 2 (token system + feed-card completion, CTO session):**
   - **Ground truth first, no duplication:** the parallel session had already
     shipped the view-aware feed card (`5afff12`, live on origin/main) — Avatar

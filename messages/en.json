@@ -71,7 +71,9 @@
     "member": "Member",
     "loading": "Loading…",
     "react": "React",
-    "comment": "Comment"
+    "comment": "Comment",
+    "unread": "Unread",
+    "selectConversation": "Select a conversation to read it here"
   },
   "composer": {
     "verifyToPost": "Verify your profile to post to the feed.",
@@ -120,7 +122,8 @@
     "member": "Member",
     "messagePrefix": "Message {name}",
     "sendMessage": "Send message",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "back": "Back"
   },
   "tripPlanner": {
     "phaseEyebrow": "Phase 2 · Utility layer",

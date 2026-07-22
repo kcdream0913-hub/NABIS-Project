@@ -71,7 +71,9 @@
     "member": "सदस्य",
     "loading": "लोड हुँदैछ…",
     "react": "प्रतिक्रिया",
-    "comment": "टिप्पणी"
+    "comment": "टिप्पणी",
+    "unread": "नपढिएको",
+    "selectConversation": "यहाँ पढ्न कुराकानी छान्नुहोस्"
   },
   "composer": {
     "verifyToPost": "फिडमा पोस्ट गर्न आफ्नो प्रोफाइल प्रमाणित गर्नुहोस्।",
@@ -120,7 +122,8 @@
     "member": "सदस्य",
     "messagePrefix": "{name} लाई म्यासेज",
     "sendMessage": "म्यासेज पठाउनुहोस्",
-    "loading": "लोड हुँदैछ…"
+    "loading": "लोड हुँदैछ…",
+    "back": "पछाडि"
   },
   "tripPlanner": {
     "phaseEyebrow": "चरण २ · युटिलिटी तह",
