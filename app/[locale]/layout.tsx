@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -14,6 +15,16 @@ import "@fontsource/noto-sans-devanagari/600.css";
 import "@fontsource/noto-sans-devanagari/700.css";
 import { AppProvider } from "@/lib/store";
 import AppShell from "@/components/AppShell";
+
+// Inter (variable, self-hosted — same no-external-fetch rule as the Devanagari
+// font above). Exposes --font-latin, consumed by the html font stack in
+// globals.css. Latin UI text renders in Inter; Devanagari falls through to Noto.
+const inter = localFont({
+  src: "../fonts/inter-var.woff2",
+  variable: "--font-latin",
+  weight: "100 900",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "BridgeLink",
@@ -37,7 +48,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={inter.variable}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppProvider>

@@ -33,9 +33,10 @@ export default function Topbar() {
         <div className="ml-auto flex items-center gap-2">
           <GlobalSearch />
           <LanguageToggle />
+          {/* No fake unread dot: the indicator returns when notifications are
+              real. A permanent red dot spends trust on nothing. */}
           <button className="relative rounded-md p-2 text-ink-soft hover:bg-mist" aria-label={t("notifications")}>
             <Bell size={17} />
-            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-rhodo" />
           </button>
 
           <button

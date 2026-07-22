@@ -20,7 +20,7 @@
   --color-denim-soft: #e7edf7;
   --color-rhodo: #c2412f;
   --color-rhodo-soft: #f9e9e6;
-  --color-gold: #9a7222;
+  --color-gold: #856015; /* darkened for WCAG AA on gold-soft: was #9a7222 (3.82:1, fails); now 4.98:1 */
   --color-gold-soft: #f7efdd;
 
   /*
@@ -41,17 +41,44 @@
   /* Raised neutral surface (one step above white/mist) for inset panels like
      the ID-upload preview. AA: ink 14.5:1, ink-soft 4.93:1 on it. */
   --color-surface-2: #edf1f0;
+
+  /* Primary action fill. The KYC "Submit" button (profile/verify) already
+     referenced bg-fill-accent / text-on-accent, but the tokens were never
+     defined — so that button rendered UNSTYLED (transparent) on production.
+     Defined here as pine + white, matching every other primary button. */
+  --color-fill-accent: #0f5c55;
+  --color-on-accent: #ffffff;
 }
 
 html {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, "Noto Sans Devanagari", sans-serif;
+  /* Inter (var, self-hosted via next/font/local — set on <html> in layout.tsx)
+     carries Latin UI; Devanagari glyphs fall through to Noto Sans Devanagari. */
+  font-family: var(--font-latin, ""), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans Devanagari", sans-serif;
 }
 body { background: #f6f8f7; color: #16211f; -webkit-font-smoothing: antialiased; }
 
 :focus-visible { outline: 2px solid #0f5c55; outline-offset: 2px; border-radius: 2px; }
 
 .eyebrow { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+
+/*
+  Bilingual type mechanics (design-foundations §03). Devanagari stacks matras
+  above the shirorekha and below the base — it needs more vertical room than
+  Latin, and negative/tight tracking breaks conjunct rhythm. The Nepali locale
+  (or any inline lang="ne" span) gets its own metrics automatically; no
+  component ever hand-tunes line-height for Nepali.
+*/
+:lang(ne) {
+  line-height: 1.72;
+  letter-spacing: 0;
+}
+h1:lang(ne), h2:lang(ne), h3:lang(ne),
+:lang(ne) h1, :lang(ne) h2, :lang(ne) h3 {
+  line-height: 1.45;
+  letter-spacing: 0; /* neutralize tracking-tight on headings */
+}
+:lang(ne) .eyebrow, .eyebrow:lang(ne) { letter-spacing: 0.02em; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
