@@ -8,6 +8,7 @@ import { findOrCreateThread } from "@/lib/threads";
 import { useSectors } from "@/lib/useSectors";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import type { View } from "@/lib/types";
 
 type PersonRow = {
   id: string;
@@ -32,12 +33,15 @@ type BusinessRow = {
 export default function DirectoryPage() {
   const t = useTranslations("directory");
   const tCommon = useTranslations("common");
+  const tView = useTranslations("view");
   const sectors = useSectors();
   const supabase = createClient();
   const router = useRouter();
   const [tab, setTab] = useState<"people" | "businesses">("people");
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("all");
+  const [view, setView] = useState<View>("bridge");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,10 +67,24 @@ export default function DirectoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredPeople = people.filter((m) =>
-    `${m.name ?? ""} ${m.bio ?? ""} ${m.city ?? ""}`.toLowerCase().includes(q.toLowerCase())
-  );
+  // Normalize a free-text business country onto the two corridor countries.
+  const normCountry = (c: string | null): "us" | "nepal" | null => {
+    const l = (c ?? "").toLowerCase();
+    if (l.includes("nepal") || l === "np") return "nepal";
+    if (l.includes("united states") || l === "usa" || l === "us") return "us";
+    return null;
+  };
+  // Bridge = corridor-wide (no country narrowing); US/Nepal narrow to that side.
+  const inView = (c: "us" | "nepal" | null) => view === "bridge" || c === view;
+
+  const filteredPeople = people.filter((m) => {
+    if (verifiedOnly && m.verification_status !== "verified") return false;
+    if (!inView(m.country)) return false;
+    return `${m.name ?? ""} ${m.bio ?? ""} ${m.city ?? ""}`.toLowerCase().includes(q.toLowerCase());
+  });
   const filteredBusinesses = businesses.filter((b) => {
+    if (verifiedOnly && b.verification_status !== "verified") return false;
+    if (!inView(normCountry(b.country_of_registration))) return false;
     if (sector !== "all" && b.primary_sector !== sector && !(b.secondary_sectors ?? []).includes(sector)) {
       return false;
     }
@@ -92,13 +110,23 @@ export default function DirectoryPage() {
         ))}
       </div>
 
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("searchPlaceholder")}
-          className="flex-1 rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+          className="min-w-[12rem] flex-1 rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
         />
+        <select
+          value={view}
+          onChange={(e) => setView(e.target.value as View)}
+          className="rounded-md border border-line bg-white px-3 py-2 text-sm"
+          aria-label={tView("label")}
+        >
+          <option value="bridge">{tView("bridgeShort")}</option>
+          <option value="us">{tView("usShort")}</option>
+          <option value="nepal">{tView("nepalShort")}</option>
+        </select>
         {tab === "businesses" && (
           <select
             value={sector}
@@ -111,6 +139,15 @@ export default function DirectoryPage() {
             ))}
           </select>
         )}
+        <label className="flex items-center gap-1.5 rounded-md border border-line bg-white px-3 py-2 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            checked={verifiedOnly}
+            onChange={(e) => setVerifiedOnly(e.target.checked)}
+            className="accent-pine"
+          />
+          {t("verifiedOnly")}
+        </label>
       </div>
 
       {loading ? (

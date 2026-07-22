@@ -89,7 +89,8 @@
     "allSectors": "सबै सेक्टर",
     "member": "सदस्य",
     "message": "म्यासेज",
-    "loading": "लोड हुँदैछ…"
+    "loading": "लोड हुँदैछ…",
+    "verifiedOnly": "प्रमाणित मात्र"
   },
   "events": {
     "eyebrow": "पात्रो",

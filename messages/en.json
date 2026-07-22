@@ -89,7 +89,8 @@
     "allSectors": "All sectors",
     "member": "Member",
     "message": "Message",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "verifiedOnly": "Verified only"
   },
   "events": {
     "eyebrow": "Calendar",

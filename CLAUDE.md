@@ -159,6 +159,12 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     green. NOTE: events have no create form (seeded/admin-only) — whatever creates
     them must set `starts_at` + `event_tz`; seeding the NABIS-2026 anchor event is
     a good next step.
+  - **Directory filters — DONE.** `members/page.tsx`: view (US/Nepal/Bridge —
+    Bridge = corridor-wide, reusing the `view` vocabulary to stay synced with
+    CDO), sector (existing), and verified-only, across People + Businesses;
+    business free-text country normalized onto the two corridor countries.
+    Frontend only, no schema. +1 i18n key (`directory.verifiedOnly`; view labels
+    reuse the existing `view` namespace). tsc 0 · vitest 31/31 · build green.
 - **2026-07-22 — Design Batch 2 (token system + feed-card completion, CTO session):**
   - **Ground truth first, no duplication:** the parallel session had already
     shipped the view-aware feed card (`5afff12`, live on origin/main) — Avatar
