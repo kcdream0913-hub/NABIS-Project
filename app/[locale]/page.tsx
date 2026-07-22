@@ -105,21 +105,33 @@ export default function HomePage() {
     } = await supabase.auth.getUser();
     if (!user) return;
     const reacted = myReactions.has(postId);
-    setMyReactions((prev) => {
-      const n = new Set(prev);
-      if (reacted) n.delete(postId);
-      else n.add(postId);
-      return n;
-    });
-    setReactionCounts((prev) => ({
-      ...prev,
-      [postId]: Math.max(0, (prev[postId] ?? 0) + (reacted ? -1 : 1)),
-    }));
-    if (reacted) {
-      await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", user.id);
-    } else {
-      await supabase.from("post_reactions").insert({ post_id: postId, user_id: user.id });
-    }
+
+    // Optimistic: flip the UI first, then reconcile. `applyLocal(true)` applies the
+    // change, `applyLocal(false)` undoes it — so the rollback below is guaranteed to
+    // be the exact inverse rather than a hand-written second copy that can drift.
+    const applyLocal = (forward: boolean) => {
+      const adding = forward ? !reacted : reacted;
+      setMyReactions((prev) => {
+        const n = new Set(prev);
+        if (adding) n.add(postId);
+        else n.delete(postId);
+        return n;
+      });
+      setReactionCounts((prev) => ({
+        ...prev,
+        [postId]: Math.max(0, (prev[postId] ?? 0) + (adding ? 1 : -1)),
+      }));
+    };
+
+    applyLocal(true);
+
+    const { error } = reacted
+      ? await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", user.id)
+      : await supabase.from("post_reactions").insert({ post_id: postId, user_id: user.id });
+
+    // The write is what makes it real. If RLS rejects it or the network drops, undo
+    // the optimistic flip instead of leaving the UI asserting something untrue.
+    if (error) applyLocal(false);
   }
 
   async function loadMessages() {
