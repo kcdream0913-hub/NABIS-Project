@@ -123,6 +123,46 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-22 (late) — Prod fix + DB↔repo parity + reaction rollback:**
+  - **FIXED, was broken in prod: "add team member".** `team-manager.tsx` called
+    `find_user_id_by_email`, which migration `20260722095956` revoked from
+    `authenticated` (F8 email→uid oracle). Every call failed — and because the
+    handler collapsed `lookupError || !foundId` into one branch, owners were told
+    an existing member "isn't on BridgeLink" and were pushed to the invite path.
+    Adding a real teammate was impossible. **The Add button now ALWAYS mints a
+    `business_member` invite by email**; the uid-lookup + direct
+    `business_members` insert are gone. `redeem_business_invite()` resolves the
+    account at signup by matching the caller's email, so an existing member simply
+    redeems immediately. **No client-side call to `find_user_id_by_email` remains
+    anywhere** — do not reintroduce one; if a server ever needs it, call it with
+    the service key. i18n: `addMemberTitle`/`addMemberHint`/
+    `memberEmailPlaceholder` reworded to invite semantics, and the three keys only
+    the deleted path used (`add`, `noMemberFound`, `alreadyOnTeam`) dropped from
+    BOTH en and ne (parity test enforces this).
+  - **Captured 4 forward migrations that existed only as ROLLBACK files**:
+    `20260722155304_events_add_timestamptz_and_tz`,
+    `20260722161126_itinerary_items_add_business_fk`,
+    `20260722162053_messages_last_read_at`,
+    `20260722162840_post_reactions_table`. Definitions were dumped from the LIVE
+    database (`pg_attribute` / `pg_constraint` / `pg_policies` /
+    `pg_get_functiondef` / `pg_get_triggerdef`) and cross-checked against each
+    ROLLBACK file — not reconstructed from memory. Filenames use the DB's own
+    recorded version numbers so repo and `supabase_migrations` line up.
+  - **Verified while doing this: `post_reactions` RLS is sound.**
+    `post_reactions_insert_own` carries `WITH CHECK (user_id = auth.uid())`, so
+    the client-supplied `user_id` cannot be forged. An earlier review flagged this
+    as unverifiable from the repo; it is now both verified and captured.
+  - **PARITY IS STILL INCOMPLETE — do not trust the repo to rebuild the DB.**
+    The live project has **26** migrations; `supabase/migrations/` now holds **7**.
+    19 remain uncaptured, including two from today that no file records:
+    `20260722143651_verification_tiers_per_track_bridge` and
+    `20260722143900_verification_tiers_pin_fn_search_path`. `supabase/schema.sql`
+    is a stale snapshot, not a substitute. Applying the repo to an empty database
+    does NOT reproduce prod today.
+  - `toggleReaction` now rolls back its optimistic state when the insert/delete
+    returns an error, instead of leaving the UI asserting a reaction that was
+    never persisted.
+  - Verified: tsc 0 errors · build 28/28 both locales · vitest 31/31.
 - **2026-07-22 — Design Batch 1 integrated (from the parallel design-audit session):**
   - Cross-session workflow worked as intended: the design session produced a
     read-only fix batch as a zip; THIS session reviewed the diff against the
