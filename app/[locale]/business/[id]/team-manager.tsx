@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
-import { UserMinus, UserPlus, Mail, Copy, Check } from "lucide-react";
+import { Mail, Copy, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Role = "professional" | "assistant" | "employee";
@@ -11,16 +10,12 @@ type Role = "professional" | "assistant" | "employee";
 export default function TeamManager({ businessId }: { businessId: string }) {
   const t = useTranslations("business");
   const supabase = createClient();
-  const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("employee");
   const [canPost, setCanPost] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
-  // "Not found" state offers inviting the person instead of a dead end.
-  const [notFoundEmail, setNotFoundEmail] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -42,56 +37,19 @@ export default function TeamManager({ businessId }: { businessId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId]);
 
-  async function addMember() {
-    setError(null);
-    setNotFoundEmail(null);
-    setInviteLink(null);
-    setBusy(true);
-
-    const { data: foundId, error: lookupError } = await supabase.rpc("find_user_id_by_email", {
-      lookup_email: email.trim(),
-    });
-
-    if (lookupError || !foundId) {
-      // Not a dead end anymore — offer to invite this email instead.
-      setNotFoundEmail(email.trim());
-      setBusy(false);
-      return;
-    }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error: insertError } = await supabase.from("business_members").insert({
-      business_id: businessId,
-      user_id: foundId,
-      role,
-      status: "active",
-      can_post: canPost,
-      // Employees are auto-verified under the owner's responsibility — no
-      // separate KYC per person (spec §5.3 / D-012).
-      verified_via: "business",
-      added_by: user?.id,
-    });
-
-    if (insertError) {
-      setError(
-        insertError.message.includes("duplicate")
-          ? t("alreadyOnTeam")
-          : insertError.message
-      );
-    } else {
-      setEmail("");
-      router.refresh();
-    }
-    setBusy(false);
-  }
-
+  // Adding a teammate is ALWAYS an invite by email. We deliberately do not look
+  // up whether the address already belongs to a member: find_user_id_by_email is
+  // revoked from `authenticated` (F8 email->uid oracle hardening, migration
+  // 20260722095956), so any client-side lookup would fail — and, worse, a failed
+  // lookup is indistinguishable from "no such member". Redemption resolves the
+  // account: redeem_business_invite() binds the invite to the caller's email on
+  // signup, so an existing member simply redeems immediately.
   async function createInvite() {
-    if (!notFoundEmail) return;
+    const target = email.trim();
+    if (!target) return;
     setInviting(true);
     setError(null);
+    setInviteLink(null);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -105,7 +63,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
       .insert({
         type: "business_member",
         from_user_id: user.id,
-        target: notFoundEmail,
+        target,
         business_id: businessId,
         role,
         can_post: canPost,
@@ -142,7 +100,6 @@ export default function TeamManager({ businessId }: { businessId: string }) {
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
-            setNotFoundEmail(null);
             setInviteLink(null);
           }}
           placeholder={t("memberEmailPlaceholder")}
@@ -167,27 +124,14 @@ export default function TeamManager({ businessId }: { businessId: string }) {
           {t("canPostAsBusiness")}
         </label>
         <button
-          onClick={addMember}
-          disabled={!email.trim() || busy}
+          onClick={createInvite}
+          disabled={!email.trim() || inviting}
           className="flex items-center gap-1 rounded-md bg-pine px-3 py-1.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
         >
-          <UserPlus size={14} /> {t("add")}
+          <Mail size={14} /> {inviting ? t("inviting") : t("inviteToBridgeLink")}
         </button>
       </div>
       {error && <p className="mt-1.5 text-xs text-rhodo">{error}</p>}
-
-      {notFoundEmail && !inviteLink && (
-        <div className="mt-2 rounded-md border border-line bg-white p-2.5">
-          <p className="text-xs text-ink-soft">{t("noMemberFound")}</p>
-          <button
-            onClick={createInvite}
-            disabled={inviting}
-            className="mt-1.5 flex items-center gap-1.5 rounded-md border border-pine px-3 py-1.5 text-xs font-medium text-pine hover:bg-pine-soft disabled:opacity-50"
-          >
-            <Mail size={13} /> {inviting ? t("inviting") : t("inviteToBridgeLink")}
-          </button>
-        </div>
-      )}
 
       {inviteLink && (
         <div className="mt-2 rounded-md border border-line bg-white p-2.5">
