@@ -164,7 +164,9 @@
     "confirmDelete": "Delete this itinerary? This can't be undone.",
     "totalEstimated": "Total estimated cost",
     "bookingNotice": "Booking and payments aren't available yet — save your plan and coordinate directly with members in the meantime.",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "verifiedBusinessesTitle": "Verified businesses",
+    "viewBusiness": "View"
   },
   "businessNew": {
     "eyebrow": "Register",

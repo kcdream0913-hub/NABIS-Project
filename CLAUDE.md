@@ -165,6 +165,19 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     business free-text country normalized onto the two corridor countries.
     Frontend only, no schema. +1 i18n key (`directory.verifiedOnly`; view labels
     reuse the existing `view` namespace). tsc 0 · vitest 31/31 · build green.
+  - **Trip Planner ↔ Directory link — DONE.** Migration
+    `itinerary_items_add_business_fk` (additive nullable FK →
+    `businesses(id) on delete set null` + index; itinerary_items had 1 row;
+    advisor re-run clean; no new RLS needed — plain reference to world-readable
+    directory businesses, still gated by the owner-only itinerary_items policies).
+    `trip-planner/page.tsx`: real **verified** directory businesses surfaced as a
+    linkable recommendation group (view-filtered like Directory; degrades to the
+    curated templates when the directory is sparse — currently 1 business); adding
+    one stages `business_id`, which is persisted on save; saved items with a
+    `business_id` render a directory link. Tested `recommendationsFor`/
+    `budgetBreakdown` untouched. +2 i18n keys. tsc 0 · vitest 31/31 · build green.
+    NOTE (out of scope, tracked): item `day` still hardcoded 1 and item currency
+    USD though schema supports multi-day + per-item currency.
 - **2026-07-22 — Design Batch 2 (token system + feed-card completion, CTO session):**
   - **Ground truth first, no duplication:** the parallel session had already
     shipped the view-aware feed card (`5afff12`, live on origin/main) — Avatar

@@ -21,6 +21,15 @@ type StagedItem = {
   category: RecommendationCategory;
   estimated_cost: number;
   notes: string;
+  business_id?: string | null; // set when staged from a real directory business
+};
+
+type VerifiedBusiness = {
+  id: string;
+  name: string;
+  primary_sector: string | null;
+  country_of_registration: string | null;
+  bio: string | null;
 };
 
 type SavedItinerary = {
@@ -42,6 +51,8 @@ type SavedItem = {
   currency: string;
   notes: string | null;
   day: number;
+  business_id: string | null;
+  businesses: { id: string; name: string } | { id: string; name: string }[] | null;
 };
 
 export default function TripPlannerPage() {
@@ -58,6 +69,7 @@ export default function TripPlannerPage() {
   const [budgetCurrency, setBudgetCurrency] = useState<"USD" | "NPR">("USD");
   const [selectedInterests, setSelectedInterests] = useState<InterestSlug[]>([]);
   const [staged, setStaged] = useState<StagedItem[]>([]);
+  const [verifiedBiz, setVerifiedBiz] = useState<VerifiedBusiness[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +81,34 @@ export default function TripPlannerPage() {
   const recommendations = useMemo(
     () => recommendationsFor(view, selectedInterests),
     [view, selectedInterests]
+  );
+
+  // Real, verified directory businesses — linkable recommendations. Degrades
+  // gracefully: when the directory is sparse this list is short/empty and the
+  // curated templates below carry the planner.
+  useEffect(() => {
+    async function loadBiz() {
+      const { data } = await supabase
+        .from("businesses")
+        .select("id, name, primary_sector, country_of_registration, bio")
+        .eq("verification_status", "verified")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setVerifiedBiz(data ?? []);
+    }
+    loadBiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const normCountry = (c: string | null): "us" | "nepal" | null => {
+    const l = (c ?? "").toLowerCase();
+    if (l.includes("nepal") || l === "np") return "nepal";
+    if (l.includes("united states") || l === "usa" || l === "us") return "us";
+    return null;
+  };
+  // Bridge = corridor-wide; US/Nepal narrow to that side (matches Directory).
+  const bizForView = verifiedBiz.filter(
+    (b) => view === "bridge" || normCountry(b.country_of_registration) === view
   );
 
   const budgetBreakdown = useMemo(() => computeBudgetBreakdown(budgetAmount), [budgetAmount]);
@@ -112,6 +152,22 @@ export default function TripPlannerPage() {
         category: rec.category,
         estimated_cost: rec.estimatedCostUSD,
         notes: rec.note,
+      },
+    ]);
+  }
+
+  function addBusiness(b: VerifiedBusiness) {
+    const key = `biz-${b.id}`;
+    if (staged.some((s) => s.key === key)) return;
+    setStaged((prev) => [
+      ...prev,
+      {
+        key,
+        title: b.name,
+        category: "other",
+        estimated_cost: 0,
+        notes: b.primary_sector ?? "",
+        business_id: b.id,
       },
     ]);
   }
@@ -168,6 +224,7 @@ export default function TripPlannerPage() {
           currency: "USD",
           notes: s.notes,
           sort_order: idx,
+          business_id: s.business_id ?? null,
         }))
       );
     }
@@ -187,11 +244,11 @@ export default function TripPlannerPage() {
     if (!expandedItems[id]) {
       const { data } = await supabase
         .from("itinerary_items")
-        .select("id, title, category, estimated_cost, currency, notes, day")
+        .select("id, title, category, estimated_cost, currency, notes, day, business_id, businesses:business_id ( id, name )")
         .eq("itinerary_id", id)
         .order("day")
         .order("sort_order");
-      setExpandedItems((prev) => ({ ...prev, [id]: data ?? [] }));
+      setExpandedItems((prev) => ({ ...prev, [id]: (data as SavedItem[] | null) ?? [] }));
     }
   }
 
@@ -345,6 +402,40 @@ export default function TripPlannerPage() {
       <div className="rounded-lg border border-line bg-white p-4">
         <h2 className="text-sm font-semibold">{t("recommendationsTitle")}</h2>
         <p className="mt-0.5 text-xs text-ink-soft">{t("recommendationsHint")}</p>
+
+        {bizForView.length > 0 && (
+          <div className="mt-3">
+            <p className="eyebrow text-ink-soft">{t("verifiedBusinessesTitle")}</p>
+            <div className="mt-1.5 space-y-2">
+              {bizForView.map((b) => {
+                const key = `biz-${b.id}`;
+                const isAdded = staged.some((s) => s.key === key);
+                return (
+                  <div key={b.id} className="flex items-start justify-between gap-3 rounded-md border border-line p-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{b.name}</p>
+                      {b.primary_sector && <p className="mt-0.5 text-xs text-ink-soft">{b.primary_sector}</p>}
+                      <Link
+                        href={`/business/${b.id}`}
+                        className="mt-1 inline-block text-xs font-medium text-pine hover:text-pine-ink"
+                      >
+                        {t("viewBusiness")}
+                      </Link>
+                    </div>
+                    <button
+                      onClick={() => addBusiness(b)}
+                      disabled={isAdded}
+                      className="flex shrink-0 items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium hover:bg-mist disabled:opacity-40"
+                    >
+                      {isAdded ? t("added") : <><Plus size={12} /> {t("addToItinerary")}</>}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="mt-3 space-y-2">
           {recommendations.map((r) => {
             const isAdded = staged.some((s) => s.key === r.id);
@@ -436,14 +527,27 @@ export default function TripPlannerPage() {
                         <p className="text-xs text-ink-soft">{t("stagedEmpty")}</p>
                       ) : (
                         <>
-                          {items.map((i) => (
-                            <div key={i.id} className="flex items-center justify-between text-xs">
-                              <span>{i.title}</span>
-                              <span className="text-ink-soft">
-                                {i.currency} {i.estimated_cost}
-                              </span>
-                            </div>
-                          ))}
+                          {items.map((i) => {
+                            const biz = Array.isArray(i.businesses) ? i.businesses[0] : i.businesses;
+                            return (
+                              <div key={i.id} className="flex items-center justify-between gap-2 text-xs">
+                                <span className="min-w-0 truncate">
+                                  {i.title}
+                                  {biz && (
+                                    <Link
+                                      href={`/business/${biz.id}`}
+                                      className="ml-1.5 font-medium text-pine hover:text-pine-ink"
+                                    >
+                                      {t("viewBusiness")}
+                                    </Link>
+                                  )}
+                                </span>
+                                <span className="shrink-0 text-ink-soft">
+                                  {i.currency} {i.estimated_cost}
+                                </span>
+                              </div>
+                            );
+                          })}
                           <div className="flex items-center justify-between border-t border-line pt-1.5 text-xs font-medium">
                             <span>{t("totalEstimated")}</span>
                             <span>USD {total}</span>
