@@ -1,0 +1,16 @@
+# Normalize all text to LF in the repo; check out LF everywhere.
+# Ends the phantom CRLF full-file diffs on Windows checkouts.
+* text=auto eol=lf
+
+# Never line-normalize binary assets (protects the vendored Inter font).
+*.woff2 binary
+*.woff  binary
+*.ttf   binary
+*.otf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.pdf   binary
