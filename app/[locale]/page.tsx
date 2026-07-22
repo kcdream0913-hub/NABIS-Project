@@ -1,20 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
+import Avatar from "@/components/Avatar";
+import TrustBadge from "@/components/TrustBadge";
 import Composer from "./composer";
 import { Compass, MessagesSquare } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
+import { VIEW_META } from "@/lib/data";
+import { useApp } from "@/lib/store";
+import type { View } from "@/lib/types";
 
+type FeedProfile = {
+  name: string | null;
+  avatar_url: string | null;
+  verification_status: string | null;
+};
+type FeedBusiness = {
+  name: string | null;
+  logo_url: string | null;
+  verification_status: string | null;
+};
 type Post = {
   id: string;
   body: string;
   created_at: string;
   posted_as: string;
-  profiles: { name: string | null } | { name: string | null }[] | null;
+  view: string | null;
+  profiles: FeedProfile | FeedProfile[] | null;
+  businesses: FeedBusiness | FeedBusiness[] | null;
 };
 type Channel = { id: string; slug: string; name: string; description: string | null };
 
@@ -22,7 +39,11 @@ type Thread = { id: string; otherName: string };
 
 export default function HomePage() {
   const t = useTranslations("home");
+  const tCommon = useTranslations("common");
+  const tView = useTranslations("view");
+  const format = useFormatter();
   const supabase = createClient();
+  const { view } = useApp();
   const [mode, setMode] = useState<"feed" | "messages">("feed");
   const [posts, setPosts] = useState<Post[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -31,12 +52,17 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   async function loadFeed() {
+    // View-aware feed (spec §5.6/§5.8): the active country view filters the
+    // stream. Posts created before view-stamping (view null) stay visible.
     const { data } = await supabase
       .from("posts")
-      .select("id, body, created_at, posted_as, profiles:author_id ( name )")
+      .select(
+        "id, body, created_at, posted_as, view, profiles:author_id ( name, avatar_url, verification_status ), businesses:business_id ( name, logo_url, verification_status )"
+      )
+      .or(`view.eq.${view},view.is.null`)
       .order("created_at", { ascending: false })
       .limit(30);
-    setPosts(data ?? []);
+    setPosts((data as Post[] | null) ?? []);
   }
 
   useEffect(() => {
@@ -92,7 +118,7 @@ export default function HomePage() {
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [mode, view]);
 
   return (
     <div>
@@ -131,13 +157,49 @@ export default function HomePage() {
           ) : (
             posts.map((p) => {
               const author = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+              const business = Array.isArray(p.businesses) ? p.businesses[0] : p.businesses;
+              // Business-identity posts (spec §5.6) surface the business;
+              // everything else surfaces the human. Identity + verification
+              // always travel together (spec §5.4 "badges travel").
+              const asBusiness = p.posted_as === "business" && business;
+              const displayName = (asBusiness ? business?.name : author?.name) ?? t("member");
+              const verified =
+                (asBusiness ? business?.verification_status : author?.verification_status) ===
+                "verified";
+              const chipView = p.view && p.view in VIEW_META ? (p.view as View) : null;
               return (
                 <article key={p.id} className="rounded-lg border border-line bg-white p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold">{author?.name ?? t("member")}</p>
+                  <div className="flex items-start gap-3">
+                    <Avatar
+                      url={asBusiness ? business?.logo_url : author?.avatar_url}
+                      name={displayName}
+                      size={38}
+                      shape={asBusiness ? "rounded" : "circle"}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <p className="truncate text-sm font-semibold">{displayName}</p>
+                        <TrustBadge
+                          verified={verified}
+                          label={asBusiness ? tCommon("verifiedBusiness") : tCommon("verified")}
+                        />
+                        {chipView && (
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${VIEW_META[chipView].chip}`}
+                          >
+                            {tView(`${chipView}Short`)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-ink-soft">
+                        <time dateTime={p.created_at}>
+                          {format.relativeTime(new Date(p.created_at))}
+                        </time>
+                      </p>
+                    </div>
                     <ReportButton targetType="post" targetId={p.id} />
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed">{p.body}</p>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{p.body}</p>
                 </article>
               );
             })

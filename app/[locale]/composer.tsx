@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useApp } from "@/lib/store";
 
 export default function Composer({
   isVerified,
@@ -13,6 +14,7 @@ export default function Composer({
 }) {
   const t = useTranslations("composer");
   const supabase = createClient();
+  const { view } = useApp();
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
 
@@ -26,10 +28,14 @@ export default function Composer({
       setPosting(false);
       return;
     }
+    // Posts are stamped with the active country view (spec §5.6: the feed
+    // is view-aware). Server-side Bridge-authoring rules (BL-TRUST-01 C3)
+    // arrive with the per-track trust model — this is the display layer.
     await supabase.from("posts").insert({
       author_id: user.id,
       posted_as: "user",
       body: body.trim(),
+      view,
     });
     setBody("");
     setPosting(false);
