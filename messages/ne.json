@@ -98,7 +98,9 @@
     "empty": "अहिलेसम्म कुनै कार्यक्रम छैन।",
     "going": "जाँदैछु",
     "rsvp": "RSVP",
-    "loading": "लोड हुँदैछ…"
+    "loading": "लोड हुँदैछ…",
+    "hostedBy": "{name} द्वारा आयोजित",
+    "attendees": "{count, plural, =0 {अहिलेसम्म RSVP छैन} other {# जना जाँदै}}"
   },
   "channels": {
     "eyebrow": "म्यासेज",

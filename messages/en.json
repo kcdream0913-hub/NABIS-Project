@@ -98,7 +98,9 @@
     "empty": "No events yet.",
     "going": "Going",
     "rsvp": "RSVP",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "hostedBy": "Hosted by {name}",
+    "attendees": "{count, plural, =0 {No RSVPs yet} one {# going} other {# going}}"
   },
   "channels": {
     "eyebrow": "Messages",

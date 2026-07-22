@@ -148,6 +148,17 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     in its project files claims "never pushed to GitHub" — false; correct it
     or ignore it. The repo is github.com/kcdream0913-hub/NABIS-Project.
   - Verified: `npm run verify` green (build 28/28 both locales + 31 tests).
+- **2026-07-22 — Design per-feature pass (CTO session, incremental):**
+  - **Events — DONE.** Migration `events_add_timestamptz_and_tz` (additive:
+    `starts_at`/`ends_at timestamptz` + `event_tz`; events table EMPTY →
+    zero-data-risk; advisor re-run clean, no new findings). `events/page.tsx`:
+    explicit tz-aware "when" (renders `starts_at` in the event's IANA zone with
+    the zone shown via `Intl.DateTimeFormat`; falls back to legacy date/time),
+    host join ("Hosted by …"), per-event RSVP count (attendee proof, optimistic),
+    `VIEW_META` view chip. +2 i18n keys (en+ne). tsc 0 · vitest 31/31 · build
+    green. NOTE: events have no create form (seeded/admin-only) — whatever creates
+    them must set `starts_at` + `event_tz`; seeding the NABIS-2026 anchor event is
+    a good next step.
 - **2026-07-22 — Design Batch 2 (token system + feed-card completion, CTO session):**
   - **Ground truth first, no duplication:** the parallel session had already
     shipped the view-aware feed card (`5afff12`, live on origin/main) — Avatar
