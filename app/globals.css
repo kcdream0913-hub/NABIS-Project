@@ -48,6 +48,38 @@
      Defined here as pine + white, matching every other primary button. */
   --color-fill-accent: #0f5c55;
   --color-on-accent: #ffffff;
+
+  /* ---------------------------------------------------------------
+     Batch 2 — non-color token system (type / radius / elevation /
+     motion). Tailwind v4 @theme generates a utility per namespace.
+     Grounded in design-foundations (§type, §motion). Spacing stays on
+     Tailwind's 4px scale — already a consistent token system, so no
+     redundant aliases. Names are NEW (text-body, rounded-card,
+     shadow-card, ease-standard); shipped utilities are untouched.
+     --------------------------------------------------------------- */
+
+  /* Type ramp — Inter. UGC content floor is 16px (post/message bodies
+     never smaller); UI chrome may keep Tailwind's text-sm/text-xs. */
+  --text-display: 1.75rem;              /* 28px — hero / section title */
+  --text-display--line-height: 1.22;
+  --text-title: 1.375rem;               /* 22px — card / screen title  */
+  --text-title--line-height: 1.28;
+  --text-body: 1rem;                    /* 16px — UGC floor (post body) */
+  --text-body--line-height: 1.6;
+  --text-meta: 0.8125rem;               /* 13px — timestamps, chips     */
+  --text-meta--line-height: 1.45;
+
+  /* Radius — post card and larger surfaces. */
+  --radius-card: 0.875rem;              /* 14px → rounded-card */
+
+  /* Elevation — borders-first: the shadow is a whisper, the hairline
+     border does the structural work (design-foundations). */
+  --shadow-card: 0 1px 2px rgba(16, 33, 31, 0.06);
+  --shadow-raised: 0 4px 12px rgba(16, 33, 31, 0.08);
+
+  /* Motion — one easing, no bounce; durations 120/180/240 via
+     duration-[Nms]. Reduced-motion is collapsed globally below. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 html {

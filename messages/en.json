@@ -69,7 +69,9 @@
     "directMessages": "Direct messages",
     "channels": "Channels",
     "member": "Member",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "react": "React",
+    "comment": "Comment"
   },
   "composer": {
     "verifyToPost": "Verify your profile to post to the feed.",

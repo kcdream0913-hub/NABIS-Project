@@ -8,7 +8,7 @@ import EmptyState from "@/components/EmptyState";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
 import Composer from "./composer";
-import { Compass, MessagesSquare } from "lucide-react";
+import { Compass, MessagesSquare, Heart, MessageCircle } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
 import { VIEW_META } from "@/lib/data";
 import { useApp } from "@/lib/store";
@@ -199,7 +199,31 @@ export default function HomePage() {
                     </div>
                     <ReportButton targetType="post" targetId={p.id} />
                   </div>
-                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{p.body}</p>
+                  <p className="mt-3 whitespace-pre-line text-body leading-relaxed">{p.body}</p>
+                  {/* Reactions-ready scaffold (Batch 2): final footer layout,
+                      affordances disabled until reactions are wired. */}
+                  <footer className="mt-3 flex items-center gap-1 border-t border-line pt-2">
+                    <button
+                      type="button"
+                      disabled
+                      aria-label={t("react")}
+                      title={t("react")}
+                      data-reactions-scaffold
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta text-ink-soft transition-colors ease-standard disabled:opacity-70"
+                    >
+                      <Heart size={14} aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      aria-label={t("comment")}
+                      title={t("comment")}
+                      data-reactions-scaffold
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta text-ink-soft transition-colors ease-standard disabled:opacity-70"
+                    >
+                      <MessageCircle size={14} aria-hidden />
+                    </button>
+                  </footer>
                 </article>
               );
             })

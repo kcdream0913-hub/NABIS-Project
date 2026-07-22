@@ -148,6 +148,36 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     in its project files claims "never pushed to GitHub" — false; correct it
     or ignore it. The repo is github.com/kcdream0913-hub/NABIS-Project.
   - Verified: `npm run verify` green (build 28/28 both locales + 31 tests).
+- **2026-07-22 — Design Batch 2 (token system + feed-card completion, CTO session):**
+  - **Ground truth first, no duplication:** the parallel session had already
+    shipped the view-aware feed card (`5afff12`, live on origin/main) — Avatar
+    (circle/rounded by identity), business-vs-user identity, TrustBadge,
+    `VIEW_META` chip, relative timestamp, view-filtered query. NOT rebuilt;
+    a second card would have collided with live work.
+  - **Token system (the real Batch 2 gap):** `app/globals.css` `@theme` held
+    colors only. Added the non-color layer per design-foundations — type ramp
+    (`--text-display/title/body/meta`, Inter, 16px UGC floor + line-heights),
+    `--radius-card`, `--shadow-card`/`--shadow-raised` (borders-first),
+    `--ease-standard`. Additive, NEW utility names — nothing shipped restyled.
+    Spacing intentionally stays on Tailwind's 4px scale (already a token
+    system; no redundant aliases). Tailwind v4 emits a utility per *used*
+    token; unused ones (display/title/radius-card/shadow-card) live in source
+    and materialize on adoption.
+  - **Feed card finished to spec (additive, not a rebuild):** post body lifted
+    14px → `text-body` (16px UGC floor — the shipped card violated the
+    foundations content floor), plus a reactions-ready footer scaffold
+    (disabled affordances, `data-reactions-scaffold`, i18n `home.react` /
+    `home.comment` added to en + ne). Structure only; no reaction behavior
+    wired, per brief.
+  - Verified: `npx tsc --noEmit` 0 errors; `vitest` 31/31 (bundle parity holds,
+    322 keys en/ne); `next build` green (all routes, both locales); compiled
+    CSS confirmed to emit `--text-body` / `--text-meta` / `--ease-standard`
+    and `.text-body`.
+  - Built on `origin/main` `5afff12` in a clean clone, delivered as a reviewable
+    patch. **Local `main` was behind at `bbd9fc5` — fast-forward pull to
+    `5afff12` before applying.** Repo has no `.gitattributes`, so Windows
+    checkouts show a phantom ~90-file CRLF diff; add `* text=auto eol=lf` to
+    end it permanently.
 - **2026-07-21 (evening) — Team invites, multi-sector businesses, 15-sector list:**
   - **Team invitation UX**: "email not found" is no longer a dead end — the
     owner gets an "Invite to BridgeLink" action that creates a real `invites`
@@ -389,7 +419,11 @@ Deploy: Vercel. Tests: Vitest + Playwright (add with the data layer).
 Corridor palette in `app/globals.css` — pine `#0F5C55` (brand/Bridge), denim
 `#2B4C8C` (US), rhodo `#C2412F` (Nepal), mist/ink/line neutrals. The three view
 colors are **informational**: they mark country context in the toggle, the topbar
-context rail, and post/member chips. Type: system stack; eyebrow labels
+context rail, and post/member chips. Type: **Inter** (Latin, self-hosted via
+next/font/local) + **Noto Sans Devanagari**, with per-script `:lang(ne)` metrics —
+no longer the system stack. A semantic non-color token layer (type / radius /
+elevation / motion) lives in the `@theme` block of `app/globals.css` (Batch 2);
+spacing stays on Tailwind's 4px scale. Eyebrow labels
 (11px/uppercase/tracked) for section context. Professional density; hairline borders;
 no gradients; restraint everywhere except the context-color system.
 
