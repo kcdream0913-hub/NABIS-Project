@@ -56,6 +56,8 @@ export default function HomePage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedThread, setSelectedThread] = useState<string | null>(null);
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
+  const [myReactions, setMyReactions] = useState<Set<string>>(new Set());
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +72,54 @@ export default function HomePage() {
       .or(`view.eq.${view},view.is.null`)
       .order("created_at", { ascending: false })
       .limit(30);
-    setPosts((data as Post[] | null) ?? []);
+    const list = (data as Post[] | null) ?? [];
+    setPosts(list);
+
+    // Reactions for the visible posts: counts + which ones I've reacted to.
+    const ids = list.map((p) => p.id);
+    if (ids.length === 0) {
+      setReactionCounts({});
+      setMyReactions(new Set());
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { data: reacts } = await supabase
+      .from("post_reactions")
+      .select("post_id, user_id")
+      .in("post_id", ids);
+    const counts: Record<string, number> = {};
+    const mine = new Set<string>();
+    for (const r of reacts ?? []) {
+      counts[r.post_id] = (counts[r.post_id] ?? 0) + 1;
+      if (user && r.user_id === user.id) mine.add(r.post_id);
+    }
+    setReactionCounts(counts);
+    setMyReactions(mine);
+  }
+
+  async function toggleReaction(postId: string) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const reacted = myReactions.has(postId);
+    setMyReactions((prev) => {
+      const n = new Set(prev);
+      if (reacted) n.delete(postId);
+      else n.add(postId);
+      return n;
+    });
+    setReactionCounts((prev) => ({
+      ...prev,
+      [postId]: Math.max(0, (prev[postId] ?? 0) + (reacted ? -1 : 1)),
+    }));
+    if (reacted) {
+      await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", user.id);
+    } else {
+      await supabase.from("post_reactions").insert({ post_id: postId, user_id: user.id });
+    }
   }
 
   async function loadMessages() {
@@ -232,18 +281,23 @@ export default function HomePage() {
                     <ReportButton targetType="post" targetId={p.id} />
                   </div>
                   <p className="mt-3 whitespace-pre-line text-body leading-relaxed">{p.body}</p>
-                  {/* Reactions-ready scaffold (Batch 2): final footer layout,
-                      affordances disabled until reactions are wired. */}
+                  {/* Feed footer: the like reaction is wired to post_reactions;
+                      the comment affordance stays a scaffold (comments are later). */}
                   <footer className="mt-3 flex items-center gap-1 border-t border-line pt-2">
                     <button
                       type="button"
-                      disabled
+                      onClick={() => toggleReaction(p.id)}
+                      aria-pressed={myReactions.has(p.id)}
                       aria-label={t("react")}
                       title={t("react")}
-                      data-reactions-scaffold
-                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta text-ink-soft transition-colors ease-standard disabled:opacity-70"
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta transition-colors ease-standard hover:bg-mist ${
+                        myReactions.has(p.id) ? "text-rhodo" : "text-ink-soft"
+                      }`}
                     >
-                      <Heart size={14} aria-hidden />
+                      <Heart size={14} aria-hidden fill={myReactions.has(p.id) ? "currentColor" : "none"} />
+                      {(reactionCounts[p.id] ?? 0) > 0 && (
+                        <span className="tabular-nums">{reactionCounts[p.id]}</span>
+                      )}
                     </button>
                     <button
                       type="button"

@@ -191,6 +191,16 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     desktop, stacked on mobile) with last-message previews, relative times, and
     **unread indicators** derived from `last_read_at`. +3 i18n keys. tsc 0 ·
     vitest 31/31 · build green.
+  - **Reactions wired to real data — DONE.** Migration `post_reactions_table`
+    (`post_reactions(post_id, user_id, created_at)` PK(post_id,user_id); RLS:
+    world-readable counts + insert/delete-own — same safe shape as `rsvps`,
+    consistent with posts already world-readable; advisor clean, no new
+    findings). The Batch-2 feed footer's Heart scaffold is now a real like:
+    loads counts + my-reactions for visible posts, optimistic toggle
+    (insert/delete own), filled + count when reacted. Comment affordance stays a
+    scaffold (comments are a later feature). tsc 0 · vitest 31/31 · build green.
+    NOTE: feed has 0 posts today, so like the directory it's mechanism-first —
+    visible once posts exist. This completes the 5-feature per-feature pass.
 - **2026-07-22 — Design Batch 2 (token system + feed-card completion, CTO session):**
   - **Ground truth first, no duplication:** the parallel session had already
     shipped the view-aware feed card (`5afff12`, live on origin/main) — Avatar
