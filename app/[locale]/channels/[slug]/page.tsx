@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import EmptyState from "@/components/EmptyState";
+import Avatar from "@/components/Avatar";
+import TrustBadge from "@/components/TrustBadge";
 
 export default async function ChannelPage({
   params,
@@ -24,7 +26,7 @@ export default async function ChannelPage({
 
   const { data: businesses } = await supabase
     .from("businesses")
-    .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status, is_paid_provider, access_price_amount, access_price_currency")
+    .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status, is_paid_provider, access_price_amount, access_price_currency, logo_url")
     .or(`primary_sector.eq.${channel.sector},secondary_sectors.cs.{${channel.sector}}`);
 
   return (
@@ -49,16 +51,12 @@ export default async function ChannelPage({
               href={`/business/${b.id}`}
               className="flex items-start gap-3 rounded-lg border border-line bg-white p-4 hover:border-pine"
             >
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-pine-soft text-sm font-bold text-pine">
-                {b.name.slice(0, 2).toUpperCase()}
-              </span>
+              <Avatar name={b.name} url={b.logo_url} shape="rounded" size={44} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold">{b.name}</p>
                   {b.verification_status === "verified" ? (
-                    <span className="rounded bg-bg-success px-1.5 py-0.5 text-[10px] font-semibold text-text-success">
-                      {t("verifiedBusiness")}
-                    </span>
+                    <TrustBadge verified label={t("verifiedBusiness")} />
                   ) : (
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-soft">
                       {t("listed")}

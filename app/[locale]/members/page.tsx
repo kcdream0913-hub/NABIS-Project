@@ -6,6 +6,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { findOrCreateThread } from "@/lib/threads";
 import { useSectors } from "@/lib/useSectors";
+import Avatar from "@/components/Avatar";
+import TrustBadge from "@/components/TrustBadge";
 
 type PersonRow = {
   id: string;
@@ -14,6 +16,7 @@ type PersonRow = {
   city: string | null;
   country: "us" | "nepal" | null;
   verification_status: string;
+  avatar_url: string | null;
 };
 type BusinessRow = {
   id: string;
@@ -23,10 +26,12 @@ type BusinessRow = {
   primary_sector: string | null;
   secondary_sectors: string[];
   verification_status: string;
+  logo_url: string | null;
 };
 
 export default function DirectoryPage() {
   const t = useTranslations("directory");
+  const tCommon = useTranslations("common");
   const sectors = useSectors();
   const supabase = createClient();
   const router = useRouter();
@@ -43,11 +48,11 @@ export default function DirectoryPage() {
       const [{ data: p }, { data: b }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, name, bio, city, country, verification_status")
+          .select("id, name, bio, city, country, verification_status, avatar_url")
           .order("created_at", { ascending: false }),
         supabase
           .from("businesses")
-          .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status")
+          .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status, logo_url")
           .order("created_at", { ascending: false }),
       ]);
       setPeople(p ?? []);
@@ -115,9 +120,7 @@ export default function DirectoryPage() {
           {filteredPeople.map((m) => (
             <div key={m.id} className="rounded-lg border border-line bg-white p-4">
               <Link href={`/people/${m.id}`} className="flex items-center gap-3 hover:opacity-80">
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-pine-soft text-sm font-bold text-pine">
-                  {(m.name ?? "?").slice(0, 2).toUpperCase()}
-                </span>
+                <Avatar name={m.name} url={m.avatar_url} size={44} />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{m.name ?? t("member")}</p>
                   <p className="truncate text-xs text-ink-soft">{m.city}</p>
@@ -125,11 +128,7 @@ export default function DirectoryPage() {
               </Link>
               {m.bio && <p className="mt-3 line-clamp-2 text-sm text-ink-soft">{m.bio}</p>}
               <div className="mt-2 flex items-center justify-between">
-                {m.verification_status === "verified" && (
-                  <span className="inline-block rounded bg-bg-success px-1.5 py-0.5 text-[10px] font-semibold text-text-success">
-                    Verified
-                  </span>
-                )}
+                <TrustBadge verified={m.verification_status === "verified"} label={tCommon("verified")} />
                 <button
                   onClick={async () => {
                     const threadId = await findOrCreateThread(m.id);
@@ -151,18 +150,26 @@ export default function DirectoryPage() {
               href={`/business/${b.id}`}
               className="rounded-lg border border-line bg-white p-4 hover:border-pine"
             >
-              <p className="text-sm font-semibold">{b.name}</p>
-              <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-ink-soft">
-                <span className="font-medium text-ink">
-                  {sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector}
-                </span>
-                {(b.secondary_sectors ?? []).map((slug) => (
-                  <span key={slug} className="rounded bg-mist px-1 py-0.5">
-                    {sectors.find((s) => s.slug === slug)?.name ?? slug}
-                  </span>
-                ))}
-                <span>· {b.country_of_registration}</span>
-              </p>
+              <div className="flex items-start gap-3">
+                <Avatar name={b.name} url={b.logo_url} shape="rounded" size={40} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold">{b.name}</p>
+                    <TrustBadge verified={b.verification_status === "verified"} label={tCommon("verified")} />
+                  </div>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-ink-soft">
+                    <span className="font-medium text-ink">
+                      {sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector}
+                    </span>
+                    {(b.secondary_sectors ?? []).map((slug) => (
+                      <span key={slug} className="rounded bg-mist px-1 py-0.5">
+                        {sectors.find((s) => s.slug === slug)?.name ?? slug}
+                      </span>
+                    ))}
+                    <span>· {b.country_of_registration}</span>
+                  </p>
+                </div>
+              </div>
               {b.bio && <p className="mt-2 line-clamp-2 text-sm text-ink-soft">{b.bio}</p>}
             </Link>
           ))}

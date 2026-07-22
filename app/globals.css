@@ -22,6 +22,25 @@
   --color-rhodo-soft: #f9e9e6;
   --color-gold: #9a7222;
   --color-gold-soft: #f7efdd;
+
+  /*
+    Trust = verification. Deliberately teal, not green (≠ success) and not
+    pine (≠ clickable) — per design-foundations. Used only by the shield
+    trust mark. AA-verified: trust-ink 8.77:1 on white, 7.47:1 on trust-soft;
+    the #0e7570 icon fill clears the 3:1 graphic threshold on both.
+  */
+  --color-trust: #0e7570;
+  --color-trust-soft: #e1f0ee;
+  --color-trust-ink: #0b544f;
+
+  /* Success = genuinely-good state (posted, sent, eligible) — green, distinct
+     from trust. AA-verified: 6.49:1 on white, 5.72:1 on bg-success. */
+  --color-bg-success: #e6f4ec;
+  --color-text-success: #146c3a;
+
+  /* Raised neutral surface (one step above white/mist) for inset panels like
+     the ID-upload preview. AA: ink 14.5:1, ink-soft 4.93:1 on it. */
+  --color-surface-2: #edf1f0;
 }
 
 html {

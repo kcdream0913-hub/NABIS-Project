@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContactBusiness from "@/app/[locale]/business/[id]/contact-business";
 import ReportButton from "@/components/ReportButton";
+import Avatar from "@/components/Avatar";
+import TrustBadge from "@/components/TrustBadge";
 
 export default async function PersonPage({
   params,
@@ -20,17 +22,15 @@ export default async function PersonPage({
     <div className="mx-auto max-w-xl">
       <div className="rounded-lg border border-line bg-white p-5">
         <div className="flex items-start gap-4">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-pine-soft text-lg font-bold text-pine">
-            {(person.name ?? "?").slice(0, 2).toUpperCase()}
-          </span>
+          <Avatar name={person.name} url={person.avatar_url} size={56} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-semibold">{person.name ?? t("member")}</h1>
-              {person.verification_status === "verified" && (
-                <span className="rounded bg-bg-success px-2 py-0.5 text-[11px] font-semibold text-text-success">
-                  {t("verified")}
-                </span>
-              )}
+              <TrustBadge
+                verified={person.verification_status === "verified"}
+                label={t("verified")}
+                size="md"
+              />
               <span className="ml-auto">
                 <ReportButton targetType="profile" targetId={person.id} />
               </span>

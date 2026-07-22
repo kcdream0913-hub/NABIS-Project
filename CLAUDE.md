@@ -123,6 +123,31 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-22 — Design Batch 1 integrated (from the parallel design-audit session):**
+  - Cross-session workflow worked as intended: the design session produced a
+    read-only fix batch as a zip; THIS session reviewed the diff against the
+    real repo, verified DB columns it depends on (`profiles.avatar_url`,
+    `businesses.logo_url` — both exist live), and integrated it. Single
+    writer preserved; no divergent trees.
+  - New `components/Avatar.tsx` (image with monogram fallback, never a
+    broken-image icon) and `components/TrustBadge.tsx` (single reusable
+    verification mark — teal `--trust` tokens, deliberately not green ≠
+    success and not pine ≠ clickable; unverified renders NOTHING, never a
+    scarlet letter; forward-compatible `tier="bridge"` gold ring, unused
+    until the DB models a Bridge tier).
+  - New tokens in `app/globals.css`: trust / trust-soft / trust-ink,
+    formalized bg-success/text-success, surface-2 — all AA contrast-checked
+    per the design session's audit.
+  - Replaced inline monograms + inline verified pills across Sidebar,
+    directory (people + businesses), business detail (header + team),
+    channel detail, and person profile.
+  - **Fixed during integration**: directory's verified badge had hardcoded
+    English "Verified" (pre-existing miss from the translation pass, faithfully
+    preserved by the batch) — now uses `common.verified`.
+  - Note for the design session's next batch: the stale starter-kit CLAUDE.md
+    in its project files claims "never pushed to GitHub" — false; correct it
+    or ignore it. The repo is github.com/kcdream0913-hub/NABIS-Project.
+  - Verified: `npm run verify` green (build 28/28 both locales + 31 tests).
 - **2026-07-21 (evening) — Team invites, multi-sector businesses, 15-sector list:**
   - **Team invitation UX**: "email not found" is no longer a dead end — the
     owner gets an "Invite to BridgeLink" action that creates a real `invites`

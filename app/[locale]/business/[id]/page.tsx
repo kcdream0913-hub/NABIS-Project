@@ -5,6 +5,8 @@ import ContactBusiness from "./contact-business";
 import TeamManager from "./team-manager";
 import RemoveMemberButton from "./remove-member-button";
 import ReportButton from "@/components/ReportButton";
+import Avatar from "@/components/Avatar";
+import TrustBadge from "@/components/TrustBadge";
 
 export default async function BusinessPage({
   params,
@@ -47,17 +49,15 @@ export default async function BusinessPage({
     <div className="mx-auto max-w-2xl">
       <div className="rounded-lg border border-line bg-white p-5">
         <div className="flex items-start gap-4">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-pine-soft text-lg font-bold text-pine">
-            {business.name.slice(0, 2).toUpperCase()}
-          </span>
+          <Avatar name={business.name} url={business.logo_url} shape="rounded" size={56} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-semibold">{business.name}</h1>
-              {business.verification_status === "verified" && (
-                <span className="rounded bg-bg-success px-2 py-0.5 text-[11px] font-semibold text-text-success">
-                  {t("verifiedBusiness")}
-                </span>
-              )}
+              <TrustBadge
+                verified={business.verification_status === "verified"}
+                label={t("verifiedBusiness")}
+                size="md"
+              />
               <span className="ml-auto">
                 <ReportButton targetType="business" targetId={business.id} />
               </span>
@@ -99,9 +99,7 @@ export default async function BusinessPage({
                 key={m.id}
                 className="flex items-center gap-3 rounded-lg border border-line bg-white p-3"
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-pine-soft text-xs font-bold text-pine">
-                  {(person?.name ?? "?").slice(0, 2).toUpperCase()}
-                </span>
+                <Avatar name={person?.name} url={person?.avatar_url} size={36} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{person?.name ?? t("pending")}</p>
                   <p className="text-xs text-ink-soft">
