@@ -1,11 +1,14 @@
 {
   "nav": {
     "feed": "Feed / Messages",
-    "directory": "Directory",
+    "directory": "Members & Business",
     "channels": "Channels",
     "events": "Events",
     "registerBusiness": "Register business",
     "adminQueue": "Admin queue",
+    "groupCommunity": "Community",
+    "groupTools": "Tools",
+    "groupAdmin": "Admin",
     "comingNext": "Coming next",
     "tripPlanner": "Trip Planner",
     "phaseTag": "Phase 2",
@@ -84,8 +87,8 @@
     "post": "Post"
   },
   "directory": {
-    "eyebrow": "Directory",
-    "title": "Members & businesses",
+    "eyebrow": "Members & Business",
+    "title": "Members & Business",
     "people": "People",
     "businesses": "Businesses",
     "searchPlaceholder": "Search by name, business, or city",
@@ -114,7 +117,6 @@
     "detailSubtitle": "Businesses in this sector will appear here once verified.",
     "emptyTitle": "No registered businesses yet",
     "registerCta": "Register a business",
-    "listed": "Listed",
     "verifiedBusiness": "Verified Business",
     "secondaryTag": "Secondary"
   },

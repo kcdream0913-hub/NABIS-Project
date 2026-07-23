@@ -20,13 +20,26 @@ export default function Sidebar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const MAIN = [
-    { href: "/", label: t("feed"), icon: Home },
-    { href: "/members", label: t("directory"), icon: ContactRound },
-    { href: "/channels", label: t("channels"), icon: Hash },
-    { href: "/events", label: t("events"), icon: CalendarDays },
-    { href: "/trip-planner", label: t("tripPlanner"), icon: Map },
-    { href: "/business/new", label: t("registerBusiness"), icon: Building2 },
+  // Grouped backbone. Community = the daily social surfaces the founding cohort
+  // lives in; Tools = utilities + the register-business action. Sector channels
+  // stay in Community as the backbone of the network.
+  const GROUPS = [
+    {
+      label: t("groupCommunity"),
+      items: [
+        { href: "/", label: t("feed"), icon: Home },
+        { href: "/members", label: t("directory"), icon: ContactRound },
+        { href: "/channels", label: t("channels"), icon: Hash },
+        { href: "/events", label: t("events"), icon: CalendarDays },
+      ],
+    },
+    {
+      label: t("groupTools"),
+      items: [
+        { href: "/trip-planner", label: t("tripPlanner"), icon: Map },
+        { href: "/business/new", label: t("registerBusiness"), icon: Building2 },
+      ],
+    },
   ];
 
   useEffect(() => {
@@ -85,10 +98,18 @@ export default function Sidebar() {
         </span>
       </Link>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
-        <div className="space-y-0.5">{MAIN.map((i) => item(i.href, i.label, i.icon))}</div>
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        {GROUPS.map((g) => (
+          <div key={g.label} className="space-y-0.5">
+            <p className="eyebrow px-3 pb-1 text-ink-soft">{g.label}</p>
+            {g.items.map((i) => item(i.href, i.label, i.icon))}
+          </div>
+        ))}
         {isAdmin && (
-          <div className="space-y-0.5">{item("/admin", t("adminQueue"), ShieldAlert)}</div>
+          <div className="space-y-0.5">
+            <p className="eyebrow px-3 pb-1 text-ink-soft">{t("groupAdmin")}</p>
+            {item("/admin", t("adminQueue"), ShieldAlert)}
+          </div>
         )}
       </nav>
 

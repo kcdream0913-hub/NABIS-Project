@@ -123,6 +123,23 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-23 (Phase A · nav) — grouped navigation + "Members & Business" rename:**
+  - Nav backbone grouped into eyebrow-labelled sections: **Community** (Feed,
+    Members & Business, Channels, Events) and **Tools** (Trip Planner, Register
+    business), with the admin queue under its own **Admin** group (admin-only).
+    Sector channels stay in Community as the backbone (D-017).
+  - **Directory → "Members & Business"** across nav label, page eyebrow and H1
+    (D-019). Route stays `/members` so links + the middleware public-path list
+    don't break; the internal `DirectoryPage`/`directory.*` identifiers are
+    unchanged (code-only, no user impact).
+  - **Removed the channel-page "Listed" chip** (D-020): unverified now renders
+    nothing there, matching the ratified no-badge rule everywhere. Dropped the
+    now-dead `channels.listed` key from both locales (parity held).
+  - Decision log: recorded D-016…D-020 (billing placeholder, channel-creation
+    gating, phased sequencing, the rename, and the no-badge rule).
+  - Scope: nav is Phase A step 1 only. Polished Members & Business cards and the
+    Feed redesign are the next two Phase-A commits, each hub-verified before push.
+  - Verified: tsc 0 · vitest 46/46 · build 28/28 both locales.
 - **2026-07-23 (later) — Admin verification queue (LIGHT model) + source-of-truth map:**
   - **SOURCE OF TRUTH, settled — read this before touching verification.**
     `user_trust_tiers` is a **VIEW, not a table** (`security_invoker=true`, zero
@@ -629,3 +646,8 @@ proceed.
 | D-003 | 2026-07-17 | **Atomic Network pivot approved by founder** — community-first sequencing supersedes old Phase 1 (marketplace/KYC deferred to Phase 3) | Cold-start strategy: seed a dense, high-trust network before transactions |
 | D-004 | 2026-07-17 | Corridor palette: view colors carry information (US=denim, Nepal=rhodo, Bridge=pine) | Brief requires "clear country context at all times" |
 | D-005 | 2026-07-17 | Mock data layer this pass; Supabase next | Real auth/DB needs founder credentials; UI-first unblocked the build |
+| D-016 | 2026-07-23 | **Settings "Subscription & Billing" = PLACEHOLDER ONLY** — a Subscription section reads "Founding member — free during the pilot." Build NO payment methods, invoices, or plan-management UI. | Monetization is deferred; no entity and no payment processor yet. Payment UI would imply taking money we cannot yet take. |
+| D-017 | 2026-07-23 | **User-created channels are gated to verified/founding members AND require admin approval — mandatory during the pilot, not "if needed."** The 8/12/15 sector channels remain the backbone. | Adds a moderation surface while the founder is still the manual gate. |
+| D-018 | 2026-07-23 | **Phased sequencing (BL-STRATEGY-01).** Phase A = first-impression surfaces (navigation, "Members & Business", Feed). Phase B (only after the founding cohort is actively using it) = the heavier builds (Discord-style channels, Trip Planner, Events, full Settings). Each area ships as its own gated, hub-verified commit. | Ship what the founding cohort judges first; defer heavy builds until there's usage to shape them. |
+| D-019 | 2026-07-23 | **"Directory" renamed to "Members & Business"** (nav label, page eyebrow, page H1). Route stays `/members`. | Founder-chosen name; keeping the route avoids breaking links + the middleware public-path list. |
+| D-020 | 2026-07-23 | **Unverified = NO badge anywhere.** No "Listed" chip, no placeholder mark — absence is neutral, never a scarlet letter. TrustBadge reflects real per-track state only; tone is "facilitation only." | Light-verification model must stay honest in the UI; a fake status mark misrepresents standing. Removed the channel-page "Listed" chip to comply. |

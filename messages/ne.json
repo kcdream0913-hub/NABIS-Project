@@ -1,11 +1,14 @@
 {
   "nav": {
     "feed": "फिड / म्यासेज",
-    "directory": "डाइरेक्टरी",
+    "directory": "सदस्य र व्यवसाय",
     "channels": "च्यानलहरू",
     "events": "कार्यक्रमहरू",
     "registerBusiness": "व्यवसाय दर्ता गर्नुहोस्",
     "adminQueue": "प्रशासन क्यू",
+    "groupCommunity": "समुदाय",
+    "groupTools": "उपकरणहरू",
+    "groupAdmin": "प्रशासन",
     "comingNext": "चाँडै आउँदै",
     "tripPlanner": "यात्रा योजनाकार",
     "phaseTag": "चरण २",
@@ -84,8 +87,8 @@
     "post": "पोस्ट"
   },
   "directory": {
-    "eyebrow": "डाइरेक्टरी",
-    "title": "सदस्य र व्यवसायहरू",
+    "eyebrow": "सदस्य र व्यवसाय",
+    "title": "सदस्य र व्यवसाय",
     "people": "मानिसहरू",
     "businesses": "व्यवसायहरू",
     "searchPlaceholder": "नाम, व्यवसाय वा सहरद्वारा खोज्नुहोस्",
@@ -114,7 +117,6 @@
     "detailSubtitle": "यस सेक्टरका व्यवसायहरू प्रमाणित भएपछि यहाँ देखिनेछन्।",
     "emptyTitle": "अहिलेसम्म कुनै दर्ता व्यवसाय छैन",
     "registerCta": "व्यवसाय दर्ता गर्नुहोस्",
-    "listed": "सूचीबद्ध",
     "verifiedBusiness": "प्रमाणित व्यवसाय",
     "secondaryTag": "गौण"
   },

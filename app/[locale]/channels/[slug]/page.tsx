@@ -55,12 +55,11 @@ export default async function ChannelPage({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold">{b.name}</p>
-                  {b.verification_status === "verified" ? (
+                  {/* Unverified renders NO badge anywhere (ratified rule). The
+                      former "Listed" chip read as a status mark for the
+                      unverified and is removed. */}
+                  {b.verification_status === "verified" && (
                     <TrustBadge tier="verified" label={t("verifiedBusiness")} />
-                  ) : (
-                    <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-soft">
-                      {t("listed")}
-                    </span>
                   )}
                   {b.primary_sector !== channel.sector && (
                     <span className="rounded bg-mist px-1.5 py-0.5 text-[10px] font-medium text-ink-soft">
