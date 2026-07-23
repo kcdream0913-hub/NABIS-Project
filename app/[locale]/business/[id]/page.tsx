@@ -7,6 +7,7 @@ import RemoveMemberButton from "./remove-member-button";
 import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import { trustTier } from "@/lib/trust";
 
 export default async function BusinessPage({
   params,
@@ -15,6 +16,7 @@ export default async function BusinessPage({
 }) {
   const { id } = await params;
   const t = await getTranslations("business");
+  const tCommon = await getTranslations("common");
   const tSectors = await getTranslations("sectors");
   const roleLabel: Record<string, string> = {
     owner: t("roleOwner"),
@@ -42,7 +44,7 @@ export default async function BusinessPage({
 
   const { data: members } = await supabase
     .from("business_members")
-    .select("id, role, verified_via, can_post, profiles:user_id ( id, name, avatar_url, verification_status )")
+    .select("id, role, verified_via, can_post, profiles:user_id ( id, name, avatar_url, verification_status, bridge )")
     .eq("business_id", id);
 
   return (
@@ -54,7 +56,7 @@ export default async function BusinessPage({
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-semibold">{business.name}</h1>
               <TrustBadge
-                verified={business.verification_status === "verified"}
+                tier={trustTier(business)}
                 label={t("verifiedBusiness")}
                 size="md"
               />
@@ -101,7 +103,13 @@ export default async function BusinessPage({
               >
                 <Avatar name={person?.name} url={person?.avatar_url} size={36} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">{person?.name ?? t("pending")}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-sm font-semibold">{person?.name ?? t("pending")}</p>
+                    <TrustBadge
+                      tier={trustTier(person)}
+                      label={tCommon(trustTier(person) === "bridge" ? "bridgeVerified" : "verified")}
+                    />
+                  </div>
                   <p className="text-xs text-ink-soft">
                     {roleLabel[m.role] ?? m.role}
                     {m.verified_via === "business" ? ` · ${t("verifiedViaBusiness")}` : ""}

@@ -56,7 +56,7 @@ export default async function ChannelPage({
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold">{b.name}</p>
                   {b.verification_status === "verified" ? (
-                    <TrustBadge verified label={t("verifiedBusiness")} />
+                    <TrustBadge tier="verified" label={t("verifiedBusiness")} />
                   ) : (
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-soft">
                       {t("listed")}

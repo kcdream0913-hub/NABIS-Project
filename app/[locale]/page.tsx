@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import { trustTier } from "@/lib/trust";
 import Composer from "./composer";
 import { Compass, MessagesSquare, Heart, MessageCircle } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
@@ -19,6 +20,7 @@ type FeedProfile = {
   name: string | null;
   avatar_url: string | null;
   verification_status: string | null;
+  bridge: boolean | null;
 };
 type FeedBusiness = {
   name: string | null;
@@ -67,7 +69,7 @@ export default function HomePage() {
     const { data } = await supabase
       .from("posts")
       .select(
-        "id, body, created_at, posted_as, view, profiles:author_id ( name, avatar_url, verification_status ), businesses:business_id ( name, logo_url, verification_status )"
+        "id, body, created_at, posted_as, view, profiles:author_id ( name, avatar_url, verification_status, bridge ), businesses:business_id ( name, logo_url, verification_status )"
       )
       .or(`view.eq.${view},view.is.null`)
       .order("created_at", { ascending: false })
@@ -256,9 +258,9 @@ export default function HomePage() {
               // always travel together (spec §5.4 "badges travel").
               const asBusiness = p.posted_as === "business" && business;
               const displayName = (asBusiness ? business?.name : author?.name) ?? t("member");
-              const verified =
-                (asBusiness ? business?.verification_status : author?.verification_status) ===
-                "verified";
+              // Businesses have no corridor tier, so a business-identity post
+              // resolves to "verified" at most; only human authors can be Bridge.
+              const tier = trustTier(asBusiness ? business : author);
               const chipView = p.view && p.view in VIEW_META ? (p.view as View) : null;
               return (
                 <article key={p.id} className="rounded-lg border border-line bg-white p-4">
@@ -273,8 +275,12 @@ export default function HomePage() {
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <p className="truncate text-sm font-semibold">{displayName}</p>
                         <TrustBadge
-                          verified={verified}
-                          label={asBusiness ? tCommon("verifiedBusiness") : tCommon("verified")}
+                          tier={tier}
+                          label={
+                            asBusiness
+                              ? tCommon("verifiedBusiness")
+                              : tCommon(tier === "bridge" ? "bridgeVerified" : "verified")
+                          }
                         />
                         {chipView && (
                           <span

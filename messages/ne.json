@@ -40,6 +40,7 @@
     "loading": "लोड हुँदैछ…",
     "message": "म्यासेज",
     "verified": "प्रमाणित",
+    "bridgeVerified": "ब्रिज प्रमाणित",
     "verifiedBusiness": "प्रमाणित व्यवसाय"
   },
   "auth": {
@@ -299,7 +300,8 @@
   },
   "person": {
     "member": "सदस्य",
-    "verified": "प्रमाणित"
+    "verified": "प्रमाणित",
+    "bridgeVerified": "ब्रिज प्रमाणित"
   },
   "onboarding": {
     "step": "चरण {current} / {total}",

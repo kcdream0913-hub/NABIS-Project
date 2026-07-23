@@ -123,6 +123,46 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-23 — Trust tiers wired to real data + verification write-path fix:**
+  - **GROUND TRUTH (read this before touching trust UI): there is NO
+    `verification_tier` column.** Tiers are DERIVED, and only `profiles` carries
+    the model: `us_verification` / `np_verification`
+    (`none|pending|verified|rejected|revoked`, NOT NULL default `none`),
+    `us_verified_at` / `np_verified_at`, plus three **GENERATED STORED** columns —
+    `verification_status` (`verified` when EITHER track is verified),
+    `verified_at` (`least(...)`), and `bridge` (true only when BOTH tracks are
+    verified). `businesses` has **no** per-track columns and **no** `bridge`: a
+    business can be `verified` at most, never Bridge. The KYB Tier 1 "Listed" /
+    Tier 2 idea (D-015) is still only a derived `registration_number` check plus
+    a "listed" chip on the channel page — not modelled as a column.
+  - **FIXED, was broken in prod: admin approval of a person's verification.**
+    `approvePerson` wrote `profiles.verification_status` + `verified_at`
+    directly, but both are GENERATED ALWAYS STORED — Postgres refuses those
+    writes, and the result was never error-checked. Nothing anywhere in the
+    codebase wrote `us_verification`/`np_verification` (grep: zero hits), so
+    **no member could ever become verified through the app**; prod confirms it
+    (2 profiles, 0 verified, 0 bridge, all tracks `none`). Approve/reject now
+    write the correct per-track column keyed off the record's `policy_track`,
+    both writes are error-checked, and failures surface in the dashboard
+    (`role="alert"`). Do NOT reintroduce writes to the generated columns.
+  - **`lib/trust.ts` is the single tier mapping** (`trustTier()` →
+    `none | verified | bridge`). `verification_status` is the gate, so a stale or
+    forged `bridge` in a client payload can never mint a badge. There is
+    deliberately **no "basic" tier** — the schema doesn't model one, and an
+    unverified subject renders nothing rather than a negative mark.
+  - `TrustBadge` API changed: `verified: boolean` → `tier: TrustTier`. All six
+    call sites updated (feed, directory people + businesses, business header,
+    business team rows, channel rows, person page). `bridge` added to the profile
+    selects that feed a badge. Bridge is distinguished by a **distinct label**
+    (`common.bridgeVerified`), not by the gold ring alone — the tier is never
+    colour-only. Team-member rows now render a badge at all (they already
+    selected `verification_status` but showed nothing).
+  - +2 i18n keys × 2 locales (`common.bridgeVerified`, `person.bridgeVerified`).
+  - No schema change and no Supabase branch: the columns already exist, and a
+    backfill would be a no-op (zero verified rows). Prod was read-only throughout.
+  - Verified: tsc 0 · build 28/28 both locales · vitest 37/37 (up from 31), and
+    the new mapping test was mutation-checked — removing the
+    `verification_status` guard fails 4 of its 6 cases.
 - **2026-07-22 (late) — Prod fix + DB↔repo parity + reaction rollback:**
   - **FIXED, was broken in prod: "add team member".** `team-manager.tsx` called
     `find_user_id_by_email`, which migration `20260722095956` revoked from

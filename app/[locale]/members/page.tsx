@@ -8,6 +8,7 @@ import { findOrCreateThread } from "@/lib/threads";
 import { useSectors } from "@/lib/useSectors";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import { trustTier } from "@/lib/trust";
 import type { View } from "@/lib/types";
 
 type PersonRow = {
@@ -17,6 +18,7 @@ type PersonRow = {
   city: string | null;
   country: "us" | "nepal" | null;
   verification_status: string;
+  bridge: boolean | null;
   avatar_url: string | null;
 };
 type BusinessRow = {
@@ -52,7 +54,7 @@ export default function DirectoryPage() {
       const [{ data: p }, { data: b }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, name, bio, city, country, verification_status, avatar_url")
+          .select("id, name, bio, city, country, verification_status, bridge, avatar_url")
           .order("created_at", { ascending: false }),
         supabase
           .from("businesses")
@@ -165,7 +167,7 @@ export default function DirectoryPage() {
               </Link>
               {m.bio && <p className="mt-3 line-clamp-2 text-sm text-ink-soft">{m.bio}</p>}
               <div className="mt-2 flex items-center justify-between">
-                <TrustBadge verified={m.verification_status === "verified"} label={tCommon("verified")} />
+                <TrustBadge tier={trustTier(m)} label={tCommon(trustTier(m) === "bridge" ? "bridgeVerified" : "verified")} />
                 <button
                   onClick={async () => {
                     const threadId = await findOrCreateThread(m.id);
@@ -192,7 +194,7 @@ export default function DirectoryPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold">{b.name}</p>
-                    <TrustBadge verified={b.verification_status === "verified"} label={tCommon("verified")} />
+                    <TrustBadge tier={trustTier(b)} label={tCommon("verified")} />
                   </div>
                   <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-ink-soft">
                     <span className="font-medium text-ink">

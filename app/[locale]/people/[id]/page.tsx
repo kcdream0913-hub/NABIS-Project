@@ -5,6 +5,7 @@ import ContactBusiness from "@/app/[locale]/business/[id]/contact-business";
 import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import { trustTier } from "@/lib/trust";
 
 export default async function PersonPage({
   params,
@@ -27,8 +28,8 @@ export default async function PersonPage({
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-semibold">{person.name ?? t("member")}</h1>
               <TrustBadge
-                verified={person.verification_status === "verified"}
-                label={t("verified")}
+                tier={trustTier(person)}
+                label={trustTier(person) === "bridge" ? t("bridgeVerified") : t("verified")}
                 size="md"
               />
               <span className="ml-auto">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logAction } from "@/lib/audit";
+import type { PolicyTrack } from "@/lib/kyc";
 import { Building2, Flag, UserCheck } from "lucide-react";
 
 type PendingBusiness = {
@@ -39,6 +40,7 @@ export default function AdminDashboard() {
   const [verifications, setVerifications] = useState<PendingVerification[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function loadAll() {
     setLoading(true);
@@ -81,20 +83,50 @@ export default function AdminDashboard() {
     setBusinesses((prev) => prev.filter((b) => b.id !== id));
   }
 
-  async function approvePerson(v: PendingVerification) {
-    await supabase.from("verification_records").update({ status: "passed" }).eq("id", v.id);
-    await supabase
+  // profiles.verification_status / verified_at / bridge are GENERATED ALWAYS
+  // STORED columns — Postgres refuses to write them. The reviewable state lives
+  // in the per-track us_/np_verification columns that those generated values
+  // derive from, so a decision must be applied to the track the record is for.
+  // This previously wrote the generated columns directly, which could never take
+  // effect: every approval left the member 'unverified' with bridge = false.
+  function trackUpdate(track: PolicyTrack, decision: "verified" | "rejected") {
+    const at = decision === "verified" ? new Date().toISOString() : null;
+    return track === "us"
+      ? { us_verification: decision, us_verified_at: at }
+      : { np_verification: decision, np_verified_at: at };
+  }
+
+  async function decidePerson(v: PendingVerification, approve: boolean) {
+    setActionError(null);
+    const { error: recordError } = await supabase
+      .from("verification_records")
+      .update({ status: approve ? "passed" : "failed" })
+      .eq("id", v.id);
+    if (recordError) {
+      setActionError(recordError.message);
+      return;
+    }
+    // Mirror the decision onto the profile's track. Without this the record
+    // flips but the member's standing never changes.
+    const { error: profileError } = await supabase
       .from("profiles")
-      .update({ verification_status: "verified", verified_at: new Date().toISOString() })
+      .update(trackUpdate(v.policy_track, approve ? "verified" : "rejected"))
       .eq("id", v.subject_id);
-    await logAction("profile_verification_approved", "user", v.subject_id, { record_id: v.id });
+    if (profileError) {
+      setActionError(profileError.message);
+      return;
+    }
+    await logAction(
+      approve ? "profile_verification_approved" : "profile_verification_rejected",
+      "user",
+      v.subject_id,
+      { record_id: v.id, policy_track: v.policy_track }
+    );
     setVerifications((prev) => prev.filter((r) => r.id !== v.id));
   }
-  async function rejectPerson(v: PendingVerification) {
-    await supabase.from("verification_records").update({ status: "failed" }).eq("id", v.id);
-    await logAction("profile_verification_rejected", "user", v.subject_id, { record_id: v.id });
-    setVerifications((prev) => prev.filter((r) => r.id !== v.id));
-  }
+
+  const approvePerson = (v: PendingVerification) => decidePerson(v, true);
+  const rejectPerson = (v: PendingVerification) => decidePerson(v, false);
 
   async function dismissReport(id: string) {
     await supabase.from("reports").update({ status: "dismissed" }).eq("id", id);
@@ -136,6 +168,12 @@ export default function AdminDashboard() {
           </button>
         ))}
       </div>
+
+      {actionError && (
+        <p role="alert" className="mt-3 rounded-md border border-line bg-mist px-3 py-2 text-xs text-rhodo">
+          {actionError}
+        </p>
+      )}
 
       {loading ? (
         <p className="mt-5 text-sm text-ink-soft">{t("loading")}</p>

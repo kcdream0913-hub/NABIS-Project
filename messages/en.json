@@ -40,6 +40,7 @@
     "loading": "Loading…",
     "message": "Message",
     "verified": "Verified",
+    "bridgeVerified": "Bridge Verified",
     "verifiedBusiness": "Verified Business"
   },
   "auth": {
@@ -299,7 +300,8 @@
   },
   "person": {
     "member": "Member",
-    "verified": "Verified"
+    "verified": "Verified",
+    "bridgeVerified": "Bridge Verified"
   },
   "onboarding": {
     "step": "Step {current} of {total}",
