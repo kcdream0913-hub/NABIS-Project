@@ -123,6 +123,51 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-23 (later) — Admin verification queue (LIGHT model) + source-of-truth map:**
+  - **SOURCE OF TRUTH, settled — read this before touching verification.**
+    `user_trust_tiers` is a **VIEW, not a table** (`security_invoker=true`, zero
+    write rules, zero triggers) defined purely over `profiles`:
+    `bridge → 'bridge'`, else either track verified → `'verified'`, else
+    `'basic'`. So `trust_tier` / `verified_tracks[]` are **computed, never
+    stored**, and **"basic" is just that view's word for unverified**. Nothing in
+    the app reads it (grep: zero hits). One lineage only:
+    **base `us_/np_verification` → GENERATED `verification_status`/`verified_at`/
+    `bridge` → the view.** TrustBadge READS the generated columns; approve/reject
+    WRITES the base columns. Same source, no divergence possible.
+  - **A trigger to "recompute" the aggregate or the tier was specified and
+    deliberately NOT built — it is a no-op.** The aggregates are GENERATED
+    (Postgres recomputes them on every write and *forbids* writing them), and the
+    view has nothing stored to recompute. Writes to the base columns from
+    anywhere — SQL editor, another service — already propagate automatically. No
+    Supabase branch, no migration, no prod writes: the whole task was read-only
+    against prod.
+  - **FIXED, was silently broken: the admin businesses queue.** It selected
+    `businesses.sector`, a column the multi-sector migration renamed to
+    `primary_sector` on 2026-07-21. PostgREST errored, the error was discarded,
+    and the tab rendered "nothing pending" unconditionally. Load errors are now
+    surfaced instead of swallowed — that silence is what hid this for two days.
+  - **Admin queue built to the LIGHT model, no new tables.** Both queues now show
+    sector, sandbox (US/Nepal) and the self-attested evidence, plus per-row
+    reviewer controls: which light signal was seen
+    (self-attestation / reference / public profile / other), an optional reason,
+    and a `credential_check_needed` flag for higher-risk categories (a marker for
+    a later manual Bar-style lookup — no integration, by design). Decisions write
+    the per-track column (which drives the tier automatically) and log to
+    `verification_records` with `reviewer_id`, `status`, and a `checks` jsonb that
+    **layers the review over the submitter's original payload** rather than
+    clobbering it. Business decisions now log there too, so people and businesses
+    share one trail; `policy_track` is NOT NULL so the reviewer must pick a
+    sandbox when it can't be inferred from the country — never guessed.
+  - `lib/verificationDecision.ts` holds the pure helpers (`trackForCountry`,
+    `trackUpdate`, `buildDecisionChecks`) so the decision payload is unit-testable
+    without a DB. +9 tests, one of which asserts `trackUpdate` never emits the
+    generated columns — pinning yesterday's prod bug.
+  - **Known gap (deliberate):** the submit side (`profile/verify`) still writes a
+    *document-capture* shape (`provider:'pending_integration'`, `document_type`,
+    `document_country`). The light model's "self-attestation + references" has no
+    field yet, so reviewers currently see document metadata. Converting submit to
+    self-attestation is a separate, scoped decision.
+  - Verified: tsc 0 · build 28/28 both locales · vitest 46/46 (up from 37).
 - **2026-07-23 — Trust tiers wired to real data + verification write-path fix:**
   - **GROUND TRUTH (read this before touching trust UI): there is NO
     `verification_tier` column.** Tiers are DERIVED, and only `profiles` carries
