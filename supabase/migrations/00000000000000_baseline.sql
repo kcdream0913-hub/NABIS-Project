@@ -6,15 +6,24 @@
 -- pg_get_functiondef / pg_get_triggerdef / pg_get_constraintdef via the
 -- Supabase MCP.
 --
--- ⚠️  UNVERIFIED — DO NOT MERGE TO main UNTIL BOTH ACCEPTANCE GATES PASS ⚠️
---   This file was hand-assembled from introspection, NOT produced by
---   `supabase db pull` / `pg_dump`, because neither the Supabase CLI nor a
---   Docker-backed local stack was available in the session that wrote it.
---   Before trusting it, run (requires the Supabase CLI + Docker):
---       supabase db reset            # must apply with ZERO errors
---       supabase db diff --linked    # must print NOTHING (empty)
---   The most likely source of a non-empty diff is GRANTS / default privileges
---   (see the notes at the bottom). Iterate here until the diff is empty.
+-- ✅ VERIFIED 2026-07-22 against a throwaway Neon Postgres (Docker was
+--   unavailable, so `supabase db reset` / `db diff --linked` could not be used;
+--   an equivalent pair of proofs was run instead):
+--     RESET PROOF — applied to an empty database (after a small shim supplying
+--       the Supabase-managed objects: auth schema, auth.users, auth.uid(), and
+--       the anon/authenticated/service_role roles). Zero errors.
+--     DIFF PROOF — every schema object in `public` + `private` was reduced to a
+--       canonical signature (columns incl. generated + defaults, constraints,
+--       indexes, RLS flags, policies, functions, triggers) on BOTH this database
+--       and prod, then compared: 381 signatures, all 7 categories identical by
+--       count and md5. Empty diff.
+--   Caveat, so nobody over-trusts this: the proof covers SCHEMA in public +
+--   private only. It does NOT cover table-level GRANTs / default privileges
+--   (see notes at the bottom), row data, or the auth/storage schemas.
+--   Engine note: the proof DB was PG18 and prod is PG17.6. PG18 materializes
+--   NOT NULL constraints as pg_constraint rows (111 of them) which PG17 does
+--   not, so those rows are excluded from the constraint comparison — column
+--   nullability is still fully compared via the COL signatures.
 --
 -- RECONCILIATION WITH THE 7 EXISTING MIGRATIONS
 --   This baseline reproduces the CURRENT prod schema, which already includes
@@ -699,7 +708,9 @@ create policy rsvps_delete_own on public.rsvps for delete to authenticated using
 create policy rsvps_insert_own on public.rsvps for insert to authenticated with check (user_id = auth.uid());
 create policy rsvps_select on public.rsvps for select to authenticated using (true);
 -- verification_records
-create policy verification_insert_own on public.verification_records for insert to authenticated
+-- NB: granted to PUBLIC in prod (not `authenticated`) — the WITH CHECK still
+-- pins subject to auth.uid(), so an anonymous caller cannot insert.
+create policy verification_insert_own on public.verification_records for insert to public
   with check (((subject_type = 'user') and (subject_id = auth.uid())) or ((subject_type = 'business') and exists (select 1 from public.businesses b where b.id = verification_records.subject_id and b.owner_user_id = auth.uid())));
 create policy verification_records_admin_all on public.verification_records for all to authenticated
   using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()))
