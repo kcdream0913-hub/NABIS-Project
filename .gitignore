@@ -6,3 +6,9 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 .DS_Store
+
+# Playwright run output
+test-results/
+
+# Patch files are hand-off artifacts between sessions, never source of record.
+*.patch
