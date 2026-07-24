@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
       <div className="mb-8 text-center">
-        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-white">
+        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">
           B
         </span>
         <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("welcomeBack")}</h1>
@@ -49,13 +49,13 @@ export default function LoginPage() {
       <div className="space-y-2">
         <button
           onClick={() => handleOAuth("google")}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-white px-4 py-2.5 text-sm font-medium hover:bg-bg"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium hover:bg-bg"
         >
           {t("continueGoogle")}
         </button>
         <button
           onClick={() => handleOAuth("apple")}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-white px-4 py-2.5 text-sm font-medium hover:bg-bg"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium hover:bg-bg"
         >
           {t("continueApple")}
         </button>
@@ -90,7 +90,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
+          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-50"
         >
           {loading ? t("loggingIn") : t("logIn")}
         </button>

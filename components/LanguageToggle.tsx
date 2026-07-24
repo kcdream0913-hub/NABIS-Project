@@ -24,7 +24,7 @@ export default function LanguageToggle() {
     <div
       role="tablist"
       aria-label={t("label")}
-      className={`flex items-center gap-1 rounded-lg border border-border bg-white p-1 ${
+      className={`flex items-center gap-1 rounded-lg border border-border bg-surface p-1 ${
         isPending ? "opacity-60" : ""
       }`}
     >

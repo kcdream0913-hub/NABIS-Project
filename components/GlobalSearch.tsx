@@ -83,10 +83,10 @@ export default function GlobalSearch() {
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
         placeholder={t("searchPlaceholder")}
-        className="w-full rounded-md border border-border-input bg-bg py-1.5 pl-9 pr-3 text-sm placeholder:text-ink-soft focus:border-primary focus:bg-white"
+        className="w-full rounded-md border border-border-input bg-bg py-1.5 pl-9 pr-3 text-sm placeholder:text-ink-soft focus:border-primary focus:bg-surface"
       />
       {open && results.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-40 mt-1 max-h-72 overflow-y-auto rounded-md border border-border bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-40 mt-1 max-h-72 overflow-y-auto rounded-md border border-border bg-surface shadow-lg">
           {results.map((r) => (
             <button
               key={`${r.type}-${r.id}`}

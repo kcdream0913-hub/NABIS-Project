@@ -20,7 +20,7 @@ export default async function ChannelsPage() {
           <Link
             key={c.id}
             href={`/channels/${c.slug}`}
-            className="rounded-lg border border-border bg-white p-4 hover:border-primary"
+            className="rounded-lg border border-border bg-surface p-4 hover:border-primary"
           >
             <p className="text-sm font-semibold"># {c.name}</p>
             <p className="mt-1 text-xs text-ink-soft">{c.description}</p>

@@ -67,7 +67,7 @@ export default function ProfileEditor({
       </div>
 
       {/* Verification status — the entry point, per spec §5.2. Not a signup gate. */}
-      <section className="rounded-lg border border-border bg-white p-4">
+      <section className="rounded-lg border border-border bg-surface p-4">
         <div className="flex items-center gap-3">
           {isVerified ? (
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-active-soft text-active">
@@ -91,7 +91,7 @@ export default function ProfileEditor({
           {!isVerified && (
             <button
               onClick={() => router.push("/profile/verify")}
-              className="shrink-0 rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-white hover:bg-primary-pressed"
+              className="shrink-0 rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed"
             >
               {t("verifyCta")}
             </button>
@@ -99,7 +99,7 @@ export default function ProfileEditor({
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-white p-4">
+      <section className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold">{t("profileHeading")}</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
@@ -115,7 +115,7 @@ export default function ProfileEditor({
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value as "us" | "nepal")}
-              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
             >
               <option value="us">{t("unitedStates")}</option>
               <option value="nepal">{t("nepal")}</option>
@@ -142,7 +142,7 @@ export default function ProfileEditor({
       </section>
 
       {/* "What describes you" = sector/channel names, per spec §5.2 */}
-      <section className="rounded-lg border border-border bg-white p-4">
+      <section className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold">{t("describeHeading")}</h2>
         <p className="mt-1 text-xs text-ink-soft">
           {t("describeHint")}
@@ -171,7 +171,7 @@ export default function ProfileEditor({
       <button
         onClick={save}
         disabled={saving}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-50"
       >
         {saved ? t("saved") : saving ? t("saving") : t("saveChanges")}
       </button>

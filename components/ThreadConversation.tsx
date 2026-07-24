@@ -97,7 +97,7 @@ export default function ThreadConversation({
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col rounded-lg border border-border bg-white">
+    <div className="flex h-[calc(100vh-8rem)] flex-col rounded-lg border border-border bg-surface">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         {onBack && (
           <button
@@ -121,7 +121,7 @@ export default function ThreadConversation({
               <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 <p
                   className={`max-w-[75%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
-                    mine ? "bg-primary text-white" : "bg-bg"
+                    mine ? "bg-primary text-on-primary" : "bg-bg"
                   }`}
                 >
                   {m.body}
@@ -144,12 +144,12 @@ export default function ThreadConversation({
             if (e.key === "Enter") send();
           }}
           placeholder={t("messagePrefix", { name: (otherName || t("member")).split(" ")[0] })}
-          className="flex-1 rounded-md border border-border-input bg-bg px-3 py-2 text-sm placeholder:text-ink-soft focus:border-primary focus:bg-white"
+          className="flex-1 rounded-md border border-border-input bg-bg px-3 py-2 text-sm placeholder:text-ink-soft focus:border-primary focus:bg-surface"
         />
         <button
           onClick={send}
           aria-label={t("sendMessage")}
-          className="grid h-9 w-9 place-items-center rounded-md bg-primary text-white hover:bg-primary-pressed"
+          className="grid h-9 w-9 place-items-center rounded-md bg-primary text-on-primary hover:bg-primary-pressed"
         >
           <Send size={15} />
         </button>

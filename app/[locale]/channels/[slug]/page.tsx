@@ -49,7 +49,7 @@ export default async function ChannelPage({
             <Link
               key={b.id}
               href={`/business/${b.id}`}
-              className="flex items-start gap-3 rounded-lg border border-border bg-white p-4 hover:border-primary"
+              className="flex items-start gap-3 rounded-lg border border-border bg-surface p-4 hover:border-primary"
             >
               <Avatar name={b.name} url={b.logo_url} shape="rounded" size={44} />
               <div className="min-w-0 flex-1">

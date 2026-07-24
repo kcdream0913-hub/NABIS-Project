@@ -54,7 +54,7 @@ export default function Composer({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-3">
+    <div className="rounded-lg border border-border bg-surface p-3">
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -66,7 +66,7 @@ export default function Composer({
         <button
           onClick={publish}
           disabled={!body.trim() || posting}
-          className="rounded-md bg-primary px-3.5 py-1.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-40"
+          className="rounded-md bg-primary px-3.5 py-1.5 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-40"
         >
           {posting ? t("posting") : t("post")}
         </button>

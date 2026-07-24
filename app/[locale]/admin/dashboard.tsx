@@ -295,7 +295,7 @@ export default function AdminDashboard() {
           <select
             value={d.signal}
             onChange={(e) => setDecision(id, { signal: e.target.value as LightSignal }, inferred)}
-            className="rounded-md border border-border bg-white px-2 py-1 text-xs"
+            className="rounded-md border border-border bg-surface px-2 py-1 text-xs"
           >
             {LIGHT_SIGNALS.map((s) => (
               <option key={s} value={s}>
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
             <select
               value={d.track}
               onChange={(e) => setDecision(id, { track: e.target.value as PolicyTrack | "" }, inferred)}
-              className="rounded-md border border-border bg-white px-2 py-1 text-xs"
+              className="rounded-md border border-border bg-surface px-2 py-1 text-xs"
             >
               <option value="">{t("sandboxChoose")}</option>
               <option value="us">US</option>
@@ -346,7 +346,7 @@ export default function AdminDashboard() {
         <button onClick={onReject} className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg">
           {t("reject")}
         </button>
-        <button onClick={onApprove} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-pressed">
+        <button onClick={onApprove} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-on-primary hover:bg-primary-pressed">
           {t("approve")}
         </button>
       </div>
@@ -375,7 +375,7 @@ export default function AdminDashboard() {
           >
             <t.icon size={14} /> {t.label}
             {t.count > 0 && (
-              <span className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-on-accent">
                 {t.count}
               </span>
             )}
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
               businesses.map((b) => {
                 const inferred = trackForCountry(b.country_of_registration);
                 return (
-                  <div key={b.id} className="rounded-lg border border-border bg-white p-3">
+                  <div key={b.id} className="rounded-lg border border-border bg-surface p-3">
                     <p className="text-sm font-semibold">{b.name}</p>
                     <p className="mt-0.5 text-xs text-ink-soft">
                       {sectorName(b.primary_sector)}
@@ -430,7 +430,7 @@ export default function AdminDashboard() {
               verifications.map((v) => {
                 const person = Array.isArray(v.profiles) ? v.profiles[0] : v.profiles;
                 return (
-                  <div key={v.id} className="rounded-lg border border-border bg-white p-3">
+                  <div key={v.id} className="rounded-lg border border-border bg-surface p-3">
                     <p className="text-sm font-semibold">{person?.name ?? t("member")}</p>
                     <p className="mt-0.5 text-xs text-ink-soft">
                       <span className="mr-1.5 rounded bg-bg px-1.5 py-0.5 font-semibold uppercase tracking-wide">
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
               <p className="text-sm text-ink-soft">{t("noOpenReports")}</p>
             ) : (
               reports.map((r) => (
-                <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-white p-3">
+                <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-surface p-3">
                   <div>
                     <p className="text-sm font-semibold">
                       {r.target_type} · {r.target_id.slice(0, 8)}…
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
                     <button onClick={() => dismissReport(r.id)} className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg">
                       {t("dismiss")}
                     </button>
-                    <button onClick={() => actionReport(r.id)} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">
+                    <button onClick={() => actionReport(r.id)} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent hover:opacity-90">
                       {t("takeAction")}
                     </button>
                   </div>

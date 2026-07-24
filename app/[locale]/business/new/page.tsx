@@ -86,7 +86,7 @@ export default function NewBusinessPage() {
         {t("subtitle")}
       </p>
 
-      <div className="mt-5 space-y-3 rounded-lg border border-border bg-white p-4">
+      <div className="mt-5 space-y-3 rounded-lg border border-border bg-surface p-4">
         <label className="block text-sm">
           <span className="eyebrow text-ink-soft">{t("businessName")}</span>
           <input
@@ -103,7 +103,7 @@ export default function NewBusinessPage() {
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
             >
               {COUNTRIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -120,7 +120,7 @@ export default function NewBusinessPage() {
                 // A sector can't be both primary and secondary at once.
                 setSecondarySectors((prev) => prev.filter((s) => s !== next));
               }}
-              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
             >
               {sectors.map((s) => (
                 <option key={s.slug} value={s.slug}>{s.name}</option>
@@ -220,7 +220,7 @@ export default function NewBusinessPage() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="rounded-md border border-border bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-border bg-surface px-3 py-2 text-sm"
               >
                 <option>USD</option>
                 <option>NPR</option>
@@ -234,7 +234,7 @@ export default function NewBusinessPage() {
         <button
           onClick={submit}
           disabled={submitting || !name}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
+          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-50"
         >
           {submitting ? t("registering") : t("register")}
         </button>

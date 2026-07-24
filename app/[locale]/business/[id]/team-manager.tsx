@@ -108,7 +108,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as Role)}
-          className="rounded-md border border-border bg-white px-2 py-1.5 text-sm"
+          className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm"
         >
           <option value="professional">{t("roleProfessional")}</option>
           <option value="assistant">{t("roleAssistant")}</option>
@@ -126,7 +126,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
         <button
           onClick={createInvite}
           disabled={!email.trim() || inviting}
-          className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
+          className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-50"
         >
           <Mail size={14} /> {inviting ? t("inviting") : t("inviteToBridgeLink")}
         </button>
@@ -134,7 +134,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
       {error && <p className="mt-1.5 text-xs text-accent">{error}</p>}
 
       {inviteLink && (
-        <div className="mt-2 rounded-md border border-border bg-white p-2.5">
+        <div className="mt-2 rounded-md border border-border bg-surface p-2.5">
           <p className="text-xs text-ink-soft">{t("inviteCreated")}</p>
           <div className="mt-1.5 flex items-center gap-2">
             <code className="min-w-0 flex-1 truncate rounded bg-bg px-2 py-1 text-xs">{inviteLink}</code>

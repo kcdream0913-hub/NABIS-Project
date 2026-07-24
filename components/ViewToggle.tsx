@@ -11,7 +11,7 @@ export default function ViewToggle() {
   const t = useTranslations("view");
   const { view, setView } = useApp();
   return (
-    <div role="tablist" aria-label={t("label")} className="flex items-center gap-1 rounded-lg border border-border bg-white p-1">
+    <div role="tablist" aria-label={t("label")} className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
       {ORDER.map((v) => {
         const meta = VIEW_META[v];
         const active = v === view;

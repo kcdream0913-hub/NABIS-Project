@@ -12,7 +12,7 @@ export default function Topbar() {
   const t = useTranslations("topbar");
   const { view, setSidebarOpen } = useApp();
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur">
       <div className="flex h-14 items-center gap-3 border-b border-border px-4">
         <button
           className="rounded-md p-2 text-ink-soft hover:bg-bg md:hidden"

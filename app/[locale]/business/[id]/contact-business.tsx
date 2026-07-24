@@ -59,7 +59,7 @@ export default function ContactBusiness({
       <button
         disabled
         title={t("payTooltip")}
-        className="w-full cursor-not-allowed rounded-md bg-bridge px-4 py-2 text-sm font-medium text-white opacity-60"
+        className="w-full cursor-not-allowed rounded-md bg-bridge px-4 py-2 text-sm font-medium text-on-bridge opacity-60"
       >
         {t("payToContact", { currency: priceCurrency, amount: priceAmount ?? "" })}
       </button>
@@ -69,7 +69,7 @@ export default function ContactBusiness({
   return (
     <button
       onClick={message}
-      className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed"
+      className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed"
     >
       {t("message")}
     </button>

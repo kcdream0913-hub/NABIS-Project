@@ -284,7 +284,7 @@ export default function TripPlannerPage() {
       </p>
 
       {/* Inputs */}
-      <div className="rounded-lg border border-border bg-white p-4">
+      <div className="rounded-lg border border-border bg-surface p-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
             <span className="eyebrow text-ink-soft">{t("titleLabel")}</span>
@@ -339,7 +339,7 @@ export default function TripPlannerPage() {
               <select
                 value={budgetCurrency}
                 onChange={(e) => setBudgetCurrency(e.target.value as "USD" | "NPR")}
-                className="mt-1 rounded-md border border-border bg-white px-2 py-2 text-sm"
+                className="mt-1 rounded-md border border-border bg-surface px-2 py-2 text-sm"
               >
                 <option>USD</option>
                 <option>NPR</option>
@@ -370,7 +370,7 @@ export default function TripPlannerPage() {
       </div>
 
       {/* Budget breakdown */}
-      <div className="rounded-lg border border-border bg-white p-4">
+      <div className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold">{t("budgetBreakdown")}</h2>
         <div className="mt-3 space-y-2">
           {budgetBreakdown.map((b) => (
@@ -399,7 +399,7 @@ export default function TripPlannerPage() {
       </div>
 
       {/* Recommendations */}
-      <div className="rounded-lg border border-border bg-white p-4">
+      <div className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold">{t("recommendationsTitle")}</h2>
         <p className="mt-0.5 text-xs text-ink-soft">{t("recommendationsHint")}</p>
 
@@ -462,7 +462,7 @@ export default function TripPlannerPage() {
       </div>
 
       {/* Staged itinerary */}
-      <div className="rounded-lg border border-border bg-white p-4">
+      <div className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold">{t("stagedTitle")}</h2>
         {staged.length === 0 ? (
           <p className="mt-2 text-sm text-ink-soft">{t("stagedEmpty")}</p>
@@ -482,7 +482,7 @@ export default function TripPlannerPage() {
         <button
           onClick={saveItinerary}
           disabled={saving}
-          className="mt-3 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
+          className="mt-3 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-50"
         >
           {saving ? t("savingItinerary") : t("saveItinerary")}
         </button>
@@ -501,7 +501,7 @@ export default function TripPlannerPage() {
               const items = expandedItems[it.id] ?? [];
               const total = items.reduce((sum, i) => sum + (i.estimated_cost ?? 0), 0);
               return (
-                <div key={it.id} className="rounded-lg border border-border bg-white p-3">
+                <div key={it.id} className="rounded-lg border border-border bg-surface p-3">
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => toggleExpand(it.id)}

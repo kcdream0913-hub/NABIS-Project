@@ -117,7 +117,7 @@ export default function DirectoryPage() {
         <select
           value={view}
           onChange={(e) => setView(e.target.value as View)}
-          className="rounded-md border border-border bg-white px-3 py-2 text-sm"
+          className="rounded-md border border-border bg-surface px-3 py-2 text-sm"
           aria-label={tView("label")}
         >
           <option value="bridge">{tView("bridgeShort")}</option>
@@ -128,7 +128,7 @@ export default function DirectoryPage() {
           <select
             value={sector}
             onChange={(e) => setSector(e.target.value)}
-            className="rounded-md border border-border bg-white px-3 py-2 text-sm"
+            className="rounded-md border border-border bg-surface px-3 py-2 text-sm"
           >
             <option value="all">{t("allSectors")}</option>
             {sectors.map((s) => (
@@ -136,7 +136,7 @@ export default function DirectoryPage() {
             ))}
           </select>
         )}
-        <label className="flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-sm text-ink-soft">
+        <label className="flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink-soft">
           <input
             type="checkbox"
             checked={verifiedOnly}

@@ -42,7 +42,7 @@ export default function ReportButton({
   if (open) {
     return (
       <div
-        className="rounded-md border border-border bg-white p-2.5 text-xs"
+        className="rounded-md border border-border bg-surface p-2.5 text-xs"
         onClick={(e) => e.stopPropagation()}
       >
         {sent ? (

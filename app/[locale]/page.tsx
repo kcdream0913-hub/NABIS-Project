@@ -213,7 +213,7 @@ export default function HomePage() {
   return (
     <div>
       {/* The main-screen toggle — Feed (content) vs Messages (channels + DMs) */}
-      <div className="flex gap-1 rounded-lg border border-border bg-white p-1">
+      <div className="flex gap-1 rounded-lg border border-border bg-surface p-1">
         <button
           onClick={() => setMode("feed")}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium ${
@@ -275,7 +275,7 @@ export default function HomePage() {
                             prev.map((x) => (x.id === th.id ? { ...x, unread: false } : x))
                           );
                         }}
-                        className={`flex w-full items-center gap-3 rounded-lg border bg-white p-3 text-left hover:border-primary ${
+                        className={`flex w-full items-center gap-3 rounded-lg border bg-surface p-3 text-left hover:border-primary ${
                           selectedThread === th.id ? "border-primary" : "border-border"
                         }`}
                       >
@@ -283,7 +283,7 @@ export default function HomePage() {
                           {th.otherName.slice(0, 2).toUpperCase()}
                           {th.unread && (
                             <span
-                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-white"
+                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface"
                               aria-label={t("unread")}
                             />
                           )}
@@ -317,7 +317,7 @@ export default function HomePage() {
                     <Link
                       key={c.id}
                       href={`/channels/${c.slug}`}
-                      className="rounded-lg border border-border bg-white p-4 hover:border-primary"
+                      className="rounded-lg border border-border bg-surface p-4 hover:border-primary"
                     >
                       <p className="text-sm font-semibold"># {c.name}</p>
                       <p className="mt-1 text-xs text-ink-soft">{c.description}</p>

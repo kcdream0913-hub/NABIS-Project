@@ -49,7 +49,7 @@ export default async function BusinessPage({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-lg border border-border bg-white p-5">
+      <div className="rounded-lg border border-border bg-surface p-5">
         <div className="flex items-start gap-4">
           <Avatar name={business.name} url={business.logo_url} shape="rounded" size={56} />
           <div className="min-w-0 flex-1">
@@ -99,7 +99,7 @@ export default async function BusinessPage({
             return (
               <div
                 key={m.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-white p-3"
+                className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3"
               >
                 <Avatar name={person?.name} url={person?.avatar_url} size={36} />
                 <div className="min-w-0 flex-1">

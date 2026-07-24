@@ -90,7 +90,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-white p-6">
+      <div className="rounded-lg border border-border bg-surface p-6">
         {step === 0 && (
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
@@ -133,7 +133,7 @@ export default function OnboardingPage() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as "us" | "nepal")}
-                  className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
                 >
                   <option value="us">{t("unitedStates")}</option>
                   <option value="nepal">{t("nepal")}</option>
@@ -210,7 +210,7 @@ export default function OnboardingPage() {
         <button
           onClick={() => setStep((s) => Math.max(0, s - 1))}
           disabled={step === 0}
-          className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-white disabled:opacity-0"
+          className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-surface disabled:opacity-0"
         >
           <ArrowLeft size={15} /> {t("back")}
         </button>
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext}
-            className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-40"
           >
             {t("continue")} <ArrowRight size={15} />
           </button>
@@ -226,7 +226,7 @@ export default function OnboardingPage() {
           <button
             onClick={finish}
             disabled={!canNext || saving}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-50"
           >
             {saving ? t("saving") : t("enter")}
           </button>

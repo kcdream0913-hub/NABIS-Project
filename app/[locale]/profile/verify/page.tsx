@@ -132,7 +132,7 @@ export default function VerifyProfilePage() {
           <p className="mt-2 text-sm text-ink-soft">{t("trackSubmittedBody")}</p>
           <button
             onClick={() => setActiveTrack(null)}
-            className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed"
+            className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed"
           >
             {t("back")}
           </button>
@@ -158,7 +158,7 @@ export default function VerifyProfilePage() {
             <select
               value={docType}
               onChange={(e) => setDocType(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
             >
               {docs.map((d) => (
                 <option key={d}>{d}</option>
@@ -171,7 +171,7 @@ export default function VerifyProfilePage() {
               <div className="grid h-full place-items-center">
                 <button
                   onClick={startCamera}
-                  className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed"
+                  className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed"
                 >
                   <Camera size={16} /> {t("turnOnCamera")}
                 </button>
@@ -184,7 +184,7 @@ export default function VerifyProfilePage() {
           </div>
           {cameraError && <p className="text-sm text-accent">{cameraError}</p>}
           {cameraOn && (
-            <button onClick={capture} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-pressed">
+            <button onClick={capture} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-pressed">
               {t("capture")}
             </button>
           )}
@@ -231,7 +231,7 @@ export default function VerifyProfilePage() {
             return (
               <div
                 key={track}
-                className={`rounded-lg border p-4 ${emphasized ? "border-primary" : "border-border"} bg-white`}
+                className={`rounded-lg border p-4 ${emphasized ? "border-primary" : "border-border"} bg-surface`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{track === "us" ? t("usTrack") : t("nepalTrack")}</span>
