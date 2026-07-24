@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSectors } from "@/lib/useSectors";
+import { markOnboarded } from "@/lib/onboarding";
 
 const STEP_COUNT = 4;
 
@@ -68,6 +69,8 @@ export default function OnboardingPage() {
     if (!userId) return;
     setSaving(true);
     await supabase.from("profiles").update({ name, city, country, sectors: selectedSectors }).eq("id", userId);
+    // This flow satisfies first-run onboarding too — don't also bounce to /welcome.
+    await markOnboarded(userId);
     setSaving(false);
     router.push("/");
     router.refresh();

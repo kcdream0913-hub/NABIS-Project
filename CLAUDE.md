@@ -123,7 +123,32 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint 7) — Settings account-page polish (frontend, NOT pushed):**
+- **2026-07-24 (sprint 8) — Onboarding / first-run flow (frontend + 1 preferences key, NOT pushed):**
+  - **`preferences.onboarded`** (jsonb, no migration) added to `lib/preferences.ts`
+    (default false; merge-managed). `lib/onboarding.ts` = `fetchOnboarded` /
+    `markOnboarded` (read-modify-write, never clobbers).
+  - **Redirect-once** — `components/OnboardingRedirect.tsx` (mounted in the (app)
+    layout) runs once per app mount: if `onboarded !== true` → `router.replace(
+    "/welcome")`. Exempts `/welcome` (target) + `/onboarding` (OAuth/invite entry)
+    so it never traps; "Skip for now" and completion both set `onboarded=true`.
+    The existing `/onboarding` finish now also marks onboarded, so OAuth/invite
+    users don't double-flow.
+  - **`/welcome`** (new page in (app), 3 steps, skippable at every step):
+    - **Step 1** Complete your profile — bio EN + ने (bilingual pattern) + city →
+      `profiles.bio/bio_ne/city`. **Avatar skipped** (no existing storage plumbing
+      — not building new storage this commit, per scope).
+    - **Step 2** Your sectors — persisted `sectors[]` as add/remove chips
+      (`profiles.sectors`); under each selected sector, up to 3 **real**
+      members/businesses (RLS-respecting `overlaps`/`in` queries, private filtered;
+      **nothing shown when none** — no filler).
+    - **Step 3** Where things are — Feed / Members & Business / Trip Planner cards,
+      one honest sentence each; when the user's sectors include tourism-hospitality
+      the Trip Planner card swaps to **"Publish your first offering"** → offering
+      editor. Each card + Finish complete onboarding then navigate.
+  - Works both locales (i18n parity), both themes; responsive (no 375px overflow).
+    +20 `welcome` i18n keys × en/ne. gates: tsc 0 · vitest 76/76 · build 54/54 both
+    locales. **NOT pushed — hub verifies.**
+- **2026-07-24 (sprint 7) — Settings account-page polish (frontend, pushed 00892af):**
   - **Overflow fix (real bug).** Root cause: `SettingsRow`'s control column is
     `shrink-0`, so a long status/error note in a non-wrapping flex (the Password
     row) forced the column — and the row — wider than the card → horizontal scroll.

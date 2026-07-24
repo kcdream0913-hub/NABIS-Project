@@ -803,5 +803,32 @@
       "us": "United States"
     },
     "compareSelect": "Select to compare"
+  },
+  "welcome": {
+    "eyebrow": "Getting started",
+    "title": "Welcome to BridgeLink",
+    "skip": "Skip for now",
+    "s1Title": "Complete your profile",
+    "s1Subtitle": "A short bio helps others know who you are and what you do.",
+    "bioEn": "Bio (English)",
+    "bioNe": "Bio (नेपाली)",
+    "city": "City",
+    "cityPlaceholder": "e.g. New York, Kathmandu",
+    "s2Title": "Your sectors",
+    "s2Subtitle": "Confirm the sectors you work in — tap to add or remove.",
+    "s3Title": "Where things are",
+    "s3Subtitle": "A few places to start.",
+    "feedTitle": "Feed",
+    "feedBody": "See what the community is posting.",
+    "dirTitle": "Members & Business",
+    "dirBody": "Find and message people and companies across the corridor.",
+    "tripTitle": "Trip Planner",
+    "tripBody": "Plan a US–Nepal trip with offerings from real providers.",
+    "publishTitle": "Publish your first offering",
+    "publishBody": "List a trek, tour or stay for travellers in the corridor.",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "saving": "Saving…"
   }
 }

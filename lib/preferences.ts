@@ -13,6 +13,7 @@ export interface Preferences {
   data_usage_opt_in: boolean;
   sharing_defaults: { show_email: boolean; show_phone: boolean };
   timezone: string; // IANA
+  onboarded: boolean; // first-run /welcome flow completed or skipped
   notifications: {
     email: { messages: boolean; verification: boolean; events: boolean; connections: boolean };
     frequency: NotificationFrequency;
@@ -25,6 +26,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   data_usage_opt_in: true,
   sharing_defaults: { show_email: false, show_phone: false },
   timezone: "America/New_York",
+  onboarded: false,
   notifications: {
     email: { messages: true, verification: true, events: true, connections: true },
     frequency: "immediate",
@@ -41,6 +43,7 @@ export function readPreferences(raw: unknown): Preferences {
     data_usage_opt_in: p.data_usage_opt_in ?? d.data_usage_opt_in,
     sharing_defaults: { ...d.sharing_defaults, ...(p.sharing_defaults ?? {}) },
     timezone: p.timezone ?? d.timezone,
+    onboarded: p.onboarded ?? d.onboarded,
     notifications: {
       email: { ...d.notifications.email, ...(p.notifications?.email ?? {}) },
       frequency: p.notifications?.frequency ?? d.notifications.frequency,
