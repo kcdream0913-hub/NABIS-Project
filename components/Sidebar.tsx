@@ -125,17 +125,22 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
       </nav>
 
       <div className="border-t border-border p-2.5">
-        <Link href="/profile" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 rounded-xl px-1.5 py-1.5 hover:bg-surface-2">
-          <span className="relative shrink-0">
-            <Avatar name={name} url={avatarUrl} size={34} />
-            <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
-          </span>
-          <span className={`min-w-0 flex-1 ${LABEL}`}>
-            <span className="block truncate text-sm font-semibold text-ink">{name ?? t("loading")}</span>
-            <span className="block text-xs text-online">● {t("online")}</span>
-          </span>
-          <SettingsIcon size={19} strokeWidth={1.9} className={`shrink-0 text-ink-soft ${LABEL}`} />
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link href="/profile" onClick={() => setSidebarOpen(false)} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 py-1.5 hover:bg-surface-2">
+            <span className="relative shrink-0">
+              <Avatar name={name} url={avatarUrl} size={34} />
+              <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
+            </span>
+            <span className={`min-w-0 flex-1 ${LABEL}`}>
+              <span className="block truncate text-sm font-semibold text-ink">{name ?? t("loading")}</span>
+              <span className="block text-xs text-online">● {t("online")}</span>
+            </span>
+          </Link>
+          <Link href="/settings" onClick={() => setSidebarOpen(false)} aria-label={t("settings")}
+            className={`shrink-0 rounded-lg p-2 text-ink-soft hover:bg-surface-2 hover:text-ink ${LABEL}`}>
+            <SettingsIcon size={19} strokeWidth={1.9} />
+          </Link>
+        </div>
         <button onClick={signOut} className="mt-1 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium text-ink-soft hover:bg-surface-2">
           <LogOut size={19} strokeWidth={1.9} className="shrink-0" />
           <span className={LABEL}>{t("signOut")}</span>

@@ -123,6 +123,59 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-24 (later) — Settings Phase A + dark-mode surface sweep (2 commits; branch migration, NOT merged):**
+  - **v1 settings was NEVER in this repo** (no `/settings`, `/terms`, `/privacy`,
+    ThemeProvider, SettingsNav, `settings.*` i18n, `preferences` column — grep +
+    history clean). So Phase A built the shell **and** the v1 sections directly
+    under the v2 IA (`BL-SETTINGS-package-v2.md`), not v1's superseded IA.
+  - **Dark-mode sweep — its own commit (`1720cb4`), no light-mode change.**
+    `bg-white → bg-surface`, `ring-white → ring-surface`, and `text-white → the
+    matching on-* token by fill` (bg-primary→on-primary, accent→on-accent,
+    bridge→on-bridge). All 24 `text-white` were on coloured fills — none on a
+    surface — so **none map to `text-ink`** (that would break button contrast in
+    light); flagged rather than applied literally. The `.dark` token layer
+    (foundation commit) now has surfaces that consume it; the toggle ships with
+    Settings.
+  - **Settings routes:** `/settings` (→ account), account, privacy, appearance,
+    devices, data (+ `data/export` GET route), support; legal `/terms` `/privacy`
+    (added to `PUBLIC_PATHS`). Shell = `ThemeProvider` (light/dark/system + font
+    scale, localStorage, pre-paint init script) + `SettingsNav` + primitives.
+  - **Verification card** reads user's own state: `user_trust_tiers.trust_tier`
+    (pk `id`), `profiles.us_/np_verification`, `verification_records` (subject key
+    = `subject_id`; history cols created_at/policy_track/status/provider). Read-only.
+  - **Download-my-data** streams RLS-scoped own rows only (profile, owned
+    businesses, authored posts, sent messages, rsvps, itineraries, verification
+    records) — no other party's data, no new storage.
+  - **DECISIONS (recorded, D-021…D-024 below):** preferences live in **one**
+    `profiles.preferences` jsonb (merge-managed via `lib/preferences.ts`, never
+    clobbered); **timezone is stored in preferences** (theme/font are
+    device-local in localStorage, NOT the DB); Phase B **2FA = TOTP** (not
+    email-OTP) and **active sessions via a service-role route** over
+    `auth.sessions`; **account deletion = the tightly-scoped
+    `delete_own_account()` SECURITY DEFINER RPC** (deletes only `auth.uid()`,
+    revoked from anon/public, granted to authenticated; FK cascade removes
+    profile + businesses).
+  - **Branch migration (NOT merged, accruing ~$0.32/day until merged/deleted):**
+    branch `settings-phase-a` (ref `rllkuddhuufmvrjgfpde`) replays the verified
+    baseline + `20260724120000_settings_preferences_and_delete_account.sql`
+    (`preferences` column + the RPC). `profiles_update_own` is row-level
+    (`id = auth.uid()`, no column scope) so the owner writes `preferences` with
+    **no new policy** (hub-confirmed). Advisors run on the branch.
+  - **OPEN QUESTIONS / honest scope:** (1) `preferences`/RPC live only on the
+    branch — settings pages that read/write preferences error against prod until
+    the branch merges (client is untyped, so this doesn't break tsc/build; not
+    pushed). (2) **visibility is stored, NOT enforced** — feed/directory/DM
+    filtering is the next commit (copy says so). (3) **email delivery** for Phase
+    B notifications/login-alerts needs a provider/worker — store-only until then.
+    (4) **SMS** phone-OTP is real but needs a configured provider or it errors
+    (labeled). (5) **`BL-LEGAL-05` was not provided** — `/terms` `/privacy` render
+    an honest working-draft notice with `[ENTITY]`/`[DATE]` placeholders (no
+    lorem); fill real clauses when the doc arrives. (6) settings user-data pages
+    are `force-dynamic`; the build still lists them `●` because the `[locale]`
+    param is statically enumerated — **verify per-user rendering on the live
+    deploy**. (7) blocking enforcement is Phase C.
+  - Verified: tsc 0 · vitest 47/47 (i18n parity + new authRouting cases) · next
+    build 46/46 both locales. NOT pushed — hub verifies; branch NOT merged.
 - **2026-07-24 (Phase A · design) — foundation rebrand + Members/Business + Feed cards (TWO gated commits, NOT pushed):**
   - **Commit 1 — foundation rebrand (`06d05c4`), one atomic colour migration.**
     Applied the token-migration map (`BL-DESIGN-token-migration-map-v1`): a
@@ -700,3 +753,7 @@ proceed.
 | D-018 | 2026-07-23 | **Phased sequencing (BL-STRATEGY-01).** Phase A = first-impression surfaces (navigation, "Members & Business", Feed). Phase B (only after the founding cohort is actively using it) = the heavier builds (Discord-style channels, Trip Planner, Events, full Settings). Each area ships as its own gated, hub-verified commit. | Ship what the founding cohort judges first; defer heavy builds until there's usage to shape them. |
 | D-019 | 2026-07-23 | **"Directory" renamed to "Members & Business"** (nav label, page eyebrow, page H1). Route stays `/members`. | Founder-chosen name; keeping the route avoids breaking links + the middleware public-path list. |
 | D-020 | 2026-07-23 | **Unverified = NO badge anywhere.** No "Listed" chip, no placeholder mark — absence is neutral, never a scarlet letter. TrustBadge reflects real per-track state only; tone is "facilitation only." | Light-verification model must stay honest in the UI; a fake status mark misrepresents standing. Removed the channel-page "Listed" chip to comply. |
+| D-021 | 2026-07-24 | **All user preferences live in one `profiles.preferences` jsonb** (merge-managed, never clobbered); **timezone stored there**, while **theme + font are device-local** (localStorage), not the DB. | One additive column beats many; per-device display prefs shouldn't sync across devices via the DB. |
+| D-022 | 2026-07-24 | **Account deletion = `delete_own_account()` SECURITY DEFINER RPC** — deletes only `auth.uid()`, revoked from anon/public, granted to authenticated; FK cascade removes profile + businesses. | Self-serve delete needs elevated privilege; scope it to the caller in the DB rather than shipping a service-role key to the client. |
+| D-023 | 2026-07-24 | **Phase B: 2FA = TOTP** (not email-OTP-as-2FA); **active sessions via a service-role server route** over `auth.sessions`. | TOTP is the standard second factor; listing sessions needs an elevated read. |
+| D-024 | 2026-07-24 | **Profile visibility is stored now but enforced in the next commit**; the UI copy says so. | Honest UI — never imply feed/directory/DM filtering that isn't wired yet. |

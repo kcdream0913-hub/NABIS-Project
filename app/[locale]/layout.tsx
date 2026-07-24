@@ -15,6 +15,7 @@ import "@fontsource/noto-sans-devanagari/600.css";
 import "@fontsource/noto-sans-devanagari/700.css";
 import { AppProvider } from "@/lib/store";
 import AppShell from "@/components/AppShell";
+import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 
 // Inter (variable, self-hosted — same no-external-fetch rule as the Devanagari
 // font above). Exposes --font-latin, consumed by the html font stack in
@@ -48,12 +49,18 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={inter.variable}>
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* Apply stored theme/font before first paint — no light-then-dark flash. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <AppProvider>
-            <AppShell>{children}</AppShell>
-          </AppProvider>
+          <ThemeProvider>
+            <AppProvider>
+              <AppShell>{children}</AppShell>
+            </AppProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

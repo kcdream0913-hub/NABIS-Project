@@ -15,7 +15,8 @@
     "viewProfile": "View profile",
     "loading": "Loading…",
     "signOut": "Sign out",
-    "online": "Online"
+    "online": "Online",
+    "settings": "Settings"
   },
   "card": {
     "message": "Message",
@@ -28,6 +29,138 @@
     "comment": "Comment",
     "share": "Share",
     "postedBy": "Posted by {name}"
+  },
+  "settings": {
+    "eyebrow": "Account & preferences",
+    "title": "Settings",
+    "nav": {
+      "aria": "Settings sections",
+      "account": "Account",
+      "privacy": "Privacy & Data",
+      "appearance": "Appearance",
+      "devices": "Devices",
+      "data": "Data & Legal",
+      "support": "Support"
+    },
+    "account": {
+      "title": "Account",
+      "description": "Your name, sign-in email, and password.",
+      "nameLabel": "Display name",
+      "emailLabel": "Email",
+      "emailHint": "Changing your email sends a confirmation link to the new address.",
+      "passwordLabel": "Password",
+      "passwordHint": "At least 8 characters.",
+      "passwordPlaceholder": "New password",
+      "save": "Save",
+      "updateEmail": "Update email",
+      "updatePassword": "Update password",
+      "saved": "Saved",
+      "emailConfirmSent": "Confirmation link sent — check your new inbox.",
+      "pwTooShort": "Password must be at least 8 characters."
+    },
+    "verification": {
+      "title": "Verification status & history",
+      "description": "Your current tier, each policy track, and past decisions.",
+      "currentTier": "Current tier",
+      "tier": { "basic": "Not yet verified", "verified": "Verified", "bridge": "Bridge Verified" },
+      "usTrack": "US track",
+      "npTrack": "Nepal track",
+      "status": {
+        "none": "Not started",
+        "pending": "Pending review",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "revoked": "Revoked"
+      },
+      "history": "History",
+      "noHistory": "No verification activity yet."
+    },
+    "privacy": {
+      "title": "Privacy & Data",
+      "description": "Control who can see your profile and what you share.",
+      "profileVisibility": "Profile visibility",
+      "visibilityHint": "Who can find and view your profile.",
+      "visibility": { "public": "Public", "bridge": "Bridge only", "private": "Private" },
+      "enforcementNote": "Saved now; visibility filtering across the feed, directory, and messages arrives in the next update.",
+      "showEmail": "Show email on profile",
+      "showEmailHint": "Let other members see your email.",
+      "showPhone": "Show phone on profile",
+      "showPhoneHint": "Let other members see your phone number.",
+      "dataUsage": "Product improvement",
+      "dataUsageHint": "Allow anonymized usage to improve BridgeLink.",
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Theme and text size for this device.",
+      "theme": { "label": "Theme", "hint": "Light, dark, or match your system.", "light": "Light", "dark": "Dark", "system": "System" },
+      "font": { "label": "Text size", "hint": "Adjust the base text size.", "small": "Small", "normal": "Default", "large": "Large" },
+      "regionTitle": "Language & Region",
+      "regionDescription": "Your language and time zone.",
+      "language": "Language",
+      "languageHint": "Interface language.",
+      "timezone": "Time zone",
+      "timezoneHint": "Used to display event times.",
+      "useDetected": "Use detected ({tz})",
+      "timezoneUsage": "Event times will render in this zone.",
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "devices": {
+      "phoneTitle": "Phone number",
+      "phoneDescription": "Add a phone number for account recovery and alerts.",
+      "phoneLabel": "Phone",
+      "phoneHint": "Include your country code.",
+      "sendCode": "Send code",
+      "codeLabel": "Verification code",
+      "codeHint": "Enter the 6-digit code we texted you.",
+      "verify": "Verify",
+      "codeSent": "Code sent.",
+      "verified": "Phone verified.",
+      "smsProviderNote": "SMS delivery depends on a configured provider; if none is set, sending will fail.",
+      "appTitle": "Mobile app",
+      "appDescription": "Pair the BridgeLink mobile app.",
+      "appScaffold": "The mobile app isn't available yet — pairing will activate here when it ships."
+    },
+    "data": {
+      "title": "Download my data",
+      "description": "Export a copy of your BridgeLink data.",
+      "downloadButton": "Download my data (JSON)",
+      "downloadNote": "Includes your profile, businesses, posts, messages you sent, RSVPs, itineraries, and verification records.",
+      "legalTitle": "Legal",
+      "legalDescription": "Our terms and privacy policy.",
+      "terms": "Terms of Service",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "support": {
+      "title": "Support",
+      "description": "Get help with your account.",
+      "body": "Questions or trouble with your account? Reach the team and we'll help.",
+      "emailUs": "Email support",
+      "responseNote": "We aim to respond within a couple of business days."
+    },
+    "delete": {
+      "title": "Delete account",
+      "description": "Permanently remove your account and data.",
+      "warning": "This deletes your profile, businesses, posts, and messages. It cannot be undone.",
+      "button": "Delete my account",
+      "confirmTitle": "Delete your account?",
+      "confirmBody": "This is permanent. Your profile and any businesses you own will be removed.",
+      "typeToConfirm": "Type DELETE to confirm",
+      "cancel": "Cancel",
+      "confirmButton": "Delete account",
+      "deleting": "Deleting…"
+    }
+  },
+  "legal": {
+    "eyebrow": "Legal",
+    "termsTitle": "Terms of Service",
+    "privacyTitle": "Privacy Policy",
+    "lastUpdated": "Last updated: {date}",
+    "draftNotice": "This is a working draft being finalized ahead of launch.",
+    "termsIntro": "These Terms govern your use of BridgeLink, operated by {entity}. The full text is being prepared and will appear here before public launch.",
+    "privacyIntro": "This Policy explains how {entity} handles your data on BridgeLink. The full text is being prepared and will appear here before public launch."
   },
   "topbar": {
     "openNavigation": "Open navigation",

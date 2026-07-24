@@ -65,9 +65,16 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/auth/callback")).toBe(true);
   });
 
+  it("treats the public legal pages as public", () => {
+    expect(isPublicPath("/terms")).toBe(true);
+    expect(isPublicPath("/privacy")).toBe(true);
+  });
+
   it("treats the home feed and other app routes as non-public", () => {
     expect(isPublicPath("/")).toBe(false);
     expect(isPublicPath("/members")).toBe(false);
     expect(isPublicPath("/profile")).toBe(false);
+    // /settings/privacy must NOT be caught by the /privacy public prefix
+    expect(isPublicPath("/settings/privacy")).toBe(false);
   });
 });
