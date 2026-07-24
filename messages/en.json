@@ -81,7 +81,7 @@
       "profileVisibility": "Profile visibility",
       "visibilityHint": "Who can find and view your profile.",
       "visibility": { "public": "Public", "bridge": "Bridge only", "private": "Private" },
-      "enforcementNote": "Saved now; visibility filtering across the feed, directory, and messages arrives in the next update.",
+      "enforcementNote": "Applies across the directory, search, and profile pages. People you already message or share a business with keep access.",
       "showEmail": "Show email on profile",
       "showEmailHint": "Let other members see your email.",
       "showPhone": "Show phone on profile",
@@ -108,20 +108,17 @@
       "saved": "Saved"
     },
     "devices": {
-      "phoneTitle": "Phone number",
-      "phoneDescription": "Add a phone number for account recovery and alerts.",
-      "phoneLabel": "Phone",
-      "phoneHint": "Include your country code.",
-      "sendCode": "Send code",
-      "codeLabel": "Verification code",
-      "codeHint": "Enter the 6-digit code we texted you.",
-      "verify": "Verify",
-      "codeSent": "Code sent.",
-      "verified": "Phone verified.",
-      "smsProviderNote": "SMS delivery depends on a configured provider; if none is set, sending will fail.",
+      "otpTitle": "Sign in with a one-time code",
+      "otpDescription": "Email yourself a one-time sign-in link — handy for signing in on another device without your password.",
+      "otpLabel": "One-time sign-in link",
+      "otpHint": "We'll email a sign-in link to {email}.",
+      "emailCode": "Email me a link",
+      "codeEmailed": "Sign-in link sent — check your inbox.",
+      "otpNote": "The link signs you in on whichever device opens it.",
       "appTitle": "Mobile app",
       "appDescription": "Pair the BridgeLink mobile app.",
-      "appScaffold": "The mobile app isn't available yet — pairing will activate here when it ships."
+      "beta": "Beta",
+      "appScaffold": "The mobile app isn't generally available yet — pairing will activate here when it ships."
     },
     "data": {
       "title": "Download my data",
@@ -158,9 +155,8 @@
     "termsTitle": "Terms of Service",
     "privacyTitle": "Privacy Policy",
     "lastUpdated": "Last updated: {date}",
-    "draftNotice": "This is a working draft being finalized ahead of launch.",
-    "termsIntro": "These Terms govern your use of BridgeLink, operated by {entity}. The full text is being prepared and will appear here before public launch.",
-    "privacyIntro": "This Policy explains how {entity} handles your data on BridgeLink. The full text is being prepared and will appear here before public launch."
+    "pilotBanner": "Pilot draft for review — not legal advice. These terms take effect once a named operating entity ([ENTITY]) and counsel review are in place; bracketed fields are filled at that point.",
+    "nepaliPending": "A Nepali translation of this notice is required before Nepal-side onboarding."
   },
   "topbar": {
     "openNavigation": "Open navigation",

@@ -8,5 +8,5 @@ export default async function DevicesPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return <MobileConnect currentPhone={user?.phone ?? null} />;
+  return <MobileConnect email={user?.email ?? ""} />;
 }

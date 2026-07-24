@@ -17,6 +17,7 @@ type PersonRow = {
   verification_status: string;
   bridge: boolean | null;
   avatar_url: string | null;
+  preferences: { visibility?: string } | null;
 };
 type BusinessRow = {
   id: string;
@@ -49,7 +50,7 @@ export default function DirectoryPage() {
       const [{ data: p }, { data: b }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, name, bio, city, country, verification_status, bridge, avatar_url")
+          .select("id, name, bio, city, country, verification_status, bridge, avatar_url, preferences")
           .order("created_at", { ascending: false }),
         supabase
           .from("businesses")
@@ -75,6 +76,11 @@ export default function DirectoryPage() {
   const inView = (c: "us" | "nepal" | null) => view === "bridge" || c === view;
 
   const filteredPeople = people.filter((m) => {
+    // Visibility UX layer (RLS is the security floor). Private is never listed in
+    // the directory even to a related viewer; bridge-only shows only in Bridge view.
+    const vis = m.preferences?.visibility ?? "public";
+    if (vis === "private") return false;
+    if (vis === "bridge" && view !== "bridge") return false;
     if (verifiedOnly && m.verification_status !== "verified") return false;
     if (!inView(m.country)) return false;
     return `${m.name ?? ""} ${m.bio ?? ""} ${m.city ?? ""}`.toLowerCase().includes(q.toLowerCase());

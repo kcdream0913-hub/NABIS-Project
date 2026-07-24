@@ -33,23 +33,29 @@ export default function GlobalSearch() {
     }
     const timeout = setTimeout(async () => {
       const [{ data: people }, { data: businesses }, { data: channels }] = await Promise.all([
-        supabase.from("profiles").select("id, name, city").ilike("name", `%${term}%`).limit(5),
-        supabase.from("businesses").select("id, name, sector").ilike("name", `%${term}%`).limit(5),
+        supabase.from("profiles").select("id, name, city, preferences").ilike("name", `%${term}%`).limit(8),
+        supabase.from("businesses").select("id, name, primary_sector").ilike("name", `%${term}%`).limit(5),
         supabase.from("channels").select("id, slug, name").ilike("name", `%${term}%`).limit(5),
       ]);
 
       setResults([
-        ...(people ?? []).map((p) => ({
-          type: "person" as const,
-          id: p.id,
-          label: p.name ?? "Member",
-          sub: p.city ?? "",
-        })),
+        // Private profiles are never listed in search (RLS already hides those the
+        // viewer has no relationship with; this drops any private a relationship
+        // would otherwise surface). Bridge is left to RLS (verified-only).
+        ...(people ?? [])
+          .filter((p) => ((p.preferences as { visibility?: string } | null)?.visibility ?? "public") !== "private")
+          .slice(0, 5)
+          .map((p) => ({
+            type: "person" as const,
+            id: p.id,
+            label: p.name ?? "Member",
+            sub: p.city ?? "",
+          })),
         ...(businesses ?? []).map((b) => ({
           type: "business" as const,
           id: b.id,
           label: b.name,
-          sub: b.sector ?? "",
+          sub: b.primary_sector ?? "",
         })),
         ...(channels ?? []).map((c) => ({
           type: "channel" as const,

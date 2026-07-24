@@ -123,6 +123,50 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-24 (latest) — Settings shipped to prod + Visibility Enforcement + Email-OTP + real legal copy:**
+  - **Settings branch merged to prod, branch deleted.** `preferences` jsonb +
+    `delete_own_account()` RPC now live on prod (migration recorded
+    `20260724150558`; repo file renamed to match). Prod security advisors: the
+    `delete_own_account` WARN is the only new one and is **intentional**
+    (self-delete must be authenticated-callable), same accepted class as
+    `get_or_create_direct_thread` / `redeem_business_invite`. Dark sweep +
+    settings pushed (`8e50319`).
+  - **Visibility enforcement — LIVE on prod (D-024 fulfilled).** RLS backstop
+    `private.can_view_profile(target)` (SECURITY DEFINER, private schema so no
+    new advisor surface): a profile row is SELECTable when it's the viewer's own,
+    the **viewer is an admin** (review queue keeps full sight), the target is
+    **public** (default when `preferences.visibility` unset), the target is
+    **bridge** AND the viewer is **verified**, or an **existing relationship**
+    links them — a **shared DM thread** or a **shared business** (member↔member,
+    owner↔member). `profiles_select` altered to `USING(can_view_profile(id))`;
+    all 32 profiles default to public so it's backward-compatible.
+    - **Query/UX layer on top:** directory (`/members`) excludes private always +
+      bridge-only outside Bridge view; GlobalSearch excludes private (and fixed a
+      latent bug — it selected `businesses.sector`, renamed to `primary_sector`,
+      so business search returned nothing); person page 404s a hidden profile
+      (`.single()` → notFound); feed authors that RLS can't see render the
+      "Member" fallback (no name leak; a private author's posts still appear
+      anonymized — out of scope for this pass). Team lists + DM participant names
+      resolve via the relationship branches, so **active conversations don't
+      break**.
+    - **Tested with the 30 seeded accounts** (techp→private, agrip→bridge, DM
+      thread techp↔techb): stranger sees 30 (both hidden); DM partner sees 31
+      (private techp **resolves via the shared thread**); a verified viewer sees
+      32 (bridge included). Test mutations fully reverted — seeded data pristine.
+    - Privacy copy flipped from "arrives in the next update" to active.
+  - **Devices: Phone-OTP → Email-OTP** (`signInWithOtp({ email })`, no SMS
+    provider needed). QR pairing kept, labeled **Beta**. Devices i18n keys
+    reworked (en+ne, parity held).
+  - **Legal filled from `BL-LEGAL-05` (v0.2-pilot).** `/terms` (17 sections) and
+    `/privacy` (9 sections) render the real pilot text; **`[ENTITY]`/`[DATE]`/
+    `[LEGAL_EMAIL]`/`[GOVERNING_LAW]`/`[VENUE]`/`[PRIVACY_LINK]` stay literal**
+    until a real operating entity + counsel review land (Gate L1). A pilot-draft
+    banner says so. **NE Privacy translation still required before Nepal-side
+    onboarding** (D-001). NOT built this pass (flagged, in the doc's §3–4):
+    the `consents` append-only table + signup consent checkbox, the 18+ age gate,
+    and in-app disclaimers B–E — a separate scoped commit.
+  - Verified: tsc 0 · vitest 47/47 (parity) · next build 46/46 both locales;
+    prod security advisors = 3 intentional WARN, nothing new.
 - **2026-07-24 (later) — Settings Phase A + dark-mode surface sweep (2 commits; branch migration, NOT merged):**
   - **v1 settings was NEVER in this repo** (no `/settings`, `/terms`, `/privacy`,
     ThemeProvider, SettingsNav, `settings.*` i18n, `preferences` column — grep +
@@ -756,4 +800,6 @@ proceed.
 | D-021 | 2026-07-24 | **All user preferences live in one `profiles.preferences` jsonb** (merge-managed, never clobbered); **timezone stored there**, while **theme + font are device-local** (localStorage), not the DB. | One additive column beats many; per-device display prefs shouldn't sync across devices via the DB. |
 | D-022 | 2026-07-24 | **Account deletion = `delete_own_account()` SECURITY DEFINER RPC** — deletes only `auth.uid()`, revoked from anon/public, granted to authenticated; FK cascade removes profile + businesses. | Self-serve delete needs elevated privilege; scope it to the caller in the DB rather than shipping a service-role key to the client. |
 | D-023 | 2026-07-24 | **Phase B: 2FA = TOTP** (not email-OTP-as-2FA); **active sessions via a service-role server route** over `auth.sessions`. | TOTP is the standard second factor; listing sessions needs an elevated read. |
-| D-024 | 2026-07-24 | **Profile visibility is stored now but enforced in the next commit**; the UI copy says so. | Honest UI — never imply feed/directory/DM filtering that isn't wired yet. |
+| D-024 | 2026-07-24 | **Profile visibility is stored now but enforced in the next commit**; the UI copy says so. → **FULFILLED** by `private.can_view_profile` (see D-025). | Honest UI — never imply feed/directory/DM filtering that isn't wired yet. |
+| D-025 | 2026-07-24 | **Visibility model.** public = listed everywhere; bridge = visible to verified viewers + shown only in Bridge view; private = hidden from directory/search/public-profile BUT resolvable by existing relationships (shared DM thread or shared business). Admins keep full sight. Enforced by RLS (`private.can_view_profile`) as the security floor + query filters for UX. | A leak on any people-listing surface defeats it, so enforce at the DB; but never break active conversations or team visibility. |
+| D-026 | 2026-07-24 | **Device sign-in = Email OTP** (`signInWithOtp` email), not phone/SMS. QR app-pairing stays a labeled **Beta** scaffold. | No SMS provider is configured; email OTP works out of the box and needs no extra vendor. |
