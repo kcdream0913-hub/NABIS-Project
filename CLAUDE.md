@@ -123,7 +123,32 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint 6) — Trip Planner v2, Commit C2: festival overlay + compare + filters (frontend, NOT pushed):**
+- **2026-07-24 (sprint 7) — Settings account-page polish (frontend, NOT pushed):**
+  - **Overflow fix (real bug).** Root cause: `SettingsRow`'s control column is
+    `shrink-0`, so a long status/error note in a non-wrapping flex (the Password
+    row) forced the column — and the row — wider than the card → horizontal scroll.
+    All account rows (name/email/phone/password) now use one pattern: label+helper
+    left, a **width-bounded control column** (`w-full sm:w-72`) right, `w-full`
+    inputs, `flex-wrap` action rows, notes `break-words` — so no child can exceed
+    the card at 375/675/1280. Password stacks Current/New/Confirm vertically.
+    Audited the other settings pages: `PrivacyForm`'s save/error row hardened
+    (flex-wrap + break-words); appearance/devices already wrap; data/support are
+    links. No DB changes.
+  - **Email row** — kept "Update email" (Supabase has one email per user; a
+    recovery-email field would imply account-recovery capability that doesn't
+    exist). New helper copy; a **pending-change notice with the masked new address**
+    when `getUser().new_email` is set.
+  - **Request verification** — the RPC was NOT broken (the 400 was the admin DMing
+    themselves). Moved the admin id + `canRequestVerification` into `lib/support.ts`;
+    the button is **hidden when the current user is the admin** (the only 400 case).
+    Real UX otherwise: loading state, calls the RPC directly to surface its message,
+    navigates to the returned thread on success, shows a **visible error alert** on
+    failure — no silent no-op. `currentUserId` passed from the server page. +1 pure
+    helper test (admin-self hidden). No change to `get_or_create_direct_thread` or
+    any DB object.
+  - gates: tsc 0 · vitest 76/76 (+3 support) · build 52/52 both locales. **NOT
+    pushed — hub verifies.**
+- **2026-07-24 (sprint 6) — Trip Planner v2, Commit C2: festival overlay + compare + filters (frontend, pushed da51a66):**
   - **Festival overlay (Step 2)** — `festivalsOverlappingRange` (pure + tested):
     when the date range overlaps a `festivals` row it shows a banner + chips
     "<festival> (<dates>)"; dated windows (`dates` jsonb, per year) take priority,

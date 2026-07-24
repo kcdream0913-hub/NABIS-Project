@@ -47,7 +47,7 @@
       "description": "Your name, sign-in email, and password.",
       "nameLabel": "Display name",
       "emailLabel": "Email",
-      "emailHint": "Changing your email sends a confirmation link to the new address.",
+      "emailHint": "This is your sign-in email. Confirmation links are sent to both your current and new address before the change takes effect.",
       "passwordLabel": "Password",
       "passwordHint": "At least 8 characters.",
       "passwordPlaceholder": "New password",
@@ -73,7 +73,8 @@
       "confirmPasswordPlaceholder": "Confirm new password",
       "pwWrongCurrent": "Current password is incorrect.",
       "pwSameAsCurrent": "New password must be different from your current one.",
-      "pwMismatch": "New passwords don't match."
+      "pwMismatch": "New passwords don't match.",
+      "emailPending": "Pending change to {email} — confirm from both inboxes to finish."
     },
     "verification": {
       "title": "Verification status & history",
@@ -97,7 +98,9 @@
       "noHistory": "No verification activity yet.",
       "requestVerification": "Request verification",
       "requestVerificationHint": "Opens a message to the BridgeLink team.",
-      "verificationPrefill": "I'd like to get verified — "
+      "verificationPrefill": "I'd like to get verified — ",
+      "requesting": "Opening…",
+      "requestErrorFallback": "Couldn't start the request. Please try again."
     },
     "privacy": {
       "title": "Privacy & Data",

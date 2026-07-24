@@ -29,15 +29,18 @@ export default async function AccountPage() {
   // field shows a placeholder, not the address. Frontend guard only, no migration.
   const email = user.email ?? "";
   const initialName = profile?.name && profile.name !== email ? profile.name : "";
+  // GoTrue exposes new_email while an email change is awaiting confirmation.
+  const pendingEmail = (user as { new_email?: string }).new_email ?? "";
 
   return (
     <>
-      <AccountForm initialName={initialName} email={email} initialPhone={profile?.phone ?? ""} />
+      <AccountForm initialName={initialName} email={email} initialPhone={profile?.phone ?? ""} pendingEmail={pendingEmail} />
       <VerificationCard
         tier={tier}
         usStatus={(profile?.us_verification ?? "none") as TrackStatus}
         npStatus={(profile?.np_verification ?? "none") as TrackStatus}
         history={(history ?? []) as HistoryRow[]}
+        currentUserId={user.id}
       />
       <DeleteAccountButton />
     </>

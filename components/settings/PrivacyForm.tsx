@@ -64,13 +64,13 @@ export default function PrivacyForm({ initial }: { initial: Preferences }) {
         </SettingsRow>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
         <button onClick={save} disabled={busy}
           className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary-pressed disabled:opacity-50">
           {t("save")}
         </button>
         {saved && <span className="text-[13px] text-active">{t("saved")}</span>}
-        {error && <span className="text-[13px] text-accent" role="alert">{error}</span>}
+        {error && <span className="min-w-0 break-words text-[13px] text-accent" role="alert">{error}</span>}
       </div>
     </SettingsSection>
   );
