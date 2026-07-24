@@ -123,6 +123,55 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-24 (Phase A · design) — foundation rebrand + Members/Business + Feed cards (TWO gated commits, NOT pushed):**
+  - **Commit 1 — foundation rebrand (`06d05c4`), one atomic colour migration.**
+    Applied the token-migration map (`BL-DESIGN-token-migration-map-v1`): a
+    half-migrated palette compiles green but renders broken (Tailwind v4 drops
+    undefined-token utilities silently), so it landed whole. New `@theme`: brand
+    **blue** (`primary`/-pressed/-soft/on-primary/chip-ink), `accent` red =
+    importance/destructive ONLY, `bridge` = gold, **green is a STATUS colour**
+    (active + online) only, `view-us`/`view-nepal`/`view-bridge` promoted here
+    (VIEW_META migrated), neutrals → slate, `border` split into decorative
+    `border` vs interactive `border-input`, plus a forward-looking `.dark`
+    charcoal layer (no in-app toggle yet). Old→new applied across 32 files;
+    grep proof shows ZERO old token utilities and ZERO old green hex remain.
+    New `components/icons.tsx` (NAV_ICON, blue VerifiedIcon, gold BridgeStar),
+    `components/OnlineDot.tsx`; **Sidebar rebuilt as a flyout rail** (68px icons
+    → hover-expand 248px; `expanded` prop forces labels on the mobile drawer;
+    AppShell rail width + content offset now 68px). **TrustBadge restyled** to
+    blue shield (Verified) / solid gold star (Bridge); prop stays
+    `tier: TrustTier` so all 6 callsites + the mapping test are untouched.
+    `nav.online` i18n added.
+    - **view-bridge = `#3F3D9E` indigo, NOT primary blue.** The map left it
+      unpinned and mapped pine→primary, which would have made Bridge≡US blue
+      (breaks D-004 "clear country context"). Took the cards package's distinct
+      indigo instead; amended into the foundation commit so view tokens stay
+      defined in one place.
+    - **rhodo split (17 occurrences) — REPORTED to the hub for sign-off, per the
+      map; NOT pushed.** Only `lib/data.ts` VIEW_META Nepal → `view-nepal`; every
+      other rhodo (errors, destructive/remove actions, the like-heart, the unread
+      dot, failed-status, the report-count badge) → `accent`.
+  - **Commit 2 — Cards + Feed package (`BL-DESIGN-cards-feed-package-v1`).**
+    New `chips.tsx` (ViewChip/SectorChip), `ui/Cover.tsx`, `MemberCard`,
+    `BusinessCard`, `ReactionBar` (wired to `post_reactions` with rollback,
+    self-contained), `PostCard`, `Feed` (`@formkit/auto-animate`), and
+    `lib/formatRelativeTime.ts`. Card components reconciled to the repo's
+    `TrustBadge(tier,label)` API. `/members` people + business grids now render
+    the new cards (`grid gap-4 sm:grid-cols-2 lg:grid-cols-3`); the feed mode of
+    `app/[locale]/page.tsx` now renders `<Feed>`/`<PostCard>` (ReportButton
+    preserved via a `renderAction` slot; the page's old inline reaction toggle
+    removed in favour of per-card ReactionBar). +`card.*` / `feed.*` i18n
+    (en/ne). MemberCard `headline` carries the member bio (no short-title field
+    exists), clamped to 2 lines. MemberCard message button uses the existing
+    `findOrCreateThread` flow (there is no `/messages/new` route).
+  - **Not pushed — hub verifies first.** Local `main` is now ahead of
+    `origin/main` by 3 (nav `ff6d5b6` + foundation + cards). `bg-white`/
+    `text-white` were intentionally NOT migrated to `surface`/tokens (not old
+    brand tokens; dark mode isn't wired), so dark mode is forward-looking only.
+  - Verified (each commit): tsc 0 · vitest 46/46 (i18n parity) · next build
+    28/28 both locales; compiled CSS confirmed to emit the new utilities
+    (`bg-active-soft`, `text-online`, `bg-view-bridge-soft`=indigo, `.card`/
+    `.card-hover`, `border-border-input`) with real values.
 - **2026-07-23 (Phase A · nav) — grouped navigation + "Members & Business" rename:**
   - Nav backbone grouped into eyebrow-labelled sections: **Community** (Feed,
     Members & Business, Channels, Events) and **Tools** (Trip Planner, Register

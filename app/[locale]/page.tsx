@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
-import Avatar from "@/components/Avatar";
-import TrustBadge from "@/components/TrustBadge";
-import { trustTier } from "@/lib/trust";
 import Composer from "./composer";
-import { Compass, MessagesSquare, Heart, MessageCircle } from "lucide-react";
+import { Compass, MessagesSquare } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
 import ThreadConversation from "@/components/ThreadConversation";
-import { VIEW_META } from "@/lib/data";
+import Feed from "@/components/Feed";
+import type { FeedPost } from "@/components/PostCard";
 import { useApp } from "@/lib/store";
-import type { View } from "@/lib/types";
 
 type FeedProfile = {
   name: string | null;
@@ -48,9 +45,8 @@ type Thread = {
 
 export default function HomePage() {
   const t = useTranslations("home");
-  const tCommon = useTranslations("common");
-  const tView = useTranslations("view");
   const format = useFormatter();
+  const locale = useLocale();
   const supabase = createClient();
   const { view } = useApp();
   const [mode, setMode] = useState<"feed" | "messages">("feed");
@@ -99,41 +95,6 @@ export default function HomePage() {
     }
     setReactionCounts(counts);
     setMyReactions(mine);
-  }
-
-  async function toggleReaction(postId: string) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const reacted = myReactions.has(postId);
-
-    // Optimistic: flip the UI first, then reconcile. `applyLocal(true)` applies the
-    // change, `applyLocal(false)` undoes it — so the rollback below is guaranteed to
-    // be the exact inverse rather than a hand-written second copy that can drift.
-    const applyLocal = (forward: boolean) => {
-      const adding = forward ? !reacted : reacted;
-      setMyReactions((prev) => {
-        const n = new Set(prev);
-        if (adding) n.add(postId);
-        else n.delete(postId);
-        return n;
-      });
-      setReactionCounts((prev) => ({
-        ...prev,
-        [postId]: Math.max(0, (prev[postId] ?? 0) + (adding ? 1 : -1)),
-      }));
-    };
-
-    applyLocal(true);
-
-    const { error } = reacted
-      ? await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", user.id)
-      : await supabase.from("post_reactions").insert({ post_id: postId, user_id: user.id });
-
-    // The write is what makes it real. If RLS rejects it or the network drops, undo
-    // the optimistic flip instead of leaving the UI asserting something untrue.
-    if (error) applyLocal(false);
   }
 
   async function loadMessages() {
@@ -215,6 +176,40 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, view]);
 
+  // Map the loaded rows to the presentational FeedPost shape. Reaction seeds
+  // come from the bulk load; each card's ReactionBar owns its own toggle after.
+  const feedPosts: FeedPost[] = posts.map((p) => {
+    const author = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+    const business = Array.isArray(p.businesses) ? p.businesses[0] : p.businesses;
+    const view: FeedPost["view"] =
+      p.view === "us" || p.view === "nepal" || p.view === "bridge" ? p.view : "bridge";
+    return {
+      id: p.id,
+      body: p.body,
+      created_at: p.created_at,
+      view,
+      posted_as: p.posted_as === "business" ? "business" : "user",
+      author: {
+        id: "",
+        name: author?.name ?? t("member"),
+        avatar_url: author?.avatar_url,
+        verification_status: author?.verification_status === "verified" ? "verified" : "unverified",
+        tier: author?.bridge ? "bridge" : undefined,
+      },
+      business: business
+        ? {
+            id: "",
+            name: business.name ?? t("member"),
+            logo_url: business.logo_url,
+            verification_status: business.verification_status === "verified" ? "verified" : "unverified",
+          }
+        : null,
+      likeCount: reactionCounts[p.id] ?? 0,
+      commentCount: 0,
+      likedByMe: myReactions.has(p.id),
+    };
+  });
+
   return (
     <div>
       {/* The main-screen toggle — Feed (content) vs Messages (channels + DMs) */}
@@ -250,87 +245,11 @@ export default function HomePage() {
               body={t("feedEmptyBody")}
             />
           ) : (
-            posts.map((p) => {
-              const author = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
-              const business = Array.isArray(p.businesses) ? p.businesses[0] : p.businesses;
-              // Business-identity posts (spec §5.6) surface the business;
-              // everything else surfaces the human. Identity + verification
-              // always travel together (spec §5.4 "badges travel").
-              const asBusiness = p.posted_as === "business" && business;
-              const displayName = (asBusiness ? business?.name : author?.name) ?? t("member");
-              // Businesses have no corridor tier, so a business-identity post
-              // resolves to "verified" at most; only human authors can be Bridge.
-              const tier = trustTier(asBusiness ? business : author);
-              const chipView = p.view && p.view in VIEW_META ? (p.view as View) : null;
-              return (
-                <article key={p.id} className="rounded-lg border border-border bg-white p-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar
-                      url={asBusiness ? business?.logo_url : author?.avatar_url}
-                      name={displayName}
-                      size={38}
-                      shape={asBusiness ? "rounded" : "circle"}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <p className="truncate text-sm font-semibold">{displayName}</p>
-                        <TrustBadge
-                          tier={tier}
-                          label={
-                            asBusiness
-                              ? tCommon("verifiedBusiness")
-                              : tCommon(tier === "bridge" ? "bridgeVerified" : "verified")
-                          }
-                        />
-                        {chipView && (
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${VIEW_META[chipView].chip}`}
-                          >
-                            {tView(`${chipView}Short`)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-xs text-ink-soft">
-                        <time dateTime={p.created_at}>
-                          {format.relativeTime(new Date(p.created_at))}
-                        </time>
-                      </p>
-                    </div>
-                    <ReportButton targetType="post" targetId={p.id} />
-                  </div>
-                  <p className="mt-3 whitespace-pre-line text-body leading-relaxed">{p.body}</p>
-                  {/* Feed footer: the like reaction is wired to post_reactions;
-                      the comment affordance stays a scaffold (comments are later). */}
-                  <footer className="mt-3 flex items-center gap-1 border-t border-border pt-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleReaction(p.id)}
-                      aria-pressed={myReactions.has(p.id)}
-                      aria-label={t("react")}
-                      title={t("react")}
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta transition-colors ease-standard hover:bg-bg ${
-                        myReactions.has(p.id) ? "text-accent" : "text-ink-soft"
-                      }`}
-                    >
-                      <Heart size={14} aria-hidden fill={myReactions.has(p.id) ? "currentColor" : "none"} />
-                      {(reactionCounts[p.id] ?? 0) > 0 && (
-                        <span className="tabular-nums">{reactionCounts[p.id]}</span>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      disabled
-                      aria-label={t("comment")}
-                      title={t("comment")}
-                      data-reactions-scaffold
-                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta text-ink-soft transition-colors ease-standard disabled:opacity-70"
-                    >
-                      <MessageCircle size={14} aria-hidden />
-                    </button>
-                  </footer>
-                </article>
-              );
-            })
+            <Feed
+              posts={feedPosts}
+              locale={locale}
+              renderAction={(fp) => <ReportButton targetType="post" targetId={fp.id} />}
+            />
           )
         ) : channels.length === 0 && threads.length === 0 ? (
           <EmptyState

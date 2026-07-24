@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { findOrCreateThread } from "@/lib/threads";
 import { useSectors } from "@/lib/useSectors";
-import Avatar from "@/components/Avatar";
-import TrustBadge from "@/components/TrustBadge";
-import { trustTier } from "@/lib/trust";
+import MemberCard from "@/components/MemberCard";
+import BusinessCard from "@/components/BusinessCard";
 import type { View } from "@/lib/types";
 
 type PersonRow = {
@@ -34,11 +31,9 @@ type BusinessRow = {
 
 export default function DirectoryPage() {
   const t = useTranslations("directory");
-  const tCommon = useTranslations("common");
   const tView = useTranslations("view");
   const sectors = useSectors();
   const supabase = createClient();
-  const router = useRouter();
   const [tab, setTab] = useState<"people" | "businesses">("people");
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("all");
@@ -155,63 +150,47 @@ export default function DirectoryPage() {
       {loading ? (
         <p className="mt-6 text-sm text-ink-soft">{t("loading")}</p>
       ) : tab === "people" ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPeople.map((m) => (
-            <div key={m.id} className="rounded-lg border border-border bg-white p-4">
-              <Link href={`/people/${m.id}`} className="flex items-center gap-3 hover:opacity-80">
-                <Avatar name={m.name} url={m.avatar_url} size={44} />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{m.name ?? t("member")}</p>
-                  <p className="truncate text-xs text-ink-soft">{m.city}</p>
-                </div>
-              </Link>
-              {m.bio && <p className="mt-3 line-clamp-2 text-sm text-ink-soft">{m.bio}</p>}
-              <div className="mt-2 flex items-center justify-between">
-                <TrustBadge tier={trustTier(m)} label={tCommon(trustTier(m) === "bridge" ? "bridgeVerified" : "verified")} />
-                <button
-                  onClick={async () => {
-                    const threadId = await findOrCreateThread(m.id);
-                    if (threadId) router.push(`/messages/${threadId}`);
-                  }}
-                  className="ml-auto rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-bg"
-                >
-                  {t("message")}
-                </button>
-              </div>
-            </div>
+            <MemberCard
+              key={m.id}
+              id={m.id}
+              name={m.name ?? t("member")}
+              avatarUrl={m.avatar_url}
+              headline={m.bio}
+              location={m.city}
+              view={m.country ?? undefined}
+              viewLabel={m.country ? tView(`${m.country}Short`) : undefined}
+              verification={m.verification_status === "verified" ? "verified" : "unverified"}
+              tier={m.bridge ? "bridge" : undefined}
+            />
           ))}
         </div>
       ) : (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredBusinesses.map((b) => (
-            <Link
-              key={b.id}
-              href={`/business/${b.id}`}
-              className="rounded-lg border border-border bg-white p-4 hover:border-primary"
-            >
-              <div className="flex items-start gap-3">
-                <Avatar name={b.name} url={b.logo_url} shape="rounded" size={40} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold">{b.name}</p>
-                    <TrustBadge tier={trustTier(b)} label={tCommon("verified")} />
-                  </div>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-ink-soft">
-                    <span className="font-medium text-ink">
-                      {sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector}
-                    </span>
-                    {(b.secondary_sectors ?? []).map((slug) => (
-                      <span key={slug} className="rounded bg-bg px-1 py-0.5">
-                        {sectors.find((s) => s.slug === slug)?.name ?? slug}
-                      </span>
-                    ))}
-                    <span>· {b.country_of_registration}</span>
-                  </p>
-                </div>
-              </div>
-              {b.bio && <p className="mt-2 line-clamp-2 text-sm text-ink-soft">{b.bio}</p>}
-            </Link>
-          ))}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredBusinesses.map((b) => {
+            const country = normCountry(b.country_of_registration);
+            return (
+              <BusinessCard
+                key={b.id}
+                id={b.id}
+                name={b.name}
+                logoUrl={b.logo_url}
+                bio={b.bio}
+                primarySector={
+                  b.primary_sector
+                    ? sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector
+                    : null
+                }
+                secondarySectors={(b.secondary_sectors ?? []).map(
+                  (slug) => sectors.find((s) => s.slug === slug)?.name ?? slug
+                )}
+                view={country ?? undefined}
+                viewLabel={country ? tView(`${country}Short`) : undefined}
+                verificationStatus={b.verification_status === "verified" ? "verified" : "unverified"}
+              />
+            );
+          })}
         </div>
       )}
     </div>

@@ -17,6 +17,18 @@
     "signOut": "साइन आउट",
     "online": "अनलाइन"
   },
+  "card": {
+    "message": "म्यासेज",
+    "viewProfile": "प्रोफाइल हेर्नुहोस्",
+    "contact": "सम्पर्क",
+    "viewCompany": "कम्पनी हेर्नुहोस्"
+  },
+  "feed": {
+    "react": "मन पराउनुहोस्",
+    "comment": "टिप्पणी",
+    "share": "सेयर",
+    "postedBy": "{name} द्वारा पोस्ट गरिएको"
+  },
   "topbar": {
     "openNavigation": "नेभिगेसन खोल्नुहोस्",
     "searchPlaceholder": "मानिस, व्यवसाय, च्यानल खोज्नुहोस्",

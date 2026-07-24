@@ -17,6 +17,18 @@
     "signOut": "Sign out",
     "online": "Online"
   },
+  "card": {
+    "message": "Message",
+    "viewProfile": "View profile",
+    "contact": "Contact",
+    "viewCompany": "View company"
+  },
+  "feed": {
+    "react": "Like",
+    "comment": "Comment",
+    "share": "Share",
+    "postedBy": "Posted by {name}"
+  },
   "topbar": {
     "openNavigation": "Open navigation",
     "searchPlaceholder": "Search people, businesses, channels",
