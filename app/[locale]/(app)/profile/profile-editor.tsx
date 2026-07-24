@@ -11,6 +11,7 @@ type Profile = {
   id: string;
   name: string | null;
   bio: string | null;
+  bio_ne: string | null;
   city: string | null;
   country: "us" | "nepal" | null;
   sectors: string[] | null;
@@ -33,6 +34,7 @@ export default function ProfileEditor({
 
   const [name, setName] = useState(profile?.name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
+  const [bioNe, setBioNe] = useState(profile?.bio_ne ?? "");
   const [city, setCity] = useState(profile?.city ?? "");
   const [country, setCountry] = useState<"us" | "nepal">(profile?.country ?? "us");
   const [selectedSectors, setSelectedSectors] = useState<string[]>(profile?.sectors ?? []);
@@ -51,7 +53,7 @@ export default function ProfileEditor({
     setSaving(true);
     await supabase
       .from("profiles")
-      .update({ name, bio, city, country, sectors: selectedSectors })
+      .update({ name, bio, bio_ne: bioNe, city, country, sectors: selectedSectors })
       .eq("id", userId);
     setSaving(false);
     setSaved(true);
@@ -130,11 +132,21 @@ export default function ProfileEditor({
             />
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="eyebrow text-ink-soft">{t("bio")}</span>
+            <span className="eyebrow text-ink-soft">{t("bioEn")}</span>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={3}
+              className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
+            />
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="eyebrow text-ink-soft">{t("bioNe")}</span>
+            <textarea
+              value={bioNe}
+              onChange={(e) => setBioNe(e.target.value)}
+              rows={3}
+              lang="ne"
               className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
             />
           </label>

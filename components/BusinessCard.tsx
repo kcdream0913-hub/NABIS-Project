@@ -1,14 +1,16 @@
 "use client";
 import { Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Avatar from "./Avatar";
 import TrustBadge from "./TrustBadge";
+import BioText from "./BioText";
 import { Cover } from "./ui/Cover";
 import { ViewChip, SectorChip } from "./chips";
 import { trustTier } from "@/lib/trust";
+import { pickBio } from "@/lib/bilingual";
 
 export interface BusinessCardProps {
-  id: string; name: string; logoUrl?: string | null; bio?: string | null;
+  id: string; name: string; logoUrl?: string | null; bio?: string | null; bioNe?: string | null;
   primarySector?: string | null; secondarySectors?: string[] | null;
   view?: "us" | "nepal" | "bridge";
   verificationStatus: "verified" | "unverified"; tier?: "bridge";
@@ -19,9 +21,11 @@ export interface BusinessCardProps {
 export default function BusinessCard(b: BusinessCardProps) {
   const t = useTranslations("card");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const isBridge = b.tier === "bridge";
   // Businesses have no corridor tier, so this resolves to "verified" at most.
   const tier = trustTier({ verification_status: b.verificationStatus, bridge: isBridge });
+  const bio = pickBio(locale, b.bio, b.bioNe);
 
   return (
     <div className="card card-hover overflow-hidden">
@@ -42,7 +46,7 @@ export default function BusinessCard(b: BusinessCardProps) {
             </span>
           )}
         </div>
-        {b.bio && <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{b.bio}</p>}
+        {bio && <BioText text={bio.text} origin={bio.origin} className="mt-1 line-clamp-2 text-sm text-ink-soft" />}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {b.view && <ViewChip view={b.view} label={b.viewLabel} />}

@@ -1,11 +1,13 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContactBusiness from "@/app/[locale]/(app)/business/[id]/contact-business";
 import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import BioText from "@/components/BioText";
 import { trustTier } from "@/lib/trust";
+import { pickBio } from "@/lib/bilingual";
 
 export default async function PersonPage({
   params,
@@ -14,10 +16,13 @@ export default async function PersonPage({
 }) {
   const { id } = await params;
   const t = await getTranslations("person");
+  const locale = await getLocale();
   const supabase = await createClient();
 
   const { data: person } = await supabase.from("profiles").select("*").eq("id", id).single();
   if (!person) notFound();
+
+  const bio = pickBio(locale, person.bio, person.bio_ne);
 
   return (
     <div className="mx-auto max-w-xl">
@@ -39,7 +44,7 @@ export default async function PersonPage({
             <p className="mt-0.5 text-sm text-ink-soft">{person.city}</p>
           </div>
         </div>
-        {person.bio && <p className="mt-4 text-sm leading-relaxed">{person.bio}</p>}
+        {bio && <BioText text={bio.text} origin={bio.origin} className="mt-4 text-sm leading-relaxed" />}
         <div className="mt-4">
           <ContactBusiness
             ownerUserId={person.id}

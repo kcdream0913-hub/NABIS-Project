@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContactBusiness from "./contact-business";
@@ -7,7 +7,9 @@ import RemoveMemberButton from "./remove-member-button";
 import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
+import BioText from "@/components/BioText";
 import { trustTier } from "@/lib/trust";
+import { pickBio } from "@/lib/bilingual";
 
 export default async function BusinessPage({
   params,
@@ -18,6 +20,7 @@ export default async function BusinessPage({
   const t = await getTranslations("business");
   const tCommon = await getTranslations("common");
   const tSectors = await getTranslations("sectors");
+  const locale = await getLocale();
   const roleLabel: Record<string, string> = {
     owner: t("roleOwner"),
     professional: t("roleProfessional"),
@@ -80,7 +83,10 @@ export default async function BusinessPage({
             )}
           </div>
         </div>
-        {business.bio && <p className="mt-4 text-sm leading-relaxed">{business.bio}</p>}
+        {(() => {
+          const b = pickBio(locale, business.bio, business.bio_ne);
+          return b ? <BioText text={b.text} origin={b.origin} className="mt-4 text-sm leading-relaxed" /> : null;
+        })()}
         <div className="mt-4">
           <ContactBusiness
             ownerUserId={business.owner_user_id}

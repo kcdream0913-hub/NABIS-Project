@@ -186,7 +186,9 @@
     "message": "Message",
     "verified": "Verified",
     "bridgeVerified": "Bridge Verified",
-    "verifiedBusiness": "Verified Business"
+    "verifiedBusiness": "Verified Business",
+    "inEnglish": "English",
+    "inNepali": "नेपाली"
   },
   "auth": {
     "joinTitle": "Join BridgeLink",
@@ -364,6 +366,8 @@
     "regNumberPlaceholder": "PAN-VAT, EIN, or company no. — leave blank to join as Listed",
     "regNumberHint": "Not required to join. Adding it earns the green \"Verified Business\" badge and unlocks charging for access below. Never shown to anyone — only the verification outcome is displayed.",
     "bio": "Bio",
+    "bioEn": "Bio (English)",
+    "bioNe": "Bio (नेपाली)",
     "chargeFee": "Charge an upfront fee to contact this business",
     "chargeFeeHintUnlocked": "Common for service providers — legal, freelancers, outsourcing, advisory. Browsing your bio stays free; paying unlocks contacting you. The platform takes a revenue-share commission on each payment.",
     "chargeFeeHintLocked": "Add a registration number above to unlock paid access — it requires Verified Business status.",
@@ -391,6 +395,8 @@
     "nepal": "Nepal",
     "city": "City",
     "bio": "Bio",
+    "bioEn": "Bio (English)",
+    "bioNe": "Bio (नेपाली)",
     "describeHeading": "What describes you",
     "describeHint": "Select every channel that fits — you can belong to more than one.",
     "saved": "Saved",

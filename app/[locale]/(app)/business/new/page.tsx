@@ -19,6 +19,7 @@ export default function NewBusinessPage() {
   const [secondarySectors, setSecondarySectors] = useState<string[]>([]);
   const [regNumber, setRegNumber] = useState("");
   const [bio, setBio] = useState("");
+  const [bioNe, setBioNe] = useState("");
   const [isPaidProvider, setIsPaidProvider] = useState(false);
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
@@ -45,6 +46,7 @@ export default function NewBusinessPage() {
         secondary_sectors: secondarySectors,
         registration_number: regNumber || null,
         bio,
+        bio_ne: bioNe,
         owner_user_id: user.id,
         // Tier 1 "Listed" (no number) vs Tier 2 pending registry check — never
         // auto-marked "verified" client-side either way; that comes from the
@@ -180,11 +182,22 @@ export default function NewBusinessPage() {
         </label>
 
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">{t("bio")}</span>
+          <span className="eyebrow text-ink-soft">{t("bioEn")}</span>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}
+            className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
+          />
+        </label>
+
+        <label className="block text-sm">
+          <span className="eyebrow text-ink-soft">{t("bioNe")}</span>
+          <textarea
+            value={bioNe}
+            onChange={(e) => setBioNe(e.target.value)}
+            rows={3}
+            lang="ne"
             className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
           />
         </label>

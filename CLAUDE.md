@@ -123,6 +123,56 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-24 (sprint) — Auth overhaul + bilingual bios (3 commits, NOT pushed; DB on a branch):**
+  - **COMMIT 1 (`1d2cb11`) — auth isolated from the app shell (route-group split).**
+    Logged-out visitors were seeing the full app chrome (rail, top bar, avatar +
+    online dot) on /login and /signup — root cause: `AppShell` was mounted in
+    `app/[locale]/layout.tsx`, wrapping every route. Fixed structurally: the root
+    locale layout now renders providers only; `(app)/layout.tsx` owns
+    AppProvider + AppShell and all authed routes were git-moved into `(app)/`
+    (URLs unchanged). `(auth)/layout.tsx` = a chrome-free centered card with an
+    `AuthLocaleSwitch` (English | नेपाली) in the footer — a Nepali-only visitor
+    can switch **before** login (Settings is unreachable pre-auth). `/terms` +
+    `/privacy` stay at the locale root, also bare. **Top-bar LanguageToggle
+    removed** (language now lives in Settings + auth footer); component deleted.
+    Middleware: unauthenticated → **/login** (was /signup); PUBLIC_PATHS gains
+    /forgot-password + /pair. New chrome-free routes: /forgot-password (real
+    `resetPasswordForEmail`) + /pair (Beta stub). login gained a "Forgot
+    password?" link.
+  - **COMMIT 2 (`026a970`) — real sign-up.** /signup collects full name, country
+    (US/Nepal → lowercase for the CHECK), email, password + confirm, sector
+    interests (15-chip multi-select), and an 18+ checkbox with inline Terms/
+    Privacy links + the US-processing notice. signUp carries name/country/sectors
+    + a versioned consent record (tos/privacy v0.2-pilot + timestamp + locale) in
+    **user_metadata** (mailer_autoconfirm is off → no session at signup, so it
+    shows a "confirm your email" state → /login). Password-strength meter +
+    friendly accent errors.
+    - **OAuth VERIFIED against prod GoTrue /settings: google = true, apple =
+      false.** Apple button HIDDEN on /login + /signup; only Google shown.
+    - **Follow-up flagged (NOT built, frontend-only commit):** copying
+      profiles.country/sectors out of user_metadata (needs a `handle_new_user`
+      extension) + the dedicated append-only `consents` table (BL-LEGAL-05 §4).
+      Consent is version-recorded in user_metadata meanwhile.
+  - **COMMIT 3 (`<pending>`) — bilingual bios.** Branch migration
+    (`bilingual-bio`, ref `owgegsajzhefveczhgtx`, **NOT merged**, ~$0.32/day):
+    `20260724162707_bilingual_bio.sql` adds `profiles.bio_ne` + `businesses.bio_ne`
+    (text, nullable; existing `bio` stays English, NOT renamed). Advisors clean
+    (same 3 intentional WARN, columns add nothing). `lib/bilingual.ts` `pickBio`
+    (active locale's bio, else fall back with an origin marker) + `BioText`
+    component (renders "…(English)"/"…(नेपाली)"). Profile + business forms get a
+    second "Bio (नेपाली)" field; detail pages, directory MemberCard/BusinessCard
+    render the picked bio. Feed shows no bios (post body only), so nothing there.
+    - **Ordering dependency:** the code reads/writes `bio_ne`; against prod it
+      works only once the branch merges (client is untyped, so tsc/build are
+      green; not pushed). Hub merges branch + pushes code together.
+  - **ALSO VERIFIED (asked, not changed) — top-bar search.** `GlobalSearch`
+    queries **profiles, businesses, and channels by NAME (ilike prefix)** and
+    navigates to the result; it does **NOT** search posts, and does **NOT** match
+    bios/message/post content — name-only. (The earlier `businesses.sector`→
+    `primary_sector` bug that silently broke business results is already fixed;
+    private profiles are filtered.)
+  - Verified each commit: tsc 0 · vitest 47/47 (parity) · next build 50/50 both
+    locales. NOT pushed — hub verifies; bilingual-bio branch NOT merged.
 - **2026-07-24 (latest) — Settings shipped to prod + Visibility Enforcement + Email-OTP + real legal copy:**
   - **Settings branch merged to prod, branch deleted.** `preferences` jsonb +
     `delete_own_account()` RPC now live on prod (migration recorded
@@ -803,3 +853,6 @@ proceed.
 | D-024 | 2026-07-24 | **Profile visibility is stored now but enforced in the next commit**; the UI copy says so. → **FULFILLED** by `private.can_view_profile` (see D-025). | Honest UI — never imply feed/directory/DM filtering that isn't wired yet. |
 | D-025 | 2026-07-24 | **Visibility model.** public = listed everywhere; bridge = visible to verified viewers + shown only in Bridge view; private = hidden from directory/search/public-profile BUT resolvable by existing relationships (shared DM thread or shared business). Admins keep full sight. Enforced by RLS (`private.can_view_profile`) as the security floor + query filters for UX. | A leak on any people-listing surface defeats it, so enforce at the DB; but never break active conversations or team visibility. |
 | D-026 | 2026-07-24 | **Device sign-in = Email OTP** (`signInWithOtp` email), not phone/SMS. QR app-pairing stays a labeled **Beta** scaffold. | No SMS provider is configured; email OTP works out of the box and needs no extra vendor. |
+| D-027 | 2026-07-24 | **Auth screens render OUTSIDE the app shell** (route-group split: `(app)` owns AppShell, `(auth)` is chrome-free). Unauthenticated → **/login**. Language pre-login lives in the auth-card footer; the top-bar language toggle is removed. | Trust-critical first impression — logged-out users must not see app chrome/avatar; a Nepali-only user must switch language before login, which Settings can't provide. |
+| D-028 | 2026-07-24 | **OAuth buttons are gated to providers actually configured in Supabase.** Verified via GoTrue /settings: Google live → shown; Apple not configured → hidden (both /login + /signup). | A dead OAuth button is worse than none. |
+| D-029 | 2026-07-24 | **Bilingual bios: `bio` = English, `bio_ne` = Nepali** (existing `bio` NOT renamed); both optional. Display shows the active locale's bio, else falls back with an origin marker (`pickBio`/`BioText`). | US–Nepal corridor is bilingual; don't silently show the wrong-language bio or lose the English one. |

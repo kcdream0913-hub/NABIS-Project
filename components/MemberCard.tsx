@@ -1,17 +1,19 @@
 "use client";
 import { Link, useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Avatar from "./Avatar";
 import TrustBadge from "./TrustBadge";
+import BioText from "./BioText";
 import { OnlineDot } from "./OnlineDot";
 import { Cover } from "./ui/Cover";
 import { ViewChip, SectorChip } from "./chips";
 import { trustTier } from "@/lib/trust";
+import { pickBio } from "@/lib/bilingual";
 import { findOrCreateThread } from "@/lib/threads";
 
 export interface MemberCardProps {
   id: string; name: string; avatarUrl?: string | null;
-  headline?: string | null; location?: string | null; sector?: string | null;
+  headline?: string | null; headlineNe?: string | null; location?: string | null; sector?: string | null;
   view?: "us" | "nepal" | "bridge";
   verification: "verified" | "unverified"; tier?: "bridge";
   online?: boolean;
@@ -21,8 +23,10 @@ export interface MemberCardProps {
 export default function MemberCard(p: MemberCardProps) {
   const t = useTranslations("card");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const router = useRouter();
   const isBridge = p.tier === "bridge";
+  const bio = pickBio(locale, p.headline, p.headlineNe);
   const tier = trustTier({ verification_status: p.verification, bridge: isBridge });
   const trustLabel = tCommon(tier === "bridge" ? "bridgeVerified" : "verified");
 
@@ -41,7 +45,7 @@ export default function MemberCard(p: MemberCardProps) {
           <h3 className="text-[17px] font-semibold tracking-[-.01em] text-ink">{p.name}</h3>
           <TrustBadge tier={tier} label={trustLabel} />
         </div>
-        {p.headline && <p className="mt-0.5 line-clamp-2 text-sm text-ink-soft">{p.headline}</p>}
+        {bio && <BioText text={bio.text} origin={bio.origin} className="mt-0.5 line-clamp-2 text-sm text-ink-soft" />}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {p.view && <ViewChip view={p.view} label={p.viewLabel} />}

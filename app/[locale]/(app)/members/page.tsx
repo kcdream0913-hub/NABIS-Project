@@ -12,6 +12,7 @@ type PersonRow = {
   id: string;
   name: string | null;
   bio: string | null;
+  bio_ne: string | null;
   city: string | null;
   country: "us" | "nepal" | null;
   verification_status: string;
@@ -23,6 +24,7 @@ type BusinessRow = {
   id: string;
   name: string;
   bio: string | null;
+  bio_ne: string | null;
   country_of_registration: string | null;
   primary_sector: string | null;
   secondary_sectors: string[];
@@ -50,11 +52,11 @@ export default function DirectoryPage() {
       const [{ data: p }, { data: b }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, name, bio, city, country, verification_status, bridge, avatar_url, preferences")
+          .select("id, name, bio, bio_ne, city, country, verification_status, bridge, avatar_url, preferences")
           .order("created_at", { ascending: false }),
         supabase
           .from("businesses")
-          .select("id, name, bio, country_of_registration, primary_sector, secondary_sectors, verification_status, logo_url")
+          .select("id, name, bio, bio_ne, country_of_registration, primary_sector, secondary_sectors, verification_status, logo_url")
           .order("created_at", { ascending: false }),
       ]);
       setPeople(p ?? []);
@@ -164,6 +166,7 @@ export default function DirectoryPage() {
               name={m.name ?? t("member")}
               avatarUrl={m.avatar_url}
               headline={m.bio}
+              headlineNe={m.bio_ne}
               location={m.city}
               view={m.country ?? undefined}
               viewLabel={m.country ? tView(`${m.country}Short`) : undefined}
@@ -183,6 +186,7 @@ export default function DirectoryPage() {
                 name={b.name}
                 logoUrl={b.logo_url}
                 bio={b.bio}
+                bioNe={b.bio_ne}
                 primarySector={
                   b.primary_sector
                     ? sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector
