@@ -6,16 +6,20 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import OfferingEditor from "@/components/OfferingEditor";
-import { canPublishOfferings } from "@/lib/offerings";
+import { canPublishOfferings, defaultPublishTargetKey, type PublishTarget } from "@/lib/offerings";
 
 // Create route. Reachable from an owner's own profile or business page. The
-// tourism-sector gate is UX here; RLS is the real guard on insert.
+// tourism-sector gate is UX here; RLS is the real guard on insert. A user who
+// owns tourism business(es) gets a "Publish as" selector, defaulting to the
+// business so the offering lands on that business's Offerings tab (bug fix).
 export default function NewOfferingPage() {
   const t = useTranslations("offerings");
   const supabase = createClient();
   const router = useRouter();
   const businessId = useSearchParams().get("business");
   const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
+  const [targets, setTargets] = useState<PublishTarget[]>([]);
+  const [defaultKey, setDefaultKey] = useState("profile");
 
   useEffect(() => {
     async function check() {
@@ -26,19 +30,37 @@ export default function NewOfferingPage() {
         router.push("/login");
         return;
       }
-      if (businessId) {
-        const { data: b } = await supabase
+
+      const [{ data: businesses }, { data: profile }] = await Promise.all([
+        supabase
           .from("businesses")
-          .select("owner_user_id, primary_sector, secondary_sectors")
-          .eq("id", businessId)
-          .single();
-        const owns = b?.owner_user_id === user.id;
-        const tourism = canPublishOfferings([b?.primary_sector, ...((b?.secondary_sectors as string[]) ?? [])]);
-        setState(owns && tourism ? "ok" : "denied");
-      } else {
-        const { data: p } = await supabase.from("profiles").select("sectors").eq("id", user.id).single();
-        setState(canPublishOfferings(p?.sectors as string[]) ? "ok" : "denied");
+          .select("id, name, primary_sector, secondary_sectors")
+          .eq("owner_user_id", user.id)
+          .order("created_at", { ascending: true }),
+        supabase.from("profiles").select("sectors").eq("id", user.id).single(),
+      ]);
+
+      // Only tourism-eligible identities can publish (D-019).
+      const businessTargets: PublishTarget[] = (businesses ?? [])
+        .filter((b) =>
+          canPublishOfferings([b.primary_sector, ...((b.secondary_sectors as string[]) ?? [])]),
+        )
+        .map((b) => ({ type: "business", id: b.id, name: b.name }));
+      const profileEligible = canPublishOfferings(profile?.sectors as string[]);
+
+      const next: PublishTarget[] = [
+        ...businessTargets,
+        ...(profileEligible ? [{ type: "profile" as const }] : []),
+      ];
+
+      if (next.length === 0) {
+        setState("denied");
+        return;
       }
+      setTargets(next);
+      // A `?business=` deep link (from a business page) preselects that business.
+      setDefaultKey(defaultPublishTargetKey(next, businessId));
+      setState("ok");
     }
     check();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -52,5 +74,5 @@ export default function NewOfferingPage() {
       </div>
     );
 
-  return <OfferingEditor mode="create" ownerType={businessId ? "business" : "profile"} businessId={businessId ?? undefined} />;
+  return <OfferingEditor mode="create" targets={targets} defaultTargetKey={defaultKey} />;
 }

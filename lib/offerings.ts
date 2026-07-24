@@ -74,6 +74,34 @@ export function canPublishOfferings(
   return Array.isArray(sectors) && sectors.filter(Boolean).includes(TOURISM_SECTOR);
 }
 
+/**
+ * A "Publish as" identity for an offering. Exactly one of these becomes the
+ * owner FK on save, honouring the DB CHECK (business_id XOR profile_id).
+ */
+export type PublishTarget =
+  | { type: "business"; id: string; name: string }
+  | { type: "profile" };
+
+/** Stable key for a publish target — the <select> value. */
+export function targetKey(t: PublishTarget): string {
+  return t.type === "business" ? t.id : "profile";
+}
+
+/**
+ * Default "Publish as" selection. Prefers an explicitly requested key (a
+ * `?business=` deep link, or the current owner when editing); otherwise the
+ * first owned business — the common tourism case, so an offering lands on the
+ * business's Offerings tab instead of silently going personal — else personal.
+ */
+export function defaultPublishTargetKey(
+  targets: PublishTarget[],
+  preferredKey?: string | null,
+): string {
+  if (preferredKey && targets.some((t) => targetKey(t) === preferredKey)) return preferredKey;
+  const firstBusiness = targets.find((t) => t.type === "business");
+  return firstBusiness ? targetKey(firstBusiness) : "profile";
+}
+
 /** Localized festival name for the active locale, falling back to English. */
 export function pickFestivalName(locale: string, f: Festival): string {
   if (locale === "ne" && f.name_ne?.trim()) return f.name_ne;

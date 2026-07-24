@@ -11,12 +11,13 @@ import {
   PRICE_UNITS,
   SEASONS,
   TOURISM_SECTOR,
+  targetKey,
   type Festival,
   type Offering,
   type OfferingCountry,
-  type OfferingOwnerType,
   type OfferingType,
   type PriceUnit,
+  type PublishTarget,
 } from "@/lib/offerings";
 
 const INPUT = "mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary";
@@ -39,24 +40,26 @@ function Chip({ active, onClick, children, disabled }: { active: boolean; onClic
   );
 }
 
-// Create/edit an offering. Publishing from a business page sets business_id;
-// from own profile sets profile_id — never both (DB CHECK enforces). Media upload
-// is intentionally out of scope here (media stays []); it's a tracked follow-up.
+// Create/edit an offering. "Publish as" picks the owner: a business sets
+// business_id, personal sets profile_id — never both (DB CHECK enforces). The
+// selector only appears when the user has more than one publish identity. Media
+// upload is intentionally out of scope here (media stays []); tracked follow-up.
 export default function OfferingEditor({
   mode,
-  ownerType,
-  businessId,
+  targets,
+  defaultTargetKey,
   offering,
 }: {
   mode: "create" | "edit";
-  ownerType: OfferingOwnerType;
-  businessId?: string;
+  targets: PublishTarget[];
+  defaultTargetKey: string;
   offering?: Offering;
 }) {
   const t = useTranslations("offerings");
   const router = useRouter();
   const supabase = createClient();
 
+  const [ownerKey, setOwnerKey] = useState(defaultTargetKey);
   const [type, setType] = useState<OfferingType>(offering?.type ?? "trek");
   const [title, setTitle] = useState(offering?.title ?? "");
   const [titleNe, setTitleNe] = useState(offering?.title_ne ?? "");
@@ -119,6 +122,14 @@ export default function OfferingEditor({
       return;
     }
 
+    // Resolve the selected "Publish as" identity into exactly one owner FK
+    // (the other stays null), satisfying the DB CHECK either way.
+    const selected = targets.find((tg) => targetKey(tg) === ownerKey) ?? targets[0];
+    const owner =
+      selected?.type === "business"
+        ? { owner_type: "business" as const, business_id: selected.id, profile_id: null }
+        : { owner_type: "profile" as const, profile_id: user.id, business_id: null };
+
     const payload = {
       type,
       title: title.trim(),
@@ -142,7 +153,10 @@ export default function OfferingEditor({
     };
 
     if (mode === "edit" && offering) {
-      const { error: e } = await supabase.from("offerings").update(payload).eq("id", offering.id);
+      // Re-assign the owner too, so an offering created under the wrong identity
+      // can be moved to the intended business (or personal). RLS permits it when
+      // the user owns both the old and new owner.
+      const { error: e } = await supabase.from("offerings").update({ ...payload, ...owner }).eq("id", offering.id);
       if (e) {
         setError(e.message);
         setSaving(false);
@@ -151,12 +165,6 @@ export default function OfferingEditor({
       router.push(`/offerings/${offering.id}`);
       return;
     }
-
-    // create — set exactly the owner FK for this context.
-    const owner =
-      ownerType === "business"
-        ? { owner_type: "business" as const, business_id: businessId }
-        : { owner_type: "profile" as const, profile_id: user.id };
 
     const { data, error: e } = await supabase
       .from("offerings")
@@ -180,6 +188,20 @@ export default function OfferingEditor({
       <p className="mt-1 text-sm text-ink-soft">{t("editorSubtitle")}</p>
 
       <div className="mt-5 space-y-3 rounded-lg border border-border bg-surface p-4">
+        {targets.length > 1 && (
+          <label className="block text-sm">
+            <span className={LABEL}>{t("publishAs")}</span>
+            <select value={ownerKey} onChange={(e) => setOwnerKey(e.target.value)} className={SELECT}>
+              {targets.map((tg) => (
+                <option key={targetKey(tg)} value={targetKey(tg)}>
+                  {tg.type === "business" ? tg.name : t("publishAsPersonal")}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-ink-soft">{t("publishAsHint")}</span>
+          </label>
+        )}
+
         <label className="block text-sm">
           <span className={LABEL}>{t("fieldType")}</span>
           <select value={type} onChange={(e) => setType(e.target.value as OfferingType)} className={SELECT}>

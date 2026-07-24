@@ -6,16 +6,20 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import OfferingEditor from "@/components/OfferingEditor";
-import type { Offering } from "@/lib/offerings";
+import { canPublishOfferings, type Offering, type PublishTarget } from "@/lib/offerings";
 
 // Edit route. Loads the offering (RLS lets the owner read their own draft) and
 // confirms ownership before showing the editor; RLS is the real guard on update.
+// The "Publish as" selector lets an owner re-assign a mis-owned offering between
+// their identities (e.g. move a personal one onto their business).
 export default function EditOfferingPage() {
   const t = useTranslations("offerings");
   const supabase = createClient();
   const router = useRouter();
   const id = String(useParams().id);
   const [offering, setOffering] = useState<Offering | null>(null);
+  const [targets, setTargets] = useState<PublishTarget[]>([]);
+  const [defaultKey, setDefaultKey] = useState("profile");
   const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
 
   useEffect(() => {
@@ -33,15 +37,47 @@ export default function EditOfferingPage() {
         setState("denied");
         return;
       }
-      let owns = false;
-      if (o.owner_type === "profile") {
-        owns = o.profile_id === user.id;
-      } else if (o.business_id) {
-        const { data: b } = await supabase.from("businesses").select("owner_user_id").eq("id", o.business_id).single();
-        owns = b?.owner_user_id === user.id;
+
+      const [{ data: businesses }, { data: profile }] = await Promise.all([
+        supabase
+          .from("businesses")
+          .select("id, name, owner_user_id, primary_sector, secondary_sectors")
+          .eq("owner_user_id", user.id)
+          .order("created_at", { ascending: true }),
+        supabase.from("profiles").select("sectors").eq("id", user.id).single(),
+      ]);
+      const owned = businesses ?? [];
+
+      const owns =
+        o.owner_type === "profile"
+          ? o.profile_id === user.id
+          : !!o.business_id && owned.some((b) => b.id === o.business_id);
+      if (!owns) {
+        setState("denied");
+        return;
       }
+
+      // Tourism-eligible identities, plus the offering's current owner (kept even
+      // if no longer tourism-eligible, so the current selection stays valid).
+      const businessTargets: PublishTarget[] = owned
+        .filter(
+          (b) =>
+            canPublishOfferings([b.primary_sector, ...((b.secondary_sectors as string[]) ?? [])]) ||
+            b.id === o.business_id,
+        )
+        .map((b) => ({ type: "business", id: b.id, name: b.name }));
+      const includeProfile = canPublishOfferings(profile?.sectors as string[]) || o.owner_type === "profile";
+
+      const next: PublishTarget[] = [
+        ...businessTargets,
+        ...(includeProfile ? [{ type: "profile" as const }] : []),
+      ];
+      const currentKey = o.owner_type === "business" ? (o.business_id ?? "profile") : "profile";
+
       setOffering(o);
-      setState(owns ? "ok" : "denied");
+      setTargets(next);
+      setDefaultKey(currentKey);
+      setState("ok");
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,12 +91,5 @@ export default function EditOfferingPage() {
       </div>
     );
 
-  return (
-    <OfferingEditor
-      mode="edit"
-      ownerType={offering.owner_type}
-      businessId={offering.business_id ?? undefined}
-      offering={offering}
-    />
-  );
+  return <OfferingEditor mode="edit" targets={targets} defaultTargetKey={defaultKey} offering={offering} />;
 }

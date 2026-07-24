@@ -764,6 +764,9 @@
     "saving": "Saving…",
     "saveChanges": "Save changes",
     "createOffering": "Create offering",
+    "publishAs": "Publish as",
+    "publishAsPersonal": "Just me (personal)",
+    "publishAsHint": "This offering will be listed under your name or under one of your businesses.",
     "types": {
       "trek": "Trek",
       "tour": "Tour",
