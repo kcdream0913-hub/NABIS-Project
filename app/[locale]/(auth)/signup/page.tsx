@@ -7,10 +7,12 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useSectors } from "@/lib/useSectors";
 
-// Consent versions captured with each signup (BL-LEGAL-05 v0.2-pilot). Stored in
-// user_metadata now; the dedicated append-only consents table + copying
-// country/sectors into profiles is a follow-up DB change (needs a handle_new_user
-// extension on a branch — flagged, not built here).
+// Consent versions captured with each signup (BL-LEGAL-05 v0.2-pilot). These
+// ride in user_metadata; handle_new_user() (migration 20260724165101) copies
+// country + sectors into the profiles row AND writes an append-only consents
+// row per doc — server-side, because there's no client session at signup
+// (email confirmation is required). Keep these strings prefixed "tos_"/"privacy_":
+// the trigger derives doc_type from the prefix and doc_version from the remainder.
 const TOS_VERSION = "tos_v0.2-pilot";
 const PRIVACY_VERSION = "privacy_v0.2-pilot";
 

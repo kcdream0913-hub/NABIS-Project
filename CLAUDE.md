@@ -123,7 +123,50 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint) — Auth overhaul + bilingual bios (3 commits, NOT pushed; DB on a branch):**
+- **2026-07-24 (sprint 2) — Sprint-1 shipped to prod + signup data now persists:**
+  - **bilingual-bio branch MERGED to prod, branch DELETED.** `profiles.bio_ne` +
+    `businesses.bio_ne` are live (migration recorded `20260724162707`); prod
+    advisors = the 3 pre-existing intentional WARN, nothing new.
+  - **The 3 auth-overhaul + bilingual commits are PUSHED** (`1d2cb11` auth
+    isolation, `026a970` real sign-up, `18bff91` bilingual bios); prod Vercel
+    deploy `dpl_5piT8Vm…` built from `18bff91`.
+  - **NEW commit `<pending>` — "signup data persists" (branch migration, NOT
+    merged).** Branch `signup-persist` (ref `faobmbmiisgphmravndz`, ~$0.32/day
+    until merged/deleted), migration `20260724165101_signup_data_persist.sql`:
+    - **`handle_new_user()` extended** to copy `country` + `sectors[]` out of the
+      signup `user_metadata` into the new `profiles` row, so a new member lands in
+      the right sector directories immediately (previously only
+      name/avatar/provider were copied; country/sectors sat unused in metadata).
+      country is lower-cased + validated against the `us|nepal` CHECK (else NULL,
+      never a failed insert); sectors are filtered to slugs that exist in
+      `channels.slug` (a stale/forged slug can't land). OAuth signups (no consent/
+      country/sectors in metadata) still insert cleanly — country NULL, sectors
+      `{}`, 0 consent rows; onboarding fills those for the OAuth path.
+    - **Append-only `consents` ledger** (BL-LEGAL-05 §4): `consents(user_id,
+      doc_type, doc_version, granted_at, ip, locale)`. Written **server-side from
+      the trigger** because there is NO client session at signup (email
+      confirmation required). RLS = owner insert/select own (`(select auth.uid())`
+      so no `auth_rls_initplan` finding); **no UPDATE/DELETE policy → append-only**
+      for authenticated callers. `ip` is nullable and left NULL — a DB trigger
+      can't see the end user's request IP (populating it needs an app/edge layer,
+      out of scope). The trigger writes one row per doc (tos + privacy), deriving
+      `doc_type` from the `tos_`/`privacy_` prefix and `doc_version` from the rest.
+    - **Verified on the branch** with two simulated signups: (1) `country:'US'` →
+      `us`, sectors `[technology-ai, not-a-real-sector, energy-hydropower]` →
+      `[energy-hydropower, technology-ai]` (bogus filtered), 2 consent rows
+      (`v0.2-pilot`, locale carried, ip NULL); (2) OAuth-shape metadata → clean
+      defaults, 0 consent rows. Branch advisors clean (same intentional WARN +
+      the branch-default leaked-password Auth WARN; **zero new** on `consents`/
+      the trigger, both security and performance).
+    - Client: only the stale signup comment updated (consent capture now lives in
+      the trigger, not "a follow-up"). **NOT pushed, branch NOT merged — hub
+      verifies.** gates: tsc 0 · vitest 47/47 · build 50/50 both locales.
+    - **Still flagged (NOT built):** the dedicated `consents` UI/export surface,
+      NE Privacy translation before Nepal onboarding, real IP capture.
+  - **LinkedIn OAuth:** gated on `linkedin_oidc` appearing in GoTrue `/settings`
+    (see finding below) — button added only if configured, same hide-if-absent
+    rule as Google/Apple (D-028).
+- **2026-07-24 (sprint) — Auth overhaul + bilingual bios (3 commits, now pushed; bilingual-bio branch now merged — see sprint 2 above):**
   - **COMMIT 1 (`1d2cb11`) — auth isolated from the app shell (route-group split).**
     Logged-out visitors were seeing the full app chrome (rail, top bar, avatar +
     online dot) on /login and /signup — root cause: `AppShell` was mounted in
