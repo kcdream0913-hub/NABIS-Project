@@ -203,7 +203,18 @@
     "logIn": "Log in",
     "alreadyMember": "Already a member?",
     "newHere": "New here?",
-    "browseHint": "You can browse right away. Posting and messaging unlock once you verify your profile."
+    "browseHint": "Verify your profile after joining to unlock posting and messaging.",
+    "email": "Email",
+    "forgotPassword": "Forgot password?",
+    "resetTitle": "Reset your password",
+    "resetSubtitle": "We'll email you a link to set a new password.",
+    "resetSent": "Check your inbox for a link to reset your password.",
+    "sendReset": "Send reset link",
+    "sending": "Sending…",
+    "backToLogin": "Back to sign in",
+    "pairTitle": "Pair a device",
+    "pairBody": "Device pairing arrives with the BridgeLink mobile app. There's nothing to pair yet — sign in on the web for now.",
+    "beta": "Beta"
   },
   "home": {
     "feed": "Feed",

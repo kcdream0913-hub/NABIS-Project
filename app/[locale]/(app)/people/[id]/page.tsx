@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import ContactBusiness from "@/app/[locale]/business/[id]/contact-business";
+import ContactBusiness from "@/app/[locale]/(app)/business/[id]/contact-business";
 import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";

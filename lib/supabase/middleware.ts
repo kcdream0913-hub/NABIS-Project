@@ -30,16 +30,16 @@ export async function updateSession(request: NextRequest, response: NextResponse
 
   const { locale, path } = stripLocale(request.nextUrl.pathname);
 
-  // Signup is the front door: unauthenticated visitors land there first,
-  // never on the app itself. Redirect keeps whatever locale they were on.
+  // Login is the front door: unauthenticated visitors land there, never on the
+  // app itself. Redirect keeps whatever locale they were on.
   if (!user && !isPublicPath(path)) {
     const url = request.nextUrl.clone();
-    url.pathname = withLocalePrefix(locale, "/signup");
+    url.pathname = withLocalePrefix(locale, "/login");
     return NextResponse.redirect(url);
   }
 
-  // Already signed in — keep them out of the signup/login screens.
-  if (user && (path === "/login" || path === "/signup")) {
+  // Already signed in — keep them out of the auth screens.
+  if (user && (path === "/login" || path === "/signup" || path === "/forgot-password")) {
     const url = request.nextUrl.clone();
     url.pathname = withLocalePrefix(locale, "/");
     return NextResponse.redirect(url);

@@ -13,8 +13,6 @@ import "@fontsource/noto-sans-devanagari/400.css";
 import "@fontsource/noto-sans-devanagari/500.css";
 import "@fontsource/noto-sans-devanagari/600.css";
 import "@fontsource/noto-sans-devanagari/700.css";
-import { AppProvider } from "@/lib/store";
-import AppShell from "@/components/AppShell";
 import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 
 // Inter (variable, self-hosted — same no-external-fetch rule as the Devanagari
@@ -55,12 +53,11 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
+        {/* Providers only. The app chrome (sidebar/topbar) lives in the (app)
+            route group's layout, so (auth) and the public legal pages render
+            without it. */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider>
-            <AppProvider>
-              <AppShell>{children}</AppShell>
-            </AppProvider>
-          </ThemeProvider>
+          <ThemeProvider>{children}</ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

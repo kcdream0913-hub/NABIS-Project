@@ -59,9 +59,11 @@ describe("withLocalePrefix", () => {
 });
 
 describe("isPublicPath", () => {
-  it("treats /login, /signup, /auth/callback as public", () => {
+  it("treats /login, /signup, /forgot-password, /pair, /auth/callback as public", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/signup")).toBe(true);
+    expect(isPublicPath("/forgot-password")).toBe(true);
+    expect(isPublicPath("/pair")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
   });
 

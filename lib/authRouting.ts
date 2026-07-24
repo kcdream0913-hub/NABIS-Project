@@ -1,6 +1,14 @@
 import { routing } from "@/i18n/routing";
 
-export const PUBLIC_PATHS = ["/login", "/signup", "/auth/callback", "/terms", "/privacy"];
+export const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/pair",
+  "/auth/callback",
+  "/terms",
+  "/privacy",
+];
 
 // "/ne/signup" -> { locale: "ne", path: "/signup" }; "/signup" -> { locale: "en", path: "/signup" }
 export function stripLocale(pathname: string): { locale: string; path: string } {

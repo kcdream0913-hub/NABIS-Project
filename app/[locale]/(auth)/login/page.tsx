@@ -38,7 +38,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
+    <div>
       <div className="mb-8 text-center">
         <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">
           B
@@ -77,7 +77,12 @@ export default function LoginPage() {
           />
         </label>
         <label className="block text-sm">
-          <span className="eyebrow text-ink-soft">{t("password")}</span>
+          <span className="flex items-center justify-between">
+            <span className="eyebrow text-ink-soft">{t("password")}</span>
+            <Link href="/forgot-password" className="text-xs font-medium text-primary hover:text-primary-pressed">
+              {t("forgotPassword")}
+            </Link>
+          </span>
           <input
             type="password"
             required
