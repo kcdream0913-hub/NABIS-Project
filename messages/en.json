@@ -56,7 +56,24 @@
       "updatePassword": "Update password",
       "saved": "Saved",
       "emailConfirmSent": "Confirmation link sent — check your new inbox.",
-      "pwTooShort": "Password must be at least 8 characters."
+      "pwTooShort": "Password must be at least 8 characters.",
+      "nameHelper": "This is how you appear across the directory and your profile.",
+      "namePlaceholder": "e.g. Kris Dahal",
+      "errNameIsEmail": "Please enter your name, not your email address.",
+      "phoneLabel": "Phone number",
+      "phoneHint": "Optional. Shown on your profile only if you turn it on in Privacy.",
+      "phonePlaceholder": "e.g. +1 555 123 4567",
+      "errPhoneInvalid": "Please enter a valid phone number.",
+      "updatePhone": "Update phone",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "currentPasswordPlaceholder": "Current password",
+      "newPasswordPlaceholder": "New password (min 8 characters)",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "pwWrongCurrent": "Current password is incorrect.",
+      "pwSameAsCurrent": "New password must be different from your current one.",
+      "pwMismatch": "New passwords don't match."
     },
     "verification": {
       "title": "Verification status & history",
@@ -77,7 +94,10 @@
         "revoked": "Revoked"
       },
       "history": "History",
-      "noHistory": "No verification activity yet."
+      "noHistory": "No verification activity yet.",
+      "requestVerification": "Request verification",
+      "requestVerificationHint": "Opens a message to the BridgeLink team.",
+      "verificationPrefill": "I'd like to get verified — "
     },
     "privacy": {
       "title": "Privacy & Data",
@@ -138,7 +158,16 @@
       "appTitle": "Mobile app",
       "appDescription": "Pair the BridgeLink mobile app.",
       "beta": "Beta",
-      "appScaffold": "The mobile app isn't generally available yet — pairing will activate here when it ships."
+      "appScaffold": "The mobile app isn't generally available yet — pairing will activate here when it ships.",
+      "signOutTitle": "Devices & sessions",
+      "signOutDescription": "Sign out everywhere except this device.",
+      "signOutLabel": "Other sessions",
+      "signOutHint": "Signs you out on every other browser and device. This one stays signed in.",
+      "signOutOthers": "Sign out of all other devices",
+      "signOutConfirm": "Sign out everywhere else?",
+      "signOutConfirmYes": "Yes, sign out others",
+      "signOutCancel": "Cancel",
+      "signOutDone": "Signed out of all other devices."
     },
     "data": {
       "title": "Download my data",
@@ -148,14 +177,16 @@
       "legalTitle": "Legal",
       "legalDescription": "Our terms and privacy policy.",
       "terms": "Terms of Service",
-      "privacyPolicy": "Privacy Policy"
+      "privacyPolicy": "Privacy Policy",
+      "downloadImmediate": "Your export downloads immediately as a JSON file."
     },
     "support": {
       "title": "Support",
       "description": "Get help with your account.",
       "body": "Questions or trouble with your account? Reach the team and we'll help.",
       "emailUs": "Email support",
-      "responseNote": "We aim to respond within a couple of business days."
+      "responseNote": "We aim to respond within a couple of business days.",
+      "pilotSupportLabel": "Pilot support"
     },
     "delete": {
       "title": "Delete account",
@@ -525,7 +556,8 @@
   "person": {
     "member": "Member",
     "verified": "Verified",
-    "bridgeVerified": "Bridge Verified"
+    "bridgeVerified": "Bridge Verified",
+    "phoneLabel": "Phone"
   },
   "onboarding": {
     "step": "Step {current} of {total}",

@@ -9,6 +9,7 @@ export default async function DataPage() {
     <>
       <SettingsSection title={t("title")} description={t("description")}>
         <DownloadDataButton />
+        <SettingsNote>{t("downloadImmediate")}</SettingsNote>
         <SettingsNote>{t("downloadNote")}</SettingsNote>
       </SettingsSection>
 

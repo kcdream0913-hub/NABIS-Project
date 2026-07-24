@@ -14,9 +14,11 @@ type Message = { id: string; sender_id: string; body: string; created_at: string
 export default function ThreadConversation({
   threadId,
   onBack,
+  initialDraft = "",
 }: {
   threadId: string;
   onBack?: () => void;
+  initialDraft?: string;
 }) {
   const t = useTranslations("thread");
   const format = useFormatter();
@@ -24,7 +26,7 @@ export default function ThreadConversation({
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherName, setOtherName] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(initialDraft);
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 

@@ -1,8 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { ShieldCheck, Star } from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
+import { findOrCreateThread } from "@/lib/threads";
 import { SettingsSection } from "./primitives";
+
+// The pilot is admin-curated: verification is requested by DM to the founder/admin,
+// not self-served. Overridable via env so the id can track admin_users without a
+// code change; falls back to the current pilot admin's user id.
+const SUPPORT_ADMIN_ID =
+  process.env.NEXT_PUBLIC_SUPPORT_ADMIN_ID || "1258b010-291b-434c-a6a4-a1f6fee0d9b9";
 
 export type TrackStatus = "none" | "pending" | "verified" | "rejected" | "revoked";
 export type HistoryRow = {
@@ -37,8 +46,17 @@ export default function VerificationCard({
 }) {
   const t = useTranslations("settings.verification");
   const locale = useLocale();
+  const router = useRouter();
+  const [requesting, setRequesting] = useState(false);
   const fmtDate = (iso: string) =>
     new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(iso));
+
+  async function requestVerification() {
+    setRequesting(true);
+    const threadId = await findOrCreateThread(SUPPORT_ADMIN_ID);
+    if (threadId) router.push(`/messages/${threadId}?draft=${encodeURIComponent(t("verificationPrefill"))}`);
+    else setRequesting(false);
+  }
 
   const TrackRow = ({ label, status }: { label: string; status: TrackStatus }) => (
     <div className="flex items-center justify-between">
@@ -96,6 +114,20 @@ export default function VerificationCard({
             ))}
           </ul>
         )}
+      </div>
+
+      {/* Request verification — opens a DM to the admin (pilot is admin-curated). */}
+      <div className="border-t border-border pt-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={requestVerification}
+            disabled={requesting}
+            className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary-pressed disabled:opacity-50"
+          >
+            {t("requestVerification")}
+          </button>
+          <span className="text-[13px] text-ink-soft">{t("requestVerificationHint")}</span>
+        </div>
       </div>
     </SettingsSection>
   );

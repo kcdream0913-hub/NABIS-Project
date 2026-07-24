@@ -29,6 +29,13 @@ describe("stripLocale", () => {
   it("strips /ne for nested paths", () => {
     expect(stripLocale("/ne/business/new")).toEqual({ locale: "ne", path: "/business/new" });
   });
+
+  it("strips an explicit default-locale (/en) prefix too", () => {
+    // Regression: "/en/terms" used to keep its /en prefix, so the public-path
+    // check failed and logged-out visitors were bounced to /login.
+    expect(stripLocale("/en/terms")).toEqual({ locale: "en", path: "/terms" });
+    expect(stripLocale("/en")).toEqual({ locale: "en", path: "/" });
+  });
 });
 
 describe("withLocalePrefix", () => {
@@ -79,4 +86,14 @@ describe("isPublicPath", () => {
     // /settings/privacy must NOT be caught by the /privacy public prefix
     expect(isPublicPath("/settings/privacy")).toBe(false);
   });
+});
+
+// The middleware pipes the request pathname through stripLocale then isPublicPath.
+// Terms + privacy must be reachable logged-out in BOTH locales (and via an explicit
+// /en prefix), because signup links to them for consent.
+describe("legal pages are public in every locale (middleware pipeline)", () => {
+  const publicInMiddleware = (pathname: string) => isPublicPath(stripLocale(pathname).path);
+  for (const p of ["/terms", "/en/terms", "/ne/terms", "/privacy", "/en/privacy", "/ne/privacy"]) {
+    it(`${p} is public`, () => expect(publicInMiddleware(p)).toBe(true));
+  }
 });

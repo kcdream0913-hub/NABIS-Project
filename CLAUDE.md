@@ -123,7 +123,47 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint 3) — Trip Planner v2, Commit B (provider Offerings; frontend only, NOT pushed):**
+- **2026-07-24 (sprint 4) — Settings fix batch (frontend; P0–P7, NOT pushed):**
+  - **P0 (prod bug) — legal pages now public in every locale.** Root cause:
+    `stripLocale` skipped the default locale, so an explicit `/en/terms` kept its
+    `/en` prefix and `isPublicPath` failed → logged-out visitors bounced to
+    `/login` (the docs signup links to for consent). Fix: strip the `/en` prefix
+    too. **Verified with a logged-out `next start` + curl:** `/terms`, `/ne/terms`,
+    `/privacy`, `/ne/privacy` → 200; `/en/terms`, `/en/privacy` → 307 to the
+    canonical `/terms`/`/privacy` (render), no longer `/login`; control `/members`
+    → 307 `/login`. +7 authRouting tests (all four legal URLs through the
+    stripLocale→isPublicPath pipeline). No `/settings/legal` links exist; the data
+    page already points at `/terms`+`/privacy`.
+  - **P1 Account** — (a) display name never seeds from the email: if
+    `profiles.name === user.email` it's treated as unset (placeholder "e.g. Kris
+    Dahal" + helper), and saving a name equal to the email is blocked (frontend
+    guard, no migration). (b) **Real password change**: Current / New / Confirm;
+    the current password is verified via `signInWithPassword` **before**
+    `updateUser({password})`; validates new≠current, confirm=new, min 8, inline
+    errors. (c) **Phone** bound to the existing `profiles.phone` column, optional +
+    basic format check. (d) **Request verification** button → DM to the admin via
+    `get_or_create_direct_thread` with a prefilled draft (`?draft=` seeds the
+    composer); pilot stays admin-curated, no self-serve. Admin id via
+    `NEXT_PUBLIC_SUPPORT_ADMIN_ID` (falls back to the pilot admin's user id).
+  - **P2 Privacy** — the person page now renders `profiles.phone` only when
+    `sharing_defaults.show_phone` is on; unset resolves to OFF (already the
+    `readPreferences` default). All privacy toggles already read saved state.
+  - **P3 Appearance** — timezone groups reordered: **United States** + **Nepal &
+    South Asia** at top, then Other. Language stays EN + ने.
+  - **P4 Devices** — added **Sign out of all other devices**
+    (`signOut({ scope: 'others' })`) with a confirm step + success state; nav label
+    stays "Devices" (per-session list remains Phase B, needs a service-role route).
+  - **P5 Data** — added the note "Your export downloads immediately as a JSON file."
+  - **P6 Support** — visible **kcdream0913@gmail.com** ("Pilot support") + mailto
+    `?subject=BridgeLink support request`. Deliberately NOT `support@bridgelink.app`
+    (domain not owned — publishing it would misroute support mail).
+  - **P7 Naming** — product name is already **BridgeLink** everywhere (metadata
+    title/description); the remaining "NABIS" strings are summit/event references in
+    mock `lib/data.ts` / `lib/tripPlannerData.ts`, which is allowed.
+  - gates: tsc 0 · vitest 54/54 (i18n parity + 7 new routing) · build 52/52 both
+    locales. **NOT pushed — hub verifies.** Hub: set `NEXT_PUBLIC_SUPPORT_ADMIN_ID`
+    in Vercel if the admin id ever changes (default is the current pilot admin).
+- **2026-07-24 (sprint 3) — Trip Planner v2, Commit B (provider Offerings; frontend, pushed 3939f9e):**
   - Commit A MERGED to prod by hub (offerings + festivals + itinerary columns +
     RLS live; both spent branches deleted). Commit B builds the provider surface
     on that live schema — no new DB work.

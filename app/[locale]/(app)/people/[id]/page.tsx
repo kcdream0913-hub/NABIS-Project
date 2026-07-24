@@ -10,6 +10,7 @@ import OfferingsSection from "@/components/OfferingsSection";
 import { trustTier } from "@/lib/trust";
 import { pickBio } from "@/lib/bilingual";
 import { canPublishOfferings } from "@/lib/offerings";
+import { readPreferences } from "@/lib/preferences";
 
 export default async function PersonPage({
   params,
@@ -25,6 +26,10 @@ export default async function PersonPage({
   if (!person) notFound();
 
   const bio = pickBio(locale, person.bio, person.bio_ne);
+  // Phone shows only when the member opted in (sharing_defaults.show_phone); unset
+  // resolves to OFF via readPreferences.
+  const prefs = readPreferences(person.preferences);
+  const showPhone = prefs.sharing_defaults.show_phone && !!person.phone;
 
   return (
     <div className="mx-auto max-w-xl">
@@ -47,6 +52,12 @@ export default async function PersonPage({
           </div>
         </div>
         {bio && <BioText text={bio.text} origin={bio.origin} className="mt-4 text-sm leading-relaxed" />}
+        {showPhone && (
+          <p className="mt-3 text-sm text-ink-soft">
+            <span className="font-medium text-ink">{t("phoneLabel")}:</span>{" "}
+            <a href={`tel:${person.phone}`} className="text-primary hover:underline">{person.phone}</a>
+          </p>
+        )}
         <div className="mt-4">
           <ContactBusiness
             ownerUserId={person.id}

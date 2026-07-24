@@ -8,10 +8,6 @@ export type TimezoneGroup = { label: string; zones: string[] };
 
 export const TIMEZONE_GROUPS: TimezoneGroup[] = [
   {
-    label: "Nepal",
-    zones: ["Asia/Kathmandu"],
-  },
-  {
     label: "United States",
     zones: [
       "America/New_York",
@@ -24,14 +20,23 @@ export const TIMEZONE_GROUPS: TimezoneGroup[] = [
     ],
   },
   {
+    label: "Nepal & South Asia",
+    zones: [
+      "Asia/Kathmandu",
+      "Asia/Kolkata",
+      "Asia/Dhaka",
+      "Asia/Thimphu",
+      "Asia/Colombo",
+      "Asia/Karachi",
+    ],
+  },
+  {
     label: "Other",
     zones: [
       "Europe/London",
       "Europe/Paris",
       "Europe/Berlin",
       "Asia/Dubai",
-      "Asia/Kolkata",
-      "Asia/Dhaka",
       "Asia/Bangkok",
       "Asia/Singapore",
       "Asia/Hong_Kong",

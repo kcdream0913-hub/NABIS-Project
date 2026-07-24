@@ -14,7 +14,7 @@ export default async function AccountPage() {
 
   // Read-only verification state. RLS scopes each read to the caller.
   const [{ data: profile }, { data: tierRow }, { data: history }] = await Promise.all([
-    supabase.from("profiles").select("name, us_verification, np_verification").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("name, phone, us_verification, np_verification").eq("id", user.id).maybeSingle(),
     supabase.from("user_trust_tiers").select("trust_tier").eq("id", user.id).maybeSingle(),
     supabase
       .from("verification_records")
@@ -24,10 +24,15 @@ export default async function AccountPage() {
   ]);
 
   const tier = (tierRow?.trust_tier ?? "basic") as "basic" | "verified" | "bridge";
+  // Never seed the name with the sign-in email. Some rows were auto-created with
+  // name = email (the signup trigger's fallback); treat that as "unset" so the
+  // field shows a placeholder, not the address. Frontend guard only, no migration.
+  const email = user.email ?? "";
+  const initialName = profile?.name && profile.name !== email ? profile.name : "";
 
   return (
     <>
-      <AccountForm initialName={profile?.name ?? ""} email={user.email ?? ""} />
+      <AccountForm initialName={initialName} email={email} initialPhone={profile?.phone ?? ""} />
       <VerificationCard
         tier={tier}
         usStatus={(profile?.us_verification ?? "none") as TrackStatus}
