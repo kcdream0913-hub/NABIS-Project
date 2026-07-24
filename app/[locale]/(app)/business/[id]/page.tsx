@@ -8,8 +8,10 @@ import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
 import BioText from "@/components/BioText";
+import OfferingsSection from "@/components/OfferingsSection";
 import { trustTier } from "@/lib/trust";
 import { pickBio } from "@/lib/bilingual";
+import { canPublishOfferings } from "@/lib/offerings";
 
 export default async function BusinessPage({
   params,
@@ -129,6 +131,16 @@ export default async function BusinessPage({
         </div>
         <TeamManager businessId={id} />
       </div>
+
+      <OfferingsSection
+        ownerType="business"
+        subjectId={business.id}
+        providerOwnerUserId={business.owner_user_id}
+        providerName={business.name}
+        providerAvatarUrl={business.logo_url}
+        providerTier={trustTier(business)}
+        subjectHasTourism={canPublishOfferings([business.primary_sector, ...(business.secondary_sectors ?? [])])}
+      />
     </div>
   );
 }

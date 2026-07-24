@@ -6,8 +6,10 @@ import ReportButton from "@/components/ReportButton";
 import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
 import BioText from "@/components/BioText";
+import OfferingsSection from "@/components/OfferingsSection";
 import { trustTier } from "@/lib/trust";
 import { pickBio } from "@/lib/bilingual";
+import { canPublishOfferings } from "@/lib/offerings";
 
 export default async function PersonPage({
   params,
@@ -54,6 +56,16 @@ export default async function PersonPage({
           />
         </div>
       </div>
+
+      <OfferingsSection
+        ownerType="profile"
+        subjectId={person.id}
+        providerOwnerUserId={person.id}
+        providerName={person.name ?? t("member")}
+        providerAvatarUrl={person.avatar_url}
+        providerTier={trustTier(person)}
+        subjectHasTourism={canPublishOfferings(person.sectors)}
+      />
     </div>
   );
 }

@@ -62,7 +62,11 @@
       "title": "Verification status & history",
       "description": "Your current tier, each policy track, and past decisions.",
       "currentTier": "Current tier",
-      "tier": { "basic": "Not yet verified", "verified": "Verified", "bridge": "Bridge Verified" },
+      "tier": {
+        "basic": "Not yet verified",
+        "verified": "Verified",
+        "bridge": "Bridge Verified"
+      },
       "usTrack": "US track",
       "npTrack": "Nepal track",
       "status": {
@@ -80,7 +84,11 @@
       "description": "Control who can see your profile and what you share.",
       "profileVisibility": "Profile visibility",
       "visibilityHint": "Who can find and view your profile.",
-      "visibility": { "public": "Public", "bridge": "Bridge only", "private": "Private" },
+      "visibility": {
+        "public": "Public",
+        "bridge": "Bridge only",
+        "private": "Private"
+      },
       "enforcementNote": "Applies across the directory, search, and profile pages. People you already message or share a business with keep access.",
       "showEmail": "Show email on profile",
       "showEmailHint": "Let other members see your email.",
@@ -94,8 +102,20 @@
     "appearance": {
       "title": "Appearance",
       "description": "Theme and text size for this device.",
-      "theme": { "label": "Theme", "hint": "Light, dark, or match your system.", "light": "Light", "dark": "Dark", "system": "System" },
-      "font": { "label": "Text size", "hint": "Adjust the base text size.", "small": "Small", "normal": "Default", "large": "Large" },
+      "theme": {
+        "label": "Theme",
+        "hint": "Light, dark, or match your system.",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "font": {
+        "label": "Text size",
+        "hint": "Adjust the base text size.",
+        "small": "Small",
+        "normal": "Default",
+        "large": "Large"
+      },
       "regionTitle": "Language & Region",
       "regionDescription": "Your language and time zone.",
       "language": "Language",
@@ -607,5 +627,93 @@
     "business-networking": "Business & Networking",
     "shopping-crafts": "Shopping & Crafts",
     "festivals-events": "Festivals & Events"
+  },
+  "offerings": {
+    "sectionTitle": "Offerings",
+    "addOffering": "Add offering",
+    "empty": "No offerings yet.",
+    "ownerEmpty": "You haven't listed any offerings yet. Add your first one.",
+    "member": "Member",
+    "untitled": "Untitled offering",
+    "view": "View",
+    "edit": "Edit",
+    "inquire": "Inquire",
+    "inquiring": "Opening…",
+    "daysCount": "{count} days",
+    "ownerViewNote": "This is your offering. Travellers see an “Inquire” button here.",
+    "loading": "Loading…",
+    "notEligible": "Offerings are available to tourism & hospitality members. Add that sector to your profile or business to list one.",
+    "editorEyebrow": "Trip Planner",
+    "newTitle": "New offering",
+    "editTitle": "Edit offering",
+    "editorSubtitle": "List a trek, tour, stay or experience for travellers in the corridor.",
+    "fieldType": "Type",
+    "fieldTitle": "Title (English)",
+    "fieldTitleNe": "Title (नेपाली)",
+    "fieldDescription": "Description (English)",
+    "fieldDescriptionNe": "Description (नेपाली)",
+    "fieldCountry": "Country",
+    "countryAny": "Any / not specific",
+    "fieldRegion": "Region",
+    "fieldRegionPlaceholder": "e.g. Annapurna, Kathmandu Valley",
+    "fieldDirections": "Corridor directions",
+    "fieldPrice": "Price from",
+    "fieldPriceFrom": "Amount",
+    "fieldDuration": "Duration (days)",
+    "fieldGroup": "Group size",
+    "fieldGroupMin": "Min group",
+    "fieldGroupMax": "Max group",
+    "fieldSeasons": "Seasons",
+    "fieldFestivals": "Festivals",
+    "fieldAvailableFrom": "Available from",
+    "fieldAvailableTo": "Available to",
+    "fieldAvailability": "Availability",
+    "fieldStatus": "Status",
+    "statusHint": "Drafts are visible only to you. Publish to list it for travellers.",
+    "mediaFollowUp": "Photo & video upload is coming in a later update.",
+    "errTitleRequired": "Please add a title.",
+    "genericError": "Something went wrong. Please try again.",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "createOffering": "Create offering",
+    "types": {
+      "trek": "Trek",
+      "tour": "Tour",
+      "stay": "Stay",
+      "food_experience": "Food experience",
+      "transport": "Transport",
+      "festival_package": "Festival package",
+      "guide_service": "Guide service",
+      "wellness": "Wellness",
+      "event_package": "Event package"
+    },
+    "directions": {
+      "np_to_us": "Nepal → US",
+      "us_to_np": "US → Nepal",
+      "domestic_np": "Within Nepal",
+      "domestic_us": "Within US",
+      "other": "Other"
+    },
+    "units": {
+      "per_person": "per person",
+      "per_group": "per group",
+      "per_night": "per night"
+    },
+    "seasons": {
+      "spring": "Spring",
+      "summer": "Summer",
+      "monsoon": "Monsoon",
+      "autumn": "Autumn",
+      "winter": "Winter"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "country": {
+      "np": "Nepal",
+      "us": "United States"
+    }
   }
 }

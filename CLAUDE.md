@@ -123,6 +123,36 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-24 (sprint 3) — Trip Planner v2, Commit B (provider Offerings; frontend only, NOT pushed):**
+  - Commit A MERGED to prod by hub (offerings + festivals + itinerary columns +
+    RLS live; both spent branches deleted). Commit B builds the provider surface
+    on that live schema — no new DB work.
+  - **`lib/offerings.ts`** — slugs/enums (9 types, 5 direction tags, 3 price units,
+    5 seasons), `Offering`/`Festival` types, `formatMoney`, `pickFestivalName`,
+    `canPublishOfferings` (tourism-hospitality gate). Labels translate via the new
+    `offerings` i18n namespace (74 keys × en/ne, parity green).
+  - **`OfferingCard`** (reusable — Commit C's planner will consume it): bilingual
+    title (pickBio), type chip, price + unit, region/country/duration, season +
+    festival chips, provider Avatar + TrustBadge, links to the detail view.
+  - **`OfferingsSection`** on **profile (`/people/[id]`) + business (`/business/[id]`)**
+    detail pages: loads the subject's offerings (RLS scopes visibility — published
+    to all, drafts to the owner), renders the card grid. Hidden entirely when there
+    are none and the viewer isn't the owner. Owner (with tourism sector) gets an
+    **Add offering** button; drafts show a status chip + Edit link.
+  - **`OfferingEditor`** (create/edit) at `/offerings/new` (`?business=<id>` sets
+    `business_id`, else own profile sets `profile_id` — never both, DB CHECK
+    enforces) and `/offerings/[id]/edit`. Fields: type, bilingual title +
+    description, country, region, direction tags, price_from/currency/unit,
+    duration, group min/max, seasons, festivals (loaded from `festivals`, grouped
+    by country with month_hint), availability dates, draft/published. Tourism-sector
+    gate on the entry routes (UX; RLS is the real guard).
+  - **Offering detail** (`/offerings/[id]`, server): full view + provider (private
+    profile falls back to "Member" but Inquire still resolves the real user id) +
+    **`InquireButton`** → `get_or_create_direct_thread` with the provider. Owner
+    sees Edit + a note instead of Inquire.
+  - **Media upload SKIPPED this commit** (media stays `[]`) — tracked follow-up,
+    noted in the editor UI too. gates: tsc 0 · vitest 47/47 · build 52/52 both
+    locales. **NOT pushed — hub verifies; Commit C = planner wizard rebuild.**
 - **2026-07-24 (sprint 3) — Trip Planner v2, Commit A (DB only; branch, NOT merged):**
   - Ref BL-TRIP-01 / D-019: publishers = businesses AND professionals; schema
     supports all sectors (UI stays tourism-only for now); no live flight API.
