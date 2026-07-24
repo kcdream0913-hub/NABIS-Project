@@ -10,7 +10,7 @@ import TrustBadge from "@/components/TrustBadge";
 import BioText from "@/components/BioText";
 import OfferingsSection from "@/components/OfferingsSection";
 import { trustTier } from "@/lib/trust";
-import { pickBio } from "@/lib/bilingual";
+import { pickBio, isAutoBio } from "@/lib/bilingual";
 import { canPublishOfferings } from "@/lib/offerings";
 
 export default async function BusinessPage({
@@ -87,7 +87,7 @@ export default async function BusinessPage({
         </div>
         {(() => {
           const b = pickBio(locale, business.bio, business.bio_ne);
-          return b ? <BioText text={b.text} origin={b.origin} className="mt-4 text-sm leading-relaxed" /> : null;
+          return b ? <BioText text={b.text} origin={b.origin} auto={isAutoBio(locale, b, business.bio_ne_auto)} className="mt-4 text-sm leading-relaxed" /> : null;
         })()}
         <div className="mt-4">
           <ContactBusiness

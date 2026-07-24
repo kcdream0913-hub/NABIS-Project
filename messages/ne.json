@@ -242,7 +242,8 @@
     "bridgeVerified": "ब्रिज प्रमाणित",
     "verifiedBusiness": "प्रमाणित व्यवसाय",
     "inEnglish": "English",
-    "inNepali": "नेपाली"
+    "inNepali": "नेपाली",
+    "autoTranslated": "स्वतः अनुवादित"
   },
   "auth": {
     "joinTitle": "BridgeLink मा सामेल हुनुहोस्",

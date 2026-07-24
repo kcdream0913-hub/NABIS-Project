@@ -8,12 +8,12 @@ import { OnlineDot } from "./OnlineDot";
 import { Cover } from "./ui/Cover";
 import { ViewChip, SectorChip } from "./chips";
 import { trustTier } from "@/lib/trust";
-import { pickBio } from "@/lib/bilingual";
+import { pickBio, isAutoBio } from "@/lib/bilingual";
 import { findOrCreateThread } from "@/lib/threads";
 
 export interface MemberCardProps {
   id: string; name: string; avatarUrl?: string | null;
-  headline?: string | null; headlineNe?: string | null; location?: string | null; sector?: string | null;
+  headline?: string | null; headlineNe?: string | null; headlineNeAuto?: boolean | null; location?: string | null; sector?: string | null;
   view?: "us" | "nepal" | "bridge";
   verification: "verified" | "unverified"; tier?: "bridge";
   online?: boolean;
@@ -45,7 +45,7 @@ export default function MemberCard(p: MemberCardProps) {
           <h3 className="text-[17px] font-semibold tracking-[-.01em] text-ink">{p.name}</h3>
           <TrustBadge tier={tier} label={trustLabel} />
         </div>
-        {bio && <BioText text={bio.text} origin={bio.origin} className="mt-0.5 line-clamp-2 text-sm text-ink-soft" />}
+        {bio && <BioText text={bio.text} origin={bio.origin} auto={isAutoBio(locale, bio, p.headlineNeAuto)} className="mt-0.5 line-clamp-2 text-sm text-ink-soft" />}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {p.view && <ViewChip view={p.view} label={p.viewLabel} />}

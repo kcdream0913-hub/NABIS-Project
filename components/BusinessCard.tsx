@@ -7,10 +7,10 @@ import BioText from "./BioText";
 import { Cover } from "./ui/Cover";
 import { ViewChip, SectorChip } from "./chips";
 import { trustTier } from "@/lib/trust";
-import { pickBio } from "@/lib/bilingual";
+import { pickBio, isAutoBio } from "@/lib/bilingual";
 
 export interface BusinessCardProps {
-  id: string; name: string; logoUrl?: string | null; bio?: string | null; bioNe?: string | null;
+  id: string; name: string; logoUrl?: string | null; bio?: string | null; bioNe?: string | null; bioNeAuto?: boolean | null;
   primarySector?: string | null; secondarySectors?: string[] | null;
   view?: "us" | "nepal" | "bridge";
   verificationStatus: "verified" | "unverified"; tier?: "bridge";
@@ -46,7 +46,7 @@ export default function BusinessCard(b: BusinessCardProps) {
             </span>
           )}
         </div>
-        {bio && <BioText text={bio.text} origin={bio.origin} className="mt-1 line-clamp-2 text-sm text-ink-soft" />}
+        {bio && <BioText text={bio.text} origin={bio.origin} auto={isAutoBio(locale, bio, b.bioNeAuto)} className="mt-1 line-clamp-2 text-sm text-ink-soft" />}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {b.view && <ViewChip view={b.view} label={b.viewLabel} />}

@@ -22,3 +22,16 @@ export function pickBio(
   }
   return null;
 }
+
+/**
+ * True when the shown bio is the auto-translated Nepali draft displayed as the
+ * active-locale text (locale === "ne", the ne bio shown directly, and the owner
+ * hasn't reviewed it yet). This is distinct from the fallback "(English)" marker.
+ */
+export function isAutoBio(
+  locale: string,
+  pick: { origin: BioOrigin } | null,
+  bioNeAuto?: boolean | null,
+): boolean {
+  return !!bioNeAuto && !!pick && pick.origin === null && locale === "ne";
+}

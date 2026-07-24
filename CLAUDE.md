@@ -123,7 +123,34 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint 8) — Onboarding / first-run flow (frontend + 1 preferences key, NOT pushed):**
+- **2026-07-24 (sprint 9) — Nepali bio system: auto-translated marker + structured sector labels (branch migration, NOT pushed):**
+  - **Branch migration** `bio-ne-auto` (ref `ocxsljiqiepoehdaihlf`, ~$0.32/day
+    until merged), `20260724205853_bio_ne_auto.sql` (+ rollback): additive
+    `profiles.bio_ne_auto` + `businesses.bio_ne_auto` (boolean NOT NULL default
+    false; true = machine-translated draft not yet owner-reviewed). Advisors clean
+    (same 3 intentional WARN; a boolean column adds nothing). NOT merged.
+  - **BioText auto marker** — new `auto` prop + `lib/bilingual.ts isAutoBio(locale,
+    pick, bioNeAuto)`: when the **active-locale** Nepali bio is shown (locale ne,
+    `origin === null`) AND `bio_ne_auto`, renders "· Auto-translated" /
+    "· स्वतः अनुवादित" (`common.autoTranslated`, en+ne) — distinct from the fallback
+    "(English)/(नेपाली)" marker. Wired into person + business detail pages,
+    MemberCard, BusinessCard (members page selects + passes `bio_ne_auto`), and the
+    channel detail business list (upgraded from raw `b.bio` to bilingual BioText).
+  - **Owner ownership** — profile editor + business registration set
+    `bio_ne_auto = false` on save (owner reviewed the text).
+  - **Structured sector labels (D-020 audit)** — the only violations were the two
+    channels pages, which rendered the sector header from the DB English
+    `channel.name`. Both now render from the **i18n `sectors` map** by slug
+    (fallback to the stored name for any non-sector slug). Everything else
+    (directory filters, register-business chips, admin sector/role labels, the
+    People/Businesses tabs) already used `useSectors()`/i18n — no change. The 15-slug
+    Nepali sector map already exists; no new map needed.
+  - **Ordering dependency:** the explicit members-page selects now request
+    `bio_ne_auto`, so — like `bio_ne` before it — the app works against prod only
+    once the branch merges (client untyped → tsc/build green; not pushed). Hub
+    merges branch + pushes together. gates: tsc 0 · vitest 76/76 · build 54/54 both
+    locales. **NOT pushed — hub verifies.**
+- **2026-07-24 (sprint 8) — Onboarding / first-run flow (frontend + 1 preferences key, pushed a0d369a):**
   - **`preferences.onboarded`** (jsonb, no migration) added to `lib/preferences.ts`
     (default false; merge-managed). `lib/onboarding.ts` = `fetchOnboarded` /
     `markOnboarded` (read-modify-write, never clobbers).

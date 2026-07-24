@@ -8,7 +8,7 @@ import TrustBadge from "@/components/TrustBadge";
 import BioText from "@/components/BioText";
 import OfferingsSection from "@/components/OfferingsSection";
 import { trustTier } from "@/lib/trust";
-import { pickBio } from "@/lib/bilingual";
+import { pickBio, isAutoBio } from "@/lib/bilingual";
 import { canPublishOfferings } from "@/lib/offerings";
 import { readPreferences } from "@/lib/preferences";
 
@@ -51,7 +51,7 @@ export default async function PersonPage({
             <p className="mt-0.5 text-sm text-ink-soft">{person.city}</p>
           </div>
         </div>
-        {bio && <BioText text={bio.text} origin={bio.origin} className="mt-4 text-sm leading-relaxed" />}
+        {bio && <BioText text={bio.text} origin={bio.origin} auto={isAutoBio(locale, bio, person.bio_ne_auto)} className="mt-4 text-sm leading-relaxed" />}
         {showPhone && (
           <p className="mt-3 text-sm text-ink-soft">
             <span className="font-medium text-ink">{t("phoneLabel")}:</span>{" "}

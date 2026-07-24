@@ -53,7 +53,9 @@ export default function ProfileEditor({
     setSaving(true);
     await supabase
       .from("profiles")
-      .update({ name, bio, bio_ne: bioNe, city, country, sectors: selectedSectors })
+      // Saving through the editor = the owner has taken ownership of the Nepali
+      // bio, so it's no longer an unreviewed machine draft.
+      .update({ name, bio, bio_ne: bioNe, bio_ne_auto: false, city, country, sectors: selectedSectors })
       .eq("id", userId);
     setSaving(false);
     setSaved(true);

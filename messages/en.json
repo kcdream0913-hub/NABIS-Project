@@ -242,7 +242,8 @@
     "bridgeVerified": "Bridge Verified",
     "verifiedBusiness": "Verified Business",
     "inEnglish": "English",
-    "inNepali": "नेपाली"
+    "inNepali": "नेपाली",
+    "autoTranslated": "Auto-translated"
   },
   "auth": {
     "joinTitle": "Join BridgeLink",

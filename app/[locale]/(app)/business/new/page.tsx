@@ -47,6 +47,7 @@ export default function NewBusinessPage() {
         registration_number: regNumber || null,
         bio,
         bio_ne: bioNe,
+        bio_ne_auto: false, // owner-authored at creation, not a machine draft
         owner_user_id: user.id,
         // Tier 1 "Listed" (no number) vs Tier 2 pending registry check — never
         // auto-marked "verified" client-side either way; that comes from the
