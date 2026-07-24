@@ -82,15 +82,15 @@ export default function OnboardingPage() {
             {t("step", { current: step + 1, total: STEP_COUNT })}
           </p>
         </div>
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-line">
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-border">
           <div
-            className="h-full rounded-full bg-pine transition-all"
+            className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${((step + 1) / STEP_COUNT) * 100}%` }}
           />
         </div>
       </div>
 
-      <div className="rounded-lg border border-line bg-white p-6">
+      <div className="rounded-lg border border-border bg-white p-6">
         {step === 0 && (
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
@@ -100,12 +100,12 @@ export default function OnboardingPage() {
 {t("welcomeBody")}
             </p>
             {inviteResult === "joined" && (
-              <p className="mt-3 rounded-md border border-line bg-bg-success p-3 text-sm text-text-success">
+              <p className="mt-3 rounded-md border border-border bg-active-soft p-3 text-sm text-active">
                 {t("inviteJoined")}
               </p>
             )}
             {inviteResult === "invalid" && (
-              <p className="mt-3 rounded-md border border-dashed border-line bg-mist p-3 text-sm text-ink-soft">
+              <p className="mt-3 rounded-md border border-dashed border-border bg-bg p-3 text-sm text-ink-soft">
                 {t("inviteInvalid")}
               </p>
             )}
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("yourNamePlaceholder")}
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+                  className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
                 />
               </label>
               <label className="block text-sm">
@@ -133,7 +133,7 @@ export default function OnboardingPage() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as "us" | "nepal")}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
                 >
                   <option value="us">{t("unitedStates")}</option>
                   <option value="nepal">{t("nepal")}</option>
@@ -145,7 +145,7 @@ export default function OnboardingPage() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder={t("cityPlaceholder")}
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+                  className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
                 />
               </label>
             </div>
@@ -168,8 +168,8 @@ export default function OnboardingPage() {
                     title={sec.description}
                     className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
                       active
-                        ? "border-pine bg-pine-soft text-pine-ink"
-                        : "border-line text-ink-soft hover:bg-mist"
+                        ? "border-primary bg-primary-soft text-primary-pressed"
+                        : "border-border text-ink-soft hover:bg-bg"
                     }`}
                   >
                     {sec.name}
@@ -186,7 +186,7 @@ export default function OnboardingPage() {
             <ul className="mt-3 space-y-2.5">
               {guidelines.map((g, i) => (
                 <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-soft">
-                  <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-pine-soft text-[10px] font-bold text-pine">
+                  <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-primary-soft text-[10px] font-bold text-primary">
                     {i + 1}
                   </span>
                   {g}
@@ -198,7 +198,7 @@ export default function OnboardingPage() {
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="h-4 w-4 accent-pine"
+                className="h-4 w-4 accent-primary"
               />
               {t("agree")}
             </label>
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext}
-            className="flex items-center gap-1 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-40"
           >
             {t("continue")} <ArrowRight size={15} />
           </button>
@@ -226,7 +226,7 @@ export default function OnboardingPage() {
           <button
             onClick={finish}
             disabled={!canNext || saving}
-            className="rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
           >
             {saving ? t("saving") : t("enter")}
           </button>

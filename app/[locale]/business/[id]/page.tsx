@@ -49,7 +49,7 @@ export default async function BusinessPage({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-lg border border-line bg-white p-5">
+      <div className="rounded-lg border border-border bg-white p-5">
         <div className="flex items-start gap-4">
           <Avatar name={business.name} url={business.logo_url} shape="rounded" size={56} />
           <div className="min-w-0 flex-1">
@@ -67,14 +67,14 @@ export default async function BusinessPage({
             <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">
               <span className="font-medium text-ink">{sectorName(business.primary_sector)}</span>
               {(business.secondary_sectors ?? []).map((slug: string) => (
-                <span key={slug} className="rounded bg-mist px-1.5 py-0.5 text-xs">
+                <span key={slug} className="rounded bg-bg px-1.5 py-0.5 text-xs">
                   {sectorName(slug)}
                 </span>
               ))}
               <span>· {business.country_of_registration}</span>
             </div>
             {business.is_paid_provider && (
-              <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-gold-soft px-2.5 py-1 text-sm font-medium text-gold">
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-bridge-soft px-2.5 py-1 text-sm font-medium text-bridge">
                 {t("access")}: {business.access_price_currency} {business.access_price_amount}
               </div>
             )}
@@ -99,7 +99,7 @@ export default async function BusinessPage({
             return (
               <div
                 key={m.id}
-                className="flex items-center gap-3 rounded-lg border border-line bg-white p-3"
+                className="flex items-center gap-3 rounded-lg border border-border bg-white p-3"
               >
                 <Avatar name={person?.name} url={person?.avatar_url} size={36} />
                 <div className="min-w-0 flex-1">

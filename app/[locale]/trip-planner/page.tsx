@@ -270,21 +270,21 @@ export default function TripPlannerPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-pine-soft text-pine">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
           <Map size={20} />
         </span>
         <div>
-          <p className="eyebrow text-pine">{t("phaseEyebrow")}</p>
+          <p className="eyebrow text-primary">{t("phaseEyebrow")}</p>
           <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
         </div>
       </div>
 
-      <p className="rounded-md border border-dashed border-line bg-mist p-3 text-sm text-ink-soft">
+      <p className="rounded-md border border-dashed border-border bg-bg p-3 text-sm text-ink-soft">
         {t("bookingNotice")}
       </p>
 
       {/* Inputs */}
-      <div className="rounded-lg border border-line bg-white p-4">
+      <div className="rounded-lg border border-border bg-white p-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
             <span className="eyebrow text-ink-soft">{t("titleLabel")}</span>
@@ -292,7 +292,7 @@ export default function TripPlannerPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("titlePlaceholder")}
-              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+              className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
             />
           </label>
           <label className="block text-sm">
@@ -301,7 +301,7 @@ export default function TripPlannerPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
             />
           </label>
           <label className="block text-sm">
@@ -310,7 +310,7 @@ export default function TripPlannerPage() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
             />
           </label>
           <label className="block text-sm">
@@ -320,7 +320,7 @@ export default function TripPlannerPage() {
               min={1}
               value={groupSize}
               onChange={(e) => setGroupSize(Math.max(1, Number(e.target.value)))}
-              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
             />
           </label>
           <div className="grid grid-cols-[1fr_auto] gap-2">
@@ -331,7 +331,7 @@ export default function TripPlannerPage() {
                 min={0}
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(Math.max(0, Number(e.target.value)))}
-                className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               />
             </label>
             <label className="block text-sm">
@@ -339,7 +339,7 @@ export default function TripPlannerPage() {
               <select
                 value={budgetCurrency}
                 onChange={(e) => setBudgetCurrency(e.target.value as "USD" | "NPR")}
-                className="mt-1 rounded-md border border-line bg-white px-2 py-2 text-sm"
+                className="mt-1 rounded-md border border-border bg-white px-2 py-2 text-sm"
               >
                 <option>USD</option>
                 <option>NPR</option>
@@ -358,7 +358,7 @@ export default function TripPlannerPage() {
                   key={i.slug}
                   onClick={() => toggleInterest(i.slug)}
                   className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
-                    active ? "border-pine bg-pine-soft text-pine-ink" : "border-line text-ink-soft hover:bg-mist"
+                    active ? "border-primary bg-primary-soft text-primary-pressed" : "border-border text-ink-soft hover:bg-bg"
                   }`}
                 >
                   {i.name}
@@ -370,7 +370,7 @@ export default function TripPlannerPage() {
       </div>
 
       {/* Budget breakdown */}
-      <div className="rounded-lg border border-line bg-white p-4">
+      <div className="rounded-lg border border-border bg-white p-4">
         <h2 className="text-sm font-semibold">{t("budgetBreakdown")}</h2>
         <div className="mt-3 space-y-2">
           {budgetBreakdown.map((b) => (
@@ -382,7 +382,7 @@ export default function TripPlannerPage() {
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between border-t border-line pt-2 text-xs text-ink-soft">
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-2 text-xs text-ink-soft">
           <span>
             {t("perDay")}: {budgetCurrency}{" "}
             {startDate && endDate
@@ -399,7 +399,7 @@ export default function TripPlannerPage() {
       </div>
 
       {/* Recommendations */}
-      <div className="rounded-lg border border-line bg-white p-4">
+      <div className="rounded-lg border border-border bg-white p-4">
         <h2 className="text-sm font-semibold">{t("recommendationsTitle")}</h2>
         <p className="mt-0.5 text-xs text-ink-soft">{t("recommendationsHint")}</p>
 
@@ -411,13 +411,13 @@ export default function TripPlannerPage() {
                 const key = `biz-${b.id}`;
                 const isAdded = staged.some((s) => s.key === key);
                 return (
-                  <div key={b.id} className="flex items-start justify-between gap-3 rounded-md border border-line p-3">
+                  <div key={b.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-3">
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{b.name}</p>
                       {b.primary_sector && <p className="mt-0.5 text-xs text-ink-soft">{b.primary_sector}</p>}
                       <Link
                         href={`/business/${b.id}`}
-                        className="mt-1 inline-block text-xs font-medium text-pine hover:text-pine-ink"
+                        className="mt-1 inline-block text-xs font-medium text-primary hover:text-primary-pressed"
                       >
                         {t("viewBusiness")}
                       </Link>
@@ -425,7 +425,7 @@ export default function TripPlannerPage() {
                     <button
                       onClick={() => addBusiness(b)}
                       disabled={isAdded}
-                      className="flex shrink-0 items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium hover:bg-mist disabled:opacity-40"
+                      className="flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-bg disabled:opacity-40"
                     >
                       {isAdded ? t("added") : <><Plus size={12} /> {t("addToItinerary")}</>}
                     </button>
@@ -440,7 +440,7 @@ export default function TripPlannerPage() {
           {recommendations.map((r) => {
             const isAdded = staged.some((s) => s.key === r.id);
             return (
-              <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border border-line p-3">
+              <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium">{r.title}</p>
                   <p className="mt-0.5 text-xs text-ink-soft">
@@ -451,7 +451,7 @@ export default function TripPlannerPage() {
                 <button
                   onClick={() => addRecommendation(r)}
                   disabled={isAdded}
-                  className="flex shrink-0 items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium hover:bg-mist disabled:opacity-40"
+                  className="flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-bg disabled:opacity-40"
                 >
                   {isAdded ? t("added") : <><Plus size={12} /> {t("addToItinerary")}</>}
                 </button>
@@ -462,27 +462,27 @@ export default function TripPlannerPage() {
       </div>
 
       {/* Staged itinerary */}
-      <div className="rounded-lg border border-line bg-white p-4">
+      <div className="rounded-lg border border-border bg-white p-4">
         <h2 className="text-sm font-semibold">{t("stagedTitle")}</h2>
         {staged.length === 0 ? (
           <p className="mt-2 text-sm text-ink-soft">{t("stagedEmpty")}</p>
         ) : (
           <div className="mt-3 space-y-2">
             {staged.map((s) => (
-              <div key={s.key} className="flex items-center justify-between rounded-md bg-mist px-3 py-2 text-sm">
+              <div key={s.key} className="flex items-center justify-between rounded-md bg-bg px-3 py-2 text-sm">
                 <span>{s.title}</span>
-                <button onClick={() => removeStaged(s.key)} className="text-ink-soft hover:text-rhodo">
+                <button onClick={() => removeStaged(s.key)} className="text-ink-soft hover:text-accent">
                   {t("removeItem")}
                 </button>
               </div>
             ))}
           </div>
         )}
-        {error && <p className="mt-2 text-sm text-rhodo">{error}</p>}
+        {error && <p className="mt-2 text-sm text-accent">{error}</p>}
         <button
           onClick={saveItinerary}
           disabled={saving}
-          className="mt-3 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
+          className="mt-3 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
         >
           {saving ? t("savingItinerary") : t("saveItinerary")}
         </button>
@@ -501,7 +501,7 @@ export default function TripPlannerPage() {
               const items = expandedItems[it.id] ?? [];
               const total = items.reduce((sum, i) => sum + (i.estimated_cost ?? 0), 0);
               return (
-                <div key={it.id} className="rounded-lg border border-line bg-white p-3">
+                <div key={it.id} className="rounded-lg border border-border bg-white p-3">
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => toggleExpand(it.id)}
@@ -516,13 +516,13 @@ export default function TripPlannerPage() {
                     <button
                       onClick={() => deleteItinerary(it.id)}
                       aria-label={t("deleteItinerary")}
-                      className="rounded p-1.5 text-ink-soft hover:bg-mist hover:text-rhodo"
+                      className="rounded p-1.5 text-ink-soft hover:bg-bg hover:text-accent"
                     >
                       <Trash2 size={14} />
                     </button>
                   </div>
                   {expanded === it.id && (
-                    <div className="mt-2 space-y-1.5 border-t border-line pt-2">
+                    <div className="mt-2 space-y-1.5 border-t border-border pt-2">
                       {items.length === 0 ? (
                         <p className="text-xs text-ink-soft">{t("stagedEmpty")}</p>
                       ) : (
@@ -536,7 +536,7 @@ export default function TripPlannerPage() {
                                   {biz && (
                                     <Link
                                       href={`/business/${biz.id}`}
-                                      className="ml-1.5 font-medium text-pine hover:text-pine-ink"
+                                      className="ml-1.5 font-medium text-primary hover:text-primary-pressed"
                                     >
                                       {t("viewBusiness")}
                                     </Link>
@@ -548,7 +548,7 @@ export default function TripPlannerPage() {
                               </div>
                             );
                           })}
-                          <div className="flex items-center justify-between border-t border-line pt-1.5 text-xs font-medium">
+                          <div className="flex items-center justify-between border-t border-border pt-1.5 text-xs font-medium">
                             <span>{t("totalEstimated")}</span>
                             <span>USD {total}</span>
                           </div>
@@ -565,7 +565,7 @@ export default function TripPlannerPage() {
 
       <p className="text-sm text-ink-soft">
         {t("postHintPrefix")}{" "}
-        <Link href="/channels" className="font-medium text-pine hover:text-pine-ink">
+        <Link href="/channels" className="font-medium text-primary hover:text-primary-pressed">
           {t("travelPlans")}
         </Link>{" "}
         {t("postHintSuffix")}

@@ -21,7 +21,7 @@ export default async function PersonPage({
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="rounded-lg border border-line bg-white p-5">
+      <div className="rounded-lg border border-border bg-white p-5">
         <div className="flex items-start gap-4">
           <Avatar name={person.name} url={person.avatar_url} size={56} />
           <div className="min-w-0 flex-1">

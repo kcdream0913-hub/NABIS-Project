@@ -13,9 +13,9 @@ export default function Topbar() {
   const { view, setSidebarOpen } = useApp();
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur">
-      <div className="flex h-14 items-center gap-3 border-b border-line px-4">
+      <div className="flex h-14 items-center gap-3 border-b border-border px-4">
         <button
-          className="rounded-md p-2 text-ink-soft hover:bg-mist md:hidden"
+          className="rounded-md p-2 text-ink-soft hover:bg-bg md:hidden"
           onClick={() => setSidebarOpen(true)}
           aria-label={t("openNavigation")}
         >
@@ -35,14 +35,14 @@ export default function Topbar() {
           <LanguageToggle />
           {/* No fake unread dot: the indicator returns when notifications are
               real. A permanent red dot spends trust on nothing. */}
-          <button className="relative rounded-md p-2 text-ink-soft hover:bg-mist" aria-label={t("notifications")}>
+          <button className="relative rounded-md p-2 text-ink-soft hover:bg-bg" aria-label={t("notifications")}>
             <Bell size={17} />
           </button>
 
           <button
             disabled
             title={t("assistantTooltip")}
-            className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink-soft opacity-60 sm:flex"
+            className="hidden items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-ink-soft opacity-60 sm:flex"
           >
             <Sparkles size={14} /> {t("assistant")}
           </button>

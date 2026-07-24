@@ -218,11 +218,11 @@ export default function HomePage() {
   return (
     <div>
       {/* The main-screen toggle — Feed (content) vs Messages (channels + DMs) */}
-      <div className="flex gap-1 rounded-lg border border-line bg-white p-1">
+      <div className="flex gap-1 rounded-lg border border-border bg-white p-1">
         <button
           onClick={() => setMode("feed")}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium ${
-            mode === "feed" ? "bg-pine-soft text-pine-ink" : "text-ink-soft"
+            mode === "feed" ? "bg-primary-soft text-primary-pressed" : "text-ink-soft"
           }`}
         >
           <Compass size={15} /> {t("feed")}
@@ -230,7 +230,7 @@ export default function HomePage() {
         <button
           onClick={() => setMode("messages")}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm font-medium ${
-            mode === "messages" ? "bg-pine-soft text-pine-ink" : "text-ink-soft"
+            mode === "messages" ? "bg-primary-soft text-primary-pressed" : "text-ink-soft"
           }`}
         >
           <MessagesSquare size={15} /> {t("messages")}
@@ -263,7 +263,7 @@ export default function HomePage() {
               const tier = trustTier(asBusiness ? business : author);
               const chipView = p.view && p.view in VIEW_META ? (p.view as View) : null;
               return (
-                <article key={p.id} className="rounded-lg border border-line bg-white p-4">
+                <article key={p.id} className="rounded-lg border border-border bg-white p-4">
                   <div className="flex items-start gap-3">
                     <Avatar
                       url={asBusiness ? business?.logo_url : author?.avatar_url}
@@ -301,15 +301,15 @@ export default function HomePage() {
                   <p className="mt-3 whitespace-pre-line text-body leading-relaxed">{p.body}</p>
                   {/* Feed footer: the like reaction is wired to post_reactions;
                       the comment affordance stays a scaffold (comments are later). */}
-                  <footer className="mt-3 flex items-center gap-1 border-t border-line pt-2">
+                  <footer className="mt-3 flex items-center gap-1 border-t border-border pt-2">
                     <button
                       type="button"
                       onClick={() => toggleReaction(p.id)}
                       aria-pressed={myReactions.has(p.id)}
                       aria-label={t("react")}
                       title={t("react")}
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta transition-colors ease-standard hover:bg-mist ${
-                        myReactions.has(p.id) ? "text-rhodo" : "text-ink-soft"
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-meta transition-colors ease-standard hover:bg-bg ${
+                        myReactions.has(p.id) ? "text-accent" : "text-ink-soft"
                       }`}
                     >
                       <Heart size={14} aria-hidden fill={myReactions.has(p.id) ? "currentColor" : "none"} />
@@ -356,15 +356,15 @@ export default function HomePage() {
                             prev.map((x) => (x.id === th.id ? { ...x, unread: false } : x))
                           );
                         }}
-                        className={`flex w-full items-center gap-3 rounded-lg border bg-white p-3 text-left hover:border-pine ${
-                          selectedThread === th.id ? "border-pine" : "border-line"
+                        className={`flex w-full items-center gap-3 rounded-lg border bg-white p-3 text-left hover:border-primary ${
+                          selectedThread === th.id ? "border-primary" : "border-border"
                         }`}
                       >
-                        <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-pine-soft text-xs font-bold text-pine">
+                        <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-bold text-primary">
                           {th.otherName.slice(0, 2).toUpperCase()}
                           {th.unread && (
                             <span
-                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-rhodo ring-2 ring-white"
+                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-white"
                               aria-label={t("unread")}
                             />
                           )}
@@ -398,7 +398,7 @@ export default function HomePage() {
                     <Link
                       key={c.id}
                       href={`/channels/${c.slug}`}
-                      className="rounded-lg border border-line bg-white p-4 hover:border-pine"
+                      className="rounded-lg border border-border bg-white p-4 hover:border-primary"
                     >
                       <p className="text-sm font-semibold"># {c.name}</p>
                       <p className="mt-1 text-xs text-ink-soft">{c.description}</p>
@@ -413,7 +413,7 @@ export default function HomePage() {
               {selectedThread ? (
                 <ThreadConversation threadId={selectedThread} onBack={() => setSelectedThread(null)} />
               ) : (
-                <div className="hidden min-h-[300px] place-items-center rounded-lg border border-dashed border-line p-6 text-center text-sm text-ink-soft lg:grid">
+                <div className="hidden min-h-[300px] place-items-center rounded-lg border border-dashed border-border p-6 text-center text-sm text-ink-soft lg:grid">
                   {t("selectConversation")}
                 </div>
               )}

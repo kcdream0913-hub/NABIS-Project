@@ -1,61 +1,58 @@
 @import "tailwindcss";
 
 /*
-  BridgeLink design tokens — the corridor palette.
-  pine  = brand / Bridge context (Himalayan pine)
-  denim = US context
-  rhodo = Nepal context (rhododendron, Nepal's national flower)
-  The three view colors are informational: they mark country context
-  everywhere it appears (toggle, context rail, post chips).
+  BridgeLink design tokens — the rebranded palette (foundation v1, 2026-07-24).
+  Brand is blue (primary); accent red is importance/destructive only; Bridge is
+  gold; green is a STATUS colour (active + online presence) only. The three
+  view colours (view-us / view-nepal / view-bridge) stay informational: they
+  mark country context in the toggle, the context rail and post/member chips.
+  See BL-DESIGN-token-migration-map-v1 for the old→new mapping this replaced.
 */
 @theme {
-  --color-pine: #0f5c55;
-  --color-pine-ink: #0a3f3a;
-  --color-pine-soft: #e3eeec;
-  --color-mist: #f6f8f7;
-  --color-ink: #16211f;
-  --color-ink-soft: #5b6b67;
-  --color-line: #e2e8e6;
-  --color-denim: #2b4c8c;
-  --color-denim-soft: #e7edf7;
-  --color-rhodo: #c2412f;
-  --color-rhodo-soft: #f9e9e6;
-  --color-gold: #856015; /* darkened for WCAG AA on gold-soft: was #9a7222 (3.82:1, fails); now 4.98:1 */
-  --color-gold-soft: #f7efdd;
+  /* brand / trust — Verified is blue now */
+  --color-primary: #1B4B91;
+  --color-primary-pressed: #143A73;
+  --color-primary-soft: #E7EEF8;
+  --color-on-primary: #FFFFFF;
+  --color-chip-ink: #1B4B91;
 
-  /*
-    Trust = verification. Deliberately teal, not green (≠ success) and not
-    pine (≠ clickable) — per design-foundations. Used only by the shield
-    trust mark. AA-verified: trust-ink 8.77:1 on white, 7.47:1 on trust-soft;
-    the #0e7570 icon fill clears the 3:1 graphic threshold on both.
-  */
-  --color-trust: #0e7570;
-  --color-trust-soft: #e1f0ee;
-  --color-trust-ink: #0b544f;
+  /* accent red — importance only (emphasis + destructive) */
+  --color-accent: #B4262A;
+  --color-accent-soft: #FBEBEB;
+  --color-on-accent: #FFFFFF;
 
-  /* Success = genuinely-good state (posted, sent, eligible) — green, distinct
-     from trust. AA-verified: 6.49:1 on white, 5.72:1 on bg-success. */
-  --color-bg-success: #e6f4ec;
-  --color-text-success: #146c3a;
+  /* Bridge — gold only */
+  --color-bridge: #C9A227;
+  --color-bridge-soft: #E8D48B;
+  --color-on-bridge: #0F172A;
 
-  /* Raised neutral surface (one step above white/mist) for inset panels like
-     the ID-upload preview. AA: ink 14.5:1, ink-soft 4.93:1 on it. */
-  --color-surface-2: #edf1f0;
+  /* STATUS green — active + presence only (NOT brand) */
+  --color-active: #147A4E;
+  --color-active-soft: #E4F4EC;
+  --color-online: #16915E;
 
-  /* Primary action fill. The KYC "Submit" button (profile/verify) already
-     referenced bg-fill-accent / text-on-accent, but the tokens were never
-     defined — so that button rendered UNSTYLED (transparent) on production.
-     Defined here as pine + white, matching every other primary button. */
-  --color-fill-accent: #0f5c55;
-  --color-on-accent: #ffffff;
+  /* view context — corridor country identity (informational) */
+  --color-view-us: #2B4C8C;
+  --color-view-us-soft: #E7EDF7;
+  --color-view-nepal: #8E2F44;
+  --color-view-nepal-soft: #F6E7EB;
+  --color-view-bridge: #3F3D9E;        /* distinct indigo — keeps Bridge ≠ US blue */
+  --color-view-bridge-soft: #ECECF7;
+
+  /* neutrals */
+  --color-surface: #FFFFFF;
+  --color-bg: #F8FAFC;
+  --color-surface-2: #EEF2F8;
+  --color-ink: #0F172A;
+  --color-ink-soft: #54607A;
+  --color-border: #E2E8F2;        /* decorative — exempt from 3:1 */
+  --color-border-input: #808A9C;  /* interactive controls */
 
   /* ---------------------------------------------------------------
-     Batch 2 — non-color token system (type / radius / elevation /
-     motion). Tailwind v4 @theme generates a utility per namespace.
-     Grounded in design-foundations (§type, §motion). Spacing stays on
-     Tailwind's 4px scale — already a consistent token system, so no
-     redundant aliases. Names are NEW (text-body, rounded-card,
-     shadow-card, ease-standard); shipped utilities are untouched.
+     Non-color token system (type / radius / elevation / motion).
+     Tailwind v4 @theme generates a utility per namespace. Spacing
+     stays on Tailwind's 4px scale — already a consistent token
+     system, so no redundant aliases.
      --------------------------------------------------------------- */
 
   /* Type ramp — Inter. UGC content floor is 16px (post/message bodies
@@ -73,13 +70,48 @@
   --radius-card: 0.875rem;              /* 14px → rounded-card */
 
   /* Elevation — borders-first: the shadow is a whisper, the hairline
-     border does the structural work (design-foundations). */
-  --shadow-card: 0 1px 2px rgba(16, 33, 31, 0.06);
-  --shadow-raised: 0 4px 12px rgba(16, 33, 31, 0.08);
+     border does the structural work. */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-raised: 0 4px 12px rgba(15, 23, 42, 0.08);
 
   /* Motion — one easing, no bounce; durations 120/180/240 via
      duration-[Nms]. Reduced-motion is collapsed globally below. */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/*
+  Dark theme (forward-looking — no in-app toggle wires it yet). Surfaces are
+  neutral charcoal, deliberately NOT blue-navy; brand/accent/bridge lift for
+  contrast; green stays the status colour.
+*/
+.dark {
+  --color-primary: #5B8DEF;
+  --color-primary-pressed: #4B7BDC;
+  --color-primary-soft: #20304F;
+  --color-on-primary: #0A0A0A;
+  --color-chip-ink: #7FA6F2;
+  --color-accent: #EC6A66;
+  --color-accent-soft: #2A1A22;
+  --color-on-accent: #0A0A0A;
+  --color-bridge: #E0B83A;
+  --color-bridge-soft: #3A3116;
+  --color-on-bridge: #0A0A0A;
+  --color-active: #3FBB84;
+  --color-active-soft: #12301F;
+  --color-online: #3FBB84;
+  --color-view-us: #7FA6F2;
+  --color-view-us-soft: #20304F;
+  --color-view-nepal: #E08599;
+  --color-view-nepal-soft: #331C22;
+  --color-view-bridge: #A9A7E6;
+  --color-view-bridge-soft: #22213A;
+  --color-surface: #161616;   /* true charcoal — NOT blue-navy */
+  --color-bg: #0A0A0A;
+  --color-surface-2: #1F1F1F;
+  --color-ink: #F1F5F9;
+  --color-ink-soft: #9BA3B4;
+  --color-border: #2A2A2A;
+  --color-border-input: #757575;
 }
 
 html {
@@ -88,9 +120,9 @@ html {
   font-family: var(--font-latin, ""), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans Devanagari", sans-serif;
 }
-body { background: #f6f8f7; color: #16211f; -webkit-font-smoothing: antialiased; }
+body { background: var(--color-bg); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
 
-:focus-visible { outline: 2px solid #0f5c55; outline-offset: 2px; border-radius: 2px; }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
 
 .eyebrow { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
 
@@ -112,6 +144,10 @@ h1:lang(ne), h2:lang(ne), h3:lang(ne),
 }
 :lang(ne) .eyebrow, .eyebrow:lang(ne) { letter-spacing: 0.02em; }
 
+/* accessibility: honor reduced motion globally */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
 }

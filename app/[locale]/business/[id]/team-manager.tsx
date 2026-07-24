@@ -92,7 +92,7 @@ export default function TeamManager({ businessId }: { businessId: string }) {
   if (!isOwner) return null;
 
   return (
-    <div className="mt-3 rounded-lg border border-dashed border-line bg-mist p-3">
+    <div className="mt-3 rounded-lg border border-dashed border-border bg-bg p-3">
       <p className="eyebrow text-ink-soft">{t("addMemberTitle")}</p>
       <p className="mt-1 text-xs text-ink-soft">{t("addMemberHint")}</p>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -103,12 +103,12 @@ export default function TeamManager({ businessId }: { businessId: string }) {
             setInviteLink(null);
           }}
           placeholder={t("memberEmailPlaceholder")}
-          className="min-w-[180px] flex-1 rounded-md border border-line px-3 py-1.5 text-sm focus:border-pine"
+          className="min-w-[180px] flex-1 rounded-md border border-border-input px-3 py-1.5 text-sm focus:border-primary"
         />
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as Role)}
-          className="rounded-md border border-line bg-white px-2 py-1.5 text-sm"
+          className="rounded-md border border-border bg-white px-2 py-1.5 text-sm"
         >
           <option value="professional">{t("roleProfessional")}</option>
           <option value="assistant">{t("roleAssistant")}</option>
@@ -119,28 +119,28 @@ export default function TeamManager({ businessId }: { businessId: string }) {
             type="checkbox"
             checked={canPost}
             onChange={(e) => setCanPost(e.target.checked)}
-            className="h-3.5 w-3.5 accent-pine"
+            className="h-3.5 w-3.5 accent-primary"
           />
           {t("canPostAsBusiness")}
         </label>
         <button
           onClick={createInvite}
           disabled={!email.trim() || inviting}
-          className="flex items-center gap-1 rounded-md bg-pine px-3 py-1.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
+          className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
         >
           <Mail size={14} /> {inviting ? t("inviting") : t("inviteToBridgeLink")}
         </button>
       </div>
-      {error && <p className="mt-1.5 text-xs text-rhodo">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-accent">{error}</p>}
 
       {inviteLink && (
-        <div className="mt-2 rounded-md border border-line bg-white p-2.5">
+        <div className="mt-2 rounded-md border border-border bg-white p-2.5">
           <p className="text-xs text-ink-soft">{t("inviteCreated")}</p>
           <div className="mt-1.5 flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded bg-mist px-2 py-1 text-xs">{inviteLink}</code>
+            <code className="min-w-0 flex-1 truncate rounded bg-bg px-2 py-1 text-xs">{inviteLink}</code>
             <button
               onClick={copyLink}
-              className="flex shrink-0 items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-medium hover:bg-mist"
+              className="flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-bg"
             >
               {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? t("copied") : t("copyLink")}
             </button>

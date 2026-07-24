@@ -24,7 +24,7 @@ export default function LanguageToggle() {
     <div
       role="tablist"
       aria-label={t("label")}
-      className={`flex items-center gap-1 rounded-lg border border-line bg-white p-1 ${
+      className={`flex items-center gap-1 rounded-lg border border-border bg-white p-1 ${
         isPending ? "opacity-60" : ""
       }`}
     >
@@ -38,7 +38,7 @@ export default function LanguageToggle() {
             aria-selected={active}
             onClick={() => change(l)}
             className={`rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
-              active ? "bg-pine-soft text-pine-ink" : "text-ink-soft hover:bg-mist"
+              active ? "bg-primary-soft text-primary-pressed" : "text-ink-soft hover:bg-bg"
             }`}
           >
             {t(l)}

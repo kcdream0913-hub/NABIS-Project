@@ -49,7 +49,7 @@ export default async function ChannelPage({
             <Link
               key={b.id}
               href={`/business/${b.id}`}
-              className="flex items-start gap-3 rounded-lg border border-line bg-white p-4 hover:border-pine"
+              className="flex items-start gap-3 rounded-lg border border-border bg-white p-4 hover:border-primary"
             >
               <Avatar name={b.name} url={b.logo_url} shape="rounded" size={44} />
               <div className="min-w-0 flex-1">
@@ -62,12 +62,12 @@ export default async function ChannelPage({
                     <TrustBadge tier="verified" label={t("verifiedBusiness")} />
                   )}
                   {b.primary_sector !== channel.sector && (
-                    <span className="rounded bg-mist px-1.5 py-0.5 text-[10px] font-medium text-ink-soft">
+                    <span className="rounded bg-bg px-1.5 py-0.5 text-[10px] font-medium text-ink-soft">
                       {t("secondaryTag")}
                     </span>
                   )}
                   {b.is_paid_provider && (
-                    <span className="rounded bg-gold-soft px-1.5 py-0.5 text-[10px] font-semibold text-gold">
+                    <span className="rounded bg-bridge-soft px-1.5 py-0.5 text-[10px] font-semibold text-bridge">
                       {b.access_price_currency} {b.access_price_amount}
                     </span>
                   )}

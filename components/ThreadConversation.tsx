@@ -97,13 +97,13 @@ export default function ThreadConversation({
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col rounded-lg border border-line bg-white">
-      <header className="flex items-center gap-2 border-b border-line px-4 py-3">
+    <div className="flex h-[calc(100vh-8rem)] flex-col rounded-lg border border-border bg-white">
+      <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         {onBack && (
           <button
             onClick={onBack}
             aria-label={t("back")}
-            className="-ml-1 rounded p-1 text-ink-soft hover:bg-mist lg:hidden"
+            className="-ml-1 rounded p-1 text-ink-soft hover:bg-bg lg:hidden"
           >
             <ArrowLeft size={16} />
           </button>
@@ -121,7 +121,7 @@ export default function ThreadConversation({
               <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 <p
                   className={`max-w-[75%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
-                    mine ? "bg-pine text-white" : "bg-mist"
+                    mine ? "bg-primary text-white" : "bg-bg"
                   }`}
                 >
                   {m.body}
@@ -136,7 +136,7 @@ export default function ThreadConversation({
         </div>
       )}
 
-      <footer className="flex items-center gap-2 border-t border-line p-3">
+      <footer className="flex items-center gap-2 border-t border-border p-3">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -144,12 +144,12 @@ export default function ThreadConversation({
             if (e.key === "Enter") send();
           }}
           placeholder={t("messagePrefix", { name: (otherName || t("member")).split(" ")[0] })}
-          className="flex-1 rounded-md border border-line bg-mist px-3 py-2 text-sm placeholder:text-ink-soft focus:border-pine focus:bg-white"
+          className="flex-1 rounded-md border border-border-input bg-bg px-3 py-2 text-sm placeholder:text-ink-soft focus:border-primary focus:bg-white"
         />
         <button
           onClick={send}
           aria-label={t("sendMessage")}
-          className="grid h-9 w-9 place-items-center rounded-md bg-pine text-white hover:bg-pine-ink"
+          className="grid h-9 w-9 place-items-center rounded-md bg-primary text-white hover:bg-primary-pressed"
         >
           <Send size={15} />
         </button>

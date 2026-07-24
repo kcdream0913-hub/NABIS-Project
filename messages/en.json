@@ -14,7 +14,8 @@
     "phaseTag": "Phase 2",
     "viewProfile": "View profile",
     "loading": "Loading…",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "online": "Online"
   },
   "topbar": {
     "openNavigation": "Open navigation",

@@ -42,24 +42,24 @@ export default function ReportButton({
   if (open) {
     return (
       <div
-        className="rounded-md border border-line bg-white p-2.5 text-xs"
+        className="rounded-md border border-border bg-white p-2.5 text-xs"
         onClick={(e) => e.stopPropagation()}
       >
         {sent ? (
-          <p className="text-text-success">{t("sent")}</p>
+          <p className="text-active">{t("sent")}</p>
         ) : (
           <>
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t("placeholder")}
-              className="w-full rounded border border-line px-2 py-1 text-xs focus:border-pine"
+              className="w-full rounded border border-border-input px-2 py-1 text-xs focus:border-primary"
             />
             <div className="mt-1.5 flex justify-end gap-2">
               <button onClick={() => setOpen(false)} className="text-ink-soft hover:underline">
                 {t("cancel")}
               </button>
-              <button onClick={submit} className="font-medium text-rhodo hover:underline">
+              <button onClick={submit} className="font-medium text-accent hover:underline">
                 {t("submit")}
               </button>
             </div>
@@ -77,7 +77,7 @@ export default function ReportButton({
       }}
       aria-label={t("report")}
       title={t("report")}
-      className="rounded p-1 text-ink-soft hover:bg-mist hover:text-rhodo"
+      className="rounded p-1 text-ink-soft hover:bg-bg hover:text-accent"
     >
       <Flag size={13} />
     </button>

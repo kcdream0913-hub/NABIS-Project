@@ -289,13 +289,13 @@ export default function AdminDashboard() {
   }) {
     const d = decisionFor(id, inferred);
     return (
-      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-line pt-2">
+      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border pt-2">
         <label className="flex items-center gap-1 text-xs text-ink-soft">
           {t("signalLabel")}
           <select
             value={d.signal}
             onChange={(e) => setDecision(id, { signal: e.target.value as LightSignal }, inferred)}
-            className="rounded-md border border-line bg-white px-2 py-1 text-xs"
+            className="rounded-md border border-border bg-white px-2 py-1 text-xs"
           >
             {LIGHT_SIGNALS.map((s) => (
               <option key={s} value={s}>
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
             <select
               value={d.track}
               onChange={(e) => setDecision(id, { track: e.target.value as PolicyTrack | "" }, inferred)}
-              className="rounded-md border border-line bg-white px-2 py-1 text-xs"
+              className="rounded-md border border-border bg-white px-2 py-1 text-xs"
             >
               <option value="">{t("sandboxChoose")}</option>
               <option value="us">US</option>
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
           value={d.reason}
           onChange={(e) => setDecision(id, { reason: e.target.value }, inferred)}
           placeholder={t("reasonPlaceholder")}
-          className="min-w-[160px] flex-1 rounded-md border border-line px-2 py-1 text-xs focus:border-pine"
+          className="min-w-[160px] flex-1 rounded-md border border-border-input px-2 py-1 text-xs focus:border-primary"
         />
 
         <label className="flex items-center gap-1.5 text-xs text-ink-soft">
@@ -332,7 +332,7 @@ export default function AdminDashboard() {
             type="checkbox"
             checked={d.credentialCheck}
             onChange={(e) => setDecision(id, { credentialCheck: e.target.checked }, inferred)}
-            className="h-3.5 w-3.5 accent-pine"
+            className="h-3.5 w-3.5 accent-primary"
           />
           {t("credentialCheckNeeded")}
         </label>
@@ -343,10 +343,10 @@ export default function AdminDashboard() {
   function DecisionButtons({ onReject, onApprove }: { onReject: () => void; onApprove: () => void }) {
     return (
       <div className="mt-2 flex justify-end gap-2">
-        <button onClick={onReject} className="rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-mist">
+        <button onClick={onReject} className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg">
           {t("reject")}
         </button>
-        <button onClick={onApprove} className="rounded-md bg-pine px-3 py-1.5 text-xs font-medium text-white hover:bg-pine-ink">
+        <button onClick={onApprove} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-pressed">
           {t("approve")}
         </button>
       </div>
@@ -364,18 +364,18 @@ export default function AdminDashboard() {
       <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
       <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
 
-      <div className="mt-3 flex gap-1 border-b border-line">
+      <div className="mt-3 flex gap-1 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium ${
-              tab === t.id ? "border-pine text-pine-ink" : "border-transparent text-ink-soft"
+              tab === t.id ? "border-primary text-primary-pressed" : "border-transparent text-ink-soft"
             }`}
           >
             <t.icon size={14} /> {t.label}
             {t.count > 0 && (
-              <span className="rounded-full bg-rhodo px-1.5 text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-white">
                 {t.count}
               </span>
             )}
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
       </div>
 
       {actionError && (
-        <p role="alert" className="mt-3 rounded-md border border-line bg-mist px-3 py-2 text-xs text-rhodo">
+        <p role="alert" className="mt-3 rounded-md border border-border bg-bg px-3 py-2 text-xs text-accent">
           {actionError}
         </p>
       )}
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
               businesses.map((b) => {
                 const inferred = trackForCountry(b.country_of_registration);
                 return (
-                  <div key={b.id} className="rounded-lg border border-line bg-white p-3">
+                  <div key={b.id} className="rounded-lg border border-border bg-white p-3">
                     <p className="text-sm font-semibold">{b.name}</p>
                     <p className="mt-0.5 text-xs text-ink-soft">
                       {sectorName(b.primary_sector)}
@@ -430,10 +430,10 @@ export default function AdminDashboard() {
               verifications.map((v) => {
                 const person = Array.isArray(v.profiles) ? v.profiles[0] : v.profiles;
                 return (
-                  <div key={v.id} className="rounded-lg border border-line bg-white p-3">
+                  <div key={v.id} className="rounded-lg border border-border bg-white p-3">
                     <p className="text-sm font-semibold">{person?.name ?? t("member")}</p>
                     <p className="mt-0.5 text-xs text-ink-soft">
-                      <span className="mr-1.5 rounded bg-mist px-1.5 py-0.5 font-semibold uppercase tracking-wide">
+                      <span className="mr-1.5 rounded bg-bg px-1.5 py-0.5 font-semibold uppercase tracking-wide">
                         {v.policy_track}
                       </span>
                       {(person?.sectors ?? []).map(sectorName).join(", ") || t("noSector")}
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
               <p className="text-sm text-ink-soft">{t("noOpenReports")}</p>
             ) : (
               reports.map((r) => (
-                <div key={r.id} className="flex items-center justify-between rounded-lg border border-line bg-white p-3">
+                <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-white p-3">
                   <div>
                     <p className="text-sm font-semibold">
                       {r.target_type} · {r.target_id.slice(0, 8)}…
@@ -465,10 +465,10 @@ export default function AdminDashboard() {
                     {r.reason && <p className="text-xs text-ink-soft">{r.reason}</p>}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => dismissReport(r.id)} className="rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-mist">
+                    <button onClick={() => dismissReport(r.id)} className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg">
                       {t("dismiss")}
                     </button>
-                    <button onClick={() => actionReport(r.id)} className="rounded-md bg-rhodo px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">
+                    <button onClick={() => actionReport(r.id)} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">
                       {t("takeAction")}
                     </button>
                   </div>

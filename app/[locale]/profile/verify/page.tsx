@@ -115,9 +115,9 @@ export default function VerifyProfilePage() {
 
   const statusMeta: Record<TrackStatus, { label: string; icon: typeof Circle; className: string }> = {
     none: { label: t("statusNone"), icon: Circle, className: "text-ink-soft" },
-    pending: { label: t("statusPending"), icon: Clock, className: "text-gold" },
-    passed: { label: t("statusPassed"), icon: CheckCircle2, className: "text-text-success" },
-    failed: { label: t("statusFailed"), icon: XCircle, className: "text-rhodo" },
+    pending: { label: t("statusPending"), icon: Clock, className: "text-bridge" },
+    passed: { label: t("statusPassed"), icon: CheckCircle2, className: "text-active" },
+    failed: { label: t("statusFailed"), icon: XCircle, className: "text-accent" },
   };
 
   // --- Track capture flow (open) ---
@@ -125,14 +125,14 @@ export default function VerifyProfilePage() {
     if (justSubmitted) {
       return (
         <div className="mx-auto max-w-md py-16 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-bg-success text-text-success">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-active-soft text-active">
             <ShieldCheck size={26} />
           </span>
           <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("submittedTitle")}</h1>
           <p className="mt-2 text-sm text-ink-soft">{t("trackSubmittedBody")}</p>
           <button
             onClick={() => setActiveTrack(null)}
-            className="mt-6 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink"
+            className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed"
           >
             {t("back")}
           </button>
@@ -158,7 +158,7 @@ export default function VerifyProfilePage() {
             <select
               value={docType}
               onChange={(e) => setDocType(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
             >
               {docs.map((d) => (
                 <option key={d}>{d}</option>
@@ -166,12 +166,12 @@ export default function VerifyProfilePage() {
             </select>
           </label>
 
-          <div className="relative h-52 overflow-hidden rounded-lg border border-line bg-surface-2">
+          <div className="relative h-52 overflow-hidden rounded-lg border border-border bg-surface-2">
             {!cameraOn && !captured && (
               <div className="grid h-full place-items-center">
                 <button
                   onClick={startCamera}
-                  className="flex items-center gap-2 rounded-md bg-pine px-4 py-2 text-sm font-medium text-white hover:bg-pine-ink"
+                  className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-pressed"
                 >
                   <Camera size={16} /> {t("turnOnCamera")}
                 </button>
@@ -182,9 +182,9 @@ export default function VerifyProfilePage() {
               <div className="grid h-full place-items-center text-sm text-ink-soft">{t("documentCaptured")}</div>
             )}
           </div>
-          {cameraError && <p className="text-sm text-rhodo">{cameraError}</p>}
+          {cameraError && <p className="text-sm text-accent">{cameraError}</p>}
           {cameraOn && (
-            <button onClick={capture} className="w-full rounded-md bg-pine px-4 py-2.5 text-sm font-medium text-white hover:bg-pine-ink">
+            <button onClick={capture} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-pressed">
               {t("capture")}
             </button>
           )}
@@ -192,7 +192,7 @@ export default function VerifyProfilePage() {
           <button
             onClick={submit}
             disabled={!captured || submitting}
-            className="w-full rounded-md bg-fill-accent px-4 py-2.5 text-sm font-medium text-on-accent disabled:opacity-40"
+            className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-on-primary disabled:opacity-40"
           >
             {submitting ? t("submitting") : t("submit")}
           </button>
@@ -212,7 +212,7 @@ export default function VerifyProfilePage() {
       {view === "bridge" && (
         <p
           className={`mt-3 rounded-md border p-3 text-sm ${
-            bridgeEligible ? "border-line bg-bg-success text-text-success" : "border-dashed border-line bg-mist text-ink-soft"
+            bridgeEligible ? "border-border bg-active-soft text-active" : "border-dashed border-border bg-bg text-ink-soft"
           }`}
         >
           {bridgeEligible ? t("bridgeReady") : t("bridgeExplainer")}
@@ -231,7 +231,7 @@ export default function VerifyProfilePage() {
             return (
               <div
                 key={track}
-                className={`rounded-lg border p-4 ${emphasized ? "border-pine" : "border-line"} bg-white`}
+                className={`rounded-lg border p-4 ${emphasized ? "border-primary" : "border-border"} bg-white`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{track === "us" ? t("usTrack") : t("nepalTrack")}</span>
@@ -242,7 +242,7 @@ export default function VerifyProfilePage() {
                 {status !== "passed" && (
                   <button
                     onClick={() => openTrack(track)}
-                    className="mt-3 rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:bg-mist"
+                    className="mt-3 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg"
                   >
                     {status === "failed" ? t("retry") : t("startVerification")}
                   </button>

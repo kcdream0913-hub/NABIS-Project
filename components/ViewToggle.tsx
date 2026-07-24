@@ -11,7 +11,7 @@ export default function ViewToggle() {
   const t = useTranslations("view");
   const { view, setView } = useApp();
   return (
-    <div role="tablist" aria-label={t("label")} className="flex items-center gap-1 rounded-lg border border-line bg-white p-1">
+    <div role="tablist" aria-label={t("label")} className="flex items-center gap-1 rounded-lg border border-border bg-white p-1">
       {ORDER.map((v) => {
         const meta = VIEW_META[v];
         const active = v === view;
@@ -22,7 +22,7 @@ export default function ViewToggle() {
             aria-selected={active}
             onClick={() => setView(v)}
             className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
-              active ? `${meta.chip}` : "text-ink-soft hover:bg-mist"
+              active ? `${meta.chip}` : "text-ink-soft hover:bg-bg"
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${meta.dot} ${active ? "" : "opacity-30"}`} />

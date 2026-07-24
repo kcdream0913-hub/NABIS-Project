@@ -44,9 +44,9 @@ export default function Composer({
 
   if (!isVerified) {
     return (
-      <div className="rounded-lg border border-dashed border-line bg-mist p-3 text-sm text-ink-soft">
+      <div className="rounded-lg border border-dashed border-border bg-bg p-3 text-sm text-ink-soft">
         {t("verifyToPost")}{" "}
-        <a href="/profile/verify" className="font-medium text-pine hover:text-pine-ink">
+        <a href="/profile/verify" className="font-medium text-primary hover:text-primary-pressed">
           {t("verifyNow")}
         </a>
       </div>
@@ -54,7 +54,7 @@ export default function Composer({
   }
 
   return (
-    <div className="rounded-lg border border-line bg-white p-3">
+    <div className="rounded-lg border border-border bg-white p-3">
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -66,7 +66,7 @@ export default function Composer({
         <button
           onClick={publish}
           disabled={!body.trim() || posting}
-          className="rounded-md bg-pine px-3.5 py-1.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-40"
+          className="rounded-md bg-primary px-3.5 py-1.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-40"
         >
           {posting ? t("posting") : t("post")}
         </button>

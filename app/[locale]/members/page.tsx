@@ -98,13 +98,13 @@ export default function DirectoryPage() {
       <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
       <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
 
-      <div className="mt-3 flex gap-1 border-b border-line">
+      <div className="mt-3 flex gap-1 border-b border-border">
         {(["people", "businesses"] as const).map((tabKey) => (
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
             className={`border-b-2 px-3 py-2 text-sm font-medium ${
-              tab === tabKey ? "border-pine text-pine-ink" : "border-transparent text-ink-soft"
+              tab === tabKey ? "border-primary text-primary-pressed" : "border-transparent text-ink-soft"
             }`}
           >
             {tabKey === "people" ? t("people") : t("businesses")}
@@ -117,12 +117,12 @@ export default function DirectoryPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("searchPlaceholder")}
-          className="min-w-[12rem] flex-1 rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+          className="min-w-[12rem] flex-1 rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
         />
         <select
           value={view}
           onChange={(e) => setView(e.target.value as View)}
-          className="rounded-md border border-line bg-white px-3 py-2 text-sm"
+          className="rounded-md border border-border bg-white px-3 py-2 text-sm"
           aria-label={tView("label")}
         >
           <option value="bridge">{tView("bridgeShort")}</option>
@@ -133,7 +133,7 @@ export default function DirectoryPage() {
           <select
             value={sector}
             onChange={(e) => setSector(e.target.value)}
-            className="rounded-md border border-line bg-white px-3 py-2 text-sm"
+            className="rounded-md border border-border bg-white px-3 py-2 text-sm"
           >
             <option value="all">{t("allSectors")}</option>
             {sectors.map((s) => (
@@ -141,12 +141,12 @@ export default function DirectoryPage() {
             ))}
           </select>
         )}
-        <label className="flex items-center gap-1.5 rounded-md border border-line bg-white px-3 py-2 text-sm text-ink-soft">
+        <label className="flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-sm text-ink-soft">
           <input
             type="checkbox"
             checked={verifiedOnly}
             onChange={(e) => setVerifiedOnly(e.target.checked)}
-            className="accent-pine"
+            className="accent-primary"
           />
           {t("verifiedOnly")}
         </label>
@@ -157,7 +157,7 @@ export default function DirectoryPage() {
       ) : tab === "people" ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPeople.map((m) => (
-            <div key={m.id} className="rounded-lg border border-line bg-white p-4">
+            <div key={m.id} className="rounded-lg border border-border bg-white p-4">
               <Link href={`/people/${m.id}`} className="flex items-center gap-3 hover:opacity-80">
                 <Avatar name={m.name} url={m.avatar_url} size={44} />
                 <div className="min-w-0">
@@ -173,7 +173,7 @@ export default function DirectoryPage() {
                     const threadId = await findOrCreateThread(m.id);
                     if (threadId) router.push(`/messages/${threadId}`);
                   }}
-                  className="ml-auto rounded-md border border-line px-2.5 py-1 text-xs font-medium hover:bg-mist"
+                  className="ml-auto rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-bg"
                 >
                   {t("message")}
                 </button>
@@ -187,7 +187,7 @@ export default function DirectoryPage() {
             <Link
               key={b.id}
               href={`/business/${b.id}`}
-              className="rounded-lg border border-line bg-white p-4 hover:border-pine"
+              className="rounded-lg border border-border bg-white p-4 hover:border-primary"
             >
               <div className="flex items-start gap-3">
                 <Avatar name={b.name} url={b.logo_url} shape="rounded" size={40} />
@@ -201,7 +201,7 @@ export default function DirectoryPage() {
                       {sectors.find((s) => s.slug === b.primary_sector)?.name ?? b.primary_sector}
                     </span>
                     {(b.secondary_sectors ?? []).map((slug) => (
-                      <span key={slug} className="rounded bg-mist px-1 py-0.5">
+                      <span key={slug} className="rounded bg-bg px-1 py-0.5">
                         {sectors.find((s) => s.slug === slug)?.name ?? slug}
                       </span>
                     ))}

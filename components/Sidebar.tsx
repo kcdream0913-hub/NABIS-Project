@@ -3,14 +3,37 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import {
-  Home, ContactRound, Hash, CalendarDays, Building2, Settings, LogOut, Map, ShieldAlert,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "./Avatar";
+import { OnlineDot } from "./OnlineDot";
+import { NAV_ICON, type NavIconName } from "./icons";
 
-export default function Sidebar() {
+type Item = { href: string; icon: NavIconName; labelKey: string };
+
+// Grouped backbone. Community = the daily social surfaces the founding cohort
+// lives in; Tools = utilities + the register-business action. Sector channels
+// stay in Community as the backbone of the network.
+const GROUPS: { groupKey: string; items: Item[] }[] = [
+  { groupKey: "groupCommunity", items: [
+    { href: "/", icon: "feed", labelKey: "feed" },
+    { href: "/members", icon: "members", labelKey: "directory" },
+    { href: "/channels", icon: "channels", labelKey: "channels" },
+    { href: "/events", icon: "events", labelKey: "events" },
+  ]},
+  { groupKey: "groupTools", items: [
+    { href: "/trip-planner", icon: "trip", labelKey: "tripPlanner" },
+    { href: "/business/new", icon: "register", labelKey: "registerBusiness" },
+  ]},
+];
+
+/**
+ * Flyout rail: collapsed to icons (68px) on desktop, hover-expands to labels
+ * (248px). On the mobile drawer there is no hover, so `expanded` forces the
+ * labels visible (AppShell passes it for the drawer instance only).
+ */
+export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
@@ -20,27 +43,12 @@ export default function Sidebar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Grouped backbone. Community = the daily social surfaces the founding cohort
-  // lives in; Tools = utilities + the register-business action. Sector channels
-  // stay in Community as the backbone of the network.
-  const GROUPS = [
-    {
-      label: t("groupCommunity"),
-      items: [
-        { href: "/", label: t("feed"), icon: Home },
-        { href: "/members", label: t("directory"), icon: ContactRound },
-        { href: "/channels", label: t("channels"), icon: Hash },
-        { href: "/events", label: t("events"), icon: CalendarDays },
-      ],
-    },
-    {
-      label: t("groupTools"),
-      items: [
-        { href: "/trip-planner", label: t("tripPlanner"), icon: Map },
-        { href: "/business/new", label: t("registerBusiness"), icon: Building2 },
-      ],
-    },
-  ];
+  // Label reveals only when the rail is expanded. Mobile drawer forces it via
+  // `expanded`; desktop reveals on hover of the group/nav container.
+  const LABEL = expanded
+    ? "whitespace-nowrap"
+    : "whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/nav:opacity-100";
+  const rootWidth = expanded ? "w-[248px]" : "w-[68px] hover:w-[248px]";
 
   useEffect(() => {
     async function load() {
@@ -69,68 +77,68 @@ export default function Sidebar() {
     router.refresh();
   }
 
-  const item = (href: string, label: string, Icon: typeof Home, tag?: string) => {
+  const Row = ({ href, icon, label }: { href: string; icon: NavIconName; label: string }) => {
     const active = pathname === href;
+    const Icon = NAV_ICON[icon];
     return (
       <Link
-        key={href}
         href={href}
         onClick={() => setSidebarOpen(false)}
-        className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-          active ? "bg-pine-soft text-pine-ink" : "text-ink-soft hover:bg-mist hover:text-ink"
-        }`}
+        aria-current={active ? "page" : undefined}
+        className={`flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors
+          ${active ? "bg-active-soft text-active" : "text-ink-soft hover:bg-surface-2 hover:text-ink"}`}
       >
-        <Icon size={17} strokeWidth={2} className={active ? "text-pine" : "text-ink-soft group-hover:text-ink"} />
-        <span className="flex-1">{label}</span>
-        {tag ? (
-          <span className="rounded bg-gold-soft px-1.5 py-0.5 text-[10px] font-semibold text-gold">{tag}</span>
-        ) : null}
+        <Icon size={21} strokeWidth={1.9} className="shrink-0" />
+        <span className={LABEL}>{label}</span>
       </Link>
     );
   };
 
+  const AdminIcon = NAV_ICON.admin;
+  const SettingsIcon = NAV_ICON.settings;
+
   return (
-    <div className="flex h-full flex-col">
-      <Link href="/" className="flex items-center gap-2.5 px-4 py-5">
-        <span className="grid h-8 w-8 place-items-center rounded-md bg-pine text-sm font-bold text-white">B</span>
-        <span className="text-[17px] font-semibold tracking-tight">
-          Bridge<span className="text-pine">Link</span>
-        </span>
+    <div className={`group/nav flex h-full flex-col border-r border-border bg-surface transition-[width] duration-200 ease-out ${rootWidth}`}>
+      <Link href="/" className="flex items-center gap-2.5 px-3.5 py-4">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+        <span className={`text-[17px] font-semibold tracking-tight text-ink ${LABEL}`}>BridgeLink</span>
       </Link>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-2.5 pb-4">
         {GROUPS.map((g) => (
-          <div key={g.label} className="space-y-0.5">
-            <p className="eyebrow px-3 pb-1 text-ink-soft">{g.label}</p>
-            {g.items.map((i) => item(i.href, i.label, i.icon))}
+          <div key={g.groupKey} className="space-y-0.5">
+            <p className={`px-2.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-soft/70 ${LABEL}`}>{t(g.groupKey)}</p>
+            {g.items.map((it) => <Row key={it.href} href={it.href} icon={it.icon} label={t(it.labelKey)} />)}
           </div>
         ))}
         {isAdmin && (
           <div className="space-y-0.5">
-            <p className="eyebrow px-3 pb-1 text-ink-soft">{t("groupAdmin")}</p>
-            {item("/admin", t("adminQueue"), ShieldAlert)}
+            <p className={`px-2.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-soft/70 ${LABEL}`}>{t("groupAdmin")}</p>
+            <Link href="/admin" onClick={() => setSidebarOpen(false)} aria-current={pathname === "/admin" ? "page" : undefined}
+              className={`flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors
+                ${pathname === "/admin" ? "bg-active-soft text-active" : "text-ink-soft hover:bg-surface-2 hover:text-ink"}`}>
+              <AdminIcon size={21} strokeWidth={1.9} className="shrink-0" />
+              <span className={LABEL}>{t("adminQueue")}</span>
+            </Link>
           </div>
         )}
       </nav>
 
-      <div className="border-t border-line p-3">
-        <Link
-          href="/profile"
-          onClick={() => setSidebarOpen(false)}
-          className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-mist"
-        >
-          <Avatar name={name} url={avatarUrl} size={36} />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold">{name ?? t("loading")}</span>
-            <span className="block truncate text-xs text-ink-soft">{t("viewProfile")}</span>
+      <div className="border-t border-border p-2.5">
+        <Link href="/profile" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 rounded-xl px-1.5 py-1.5 hover:bg-surface-2">
+          <span className="relative shrink-0">
+            <Avatar name={name} url={avatarUrl} size={34} />
+            <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
           </span>
-          <Settings size={16} className="text-ink-soft" />
+          <span className={`min-w-0 flex-1 ${LABEL}`}>
+            <span className="block truncate text-sm font-semibold text-ink">{name ?? t("loading")}</span>
+            <span className="block text-xs text-online">● {t("online")}</span>
+          </span>
+          <SettingsIcon size={19} strokeWidth={1.9} className={`shrink-0 text-ink-soft ${LABEL}`} />
         </Link>
-        <button
-          onClick={signOut}
-          className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-mist"
-        >
-          <LogOut size={16} /> {t("signOut")}
+        <button onClick={signOut} className="mt-1 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium text-ink-soft hover:bg-surface-2">
+          <LogOut size={19} strokeWidth={1.9} className="shrink-0" />
+          <span className={LABEL}>{t("signOut")}</span>
         </button>
       </div>
     </div>

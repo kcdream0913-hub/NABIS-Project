@@ -126,7 +126,7 @@ export default function EventsPage() {
             const host = Array.isArray(e.profiles) ? e.profiles[0] : e.profiles;
             const chipView = e.view && e.view in VIEW_META ? (e.view as View) : null;
             return (
-              <article key={e.id} className="flex gap-4 rounded-lg border border-line bg-white p-4">
+              <article key={e.id} className="flex gap-4 rounded-lg border border-border bg-white p-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-sm font-semibold">{e.title}</h3>
@@ -152,7 +152,7 @@ export default function EventsPage() {
                   onClick={() => toggleRsvp(e.id)}
                   disabled={!userId}
                   className={`h-fit shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    going ? "bg-pine text-white" : "border border-line hover:bg-mist"
+                    going ? "bg-primary text-white" : "border border-border hover:bg-bg"
                   }`}
                 >
                   {going ? (

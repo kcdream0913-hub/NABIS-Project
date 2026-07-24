@@ -40,7 +40,7 @@ export default function Avatar({
 
   return (
     <span
-      className={`relative grid shrink-0 place-items-center overflow-hidden ${radius} bg-pine-soft font-bold text-pine ${className}`}
+      className={`relative grid shrink-0 place-items-center overflow-hidden ${radius} bg-primary-soft font-bold text-primary ${className}`}
       style={{ width: size, height: size, fontSize: fontPx }}
     >
       {showImg ? (

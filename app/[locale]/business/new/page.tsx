@@ -86,14 +86,14 @@ export default function NewBusinessPage() {
         {t("subtitle")}
       </p>
 
-      <div className="mt-5 space-y-3 rounded-lg border border-line bg-white p-4">
+      <div className="mt-5 space-y-3 rounded-lg border border-border bg-white p-4">
         <label className="block text-sm">
           <span className="eyebrow text-ink-soft">{t("businessName")}</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("businessNamePlaceholder")}
-            className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+            className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
           />
         </label>
 
@@ -103,7 +103,7 @@ export default function NewBusinessPage() {
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
             >
               {COUNTRIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -120,7 +120,7 @@ export default function NewBusinessPage() {
                 // A sector can't be both primary and secondary at once.
                 setSecondarySectors((prev) => prev.filter((s) => s !== next));
               }}
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
             >
               {sectors.map((s) => (
                 <option key={s.slug} value={s.slug}>{s.name}</option>
@@ -153,7 +153,7 @@ export default function NewBusinessPage() {
                       )
                     }
                     className={`rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${
-                      active ? "border-pine bg-pine-soft text-pine-ink" : "border-line text-ink-soft hover:bg-mist"
+                      active ? "border-primary bg-primary-soft text-primary-pressed" : "border-border text-ink-soft hover:bg-bg"
                     }`}
                   >
                     {s.name}
@@ -172,7 +172,7 @@ export default function NewBusinessPage() {
             value={regNumber}
             onChange={(e) => setRegNumber(e.target.value)}
             placeholder={t("regNumberPlaceholder")}
-            className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+            className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
           />
           <span className="mt-1 block text-xs text-ink-soft">
             {t("regNumberHint")}
@@ -185,19 +185,19 @@ export default function NewBusinessPage() {
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+            className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
           />
         </label>
 
         {/* Paid access — spec §5.13. Requires Tier 2 (registration number). */}
-        <div className="rounded-md border border-line bg-mist p-3">
+        <div className="rounded-md border border-border bg-bg p-3">
           <label className="flex items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
               checked={isPaidProvider}
               disabled={!regNumber}
               onChange={(e) => setIsPaidProvider(e.target.checked)}
-              className="h-4 w-4 accent-pine disabled:opacity-40"
+              className="h-4 w-4 accent-primary disabled:opacity-40"
             />
             {t("chargeFee")}
           </label>
@@ -215,12 +215,12 @@ export default function NewBusinessPage() {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder={t("amount")}
-                className="w-32 rounded-md border border-line px-3 py-2 text-sm focus:border-pine"
+                className="w-32 rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
               />
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="rounded-md border border-line bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-border bg-white px-3 py-2 text-sm"
               >
                 <option>USD</option>
                 <option>NPR</option>
@@ -229,12 +229,12 @@ export default function NewBusinessPage() {
           )}
         </div>
 
-        {error && <p className="text-sm text-rhodo">{error}</p>}
+        {error && <p className="text-sm text-accent">{error}</p>}
 
         <button
           onClick={submit}
           disabled={submitting || !name}
-          className="w-full rounded-md bg-pine px-4 py-2.5 text-sm font-medium text-white hover:bg-pine-ink disabled:opacity-50"
+          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-pressed disabled:opacity-50"
         >
           {submitting ? t("registering") : t("register")}
         </button>

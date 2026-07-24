@@ -49,7 +49,7 @@ export default function RemoveMemberButton({
     <button
       onClick={remove}
       aria-label={t("removeFromTeam")}
-      className="rounded-md p-1.5 text-ink-soft hover:bg-mist hover:text-rhodo"
+      className="rounded-md p-1.5 text-ink-soft hover:bg-bg hover:text-accent"
     >
       <X size={15} />
     </button>
