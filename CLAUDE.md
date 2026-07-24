@@ -123,7 +123,39 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint 4) — Settings fix batch (frontend; P0–P7, NOT pushed):**
+- **2026-07-24 (sprint 5) — Trip Planner v2, Commit C1: planner wizard rebuild (frontend, NOT pushed):**
+  - Replaces the generic form + the fake "Suggested starting points" (curated
+    templates + directory-business recommendations) with a real 4-step wizard over
+    the live offerings/festivals schema. `recommendationsFor`/RECOMMENDATION_TEMPLATES
+    stay in `lib/tripPlannerData.ts` (still exported + tested) but are no longer
+    rendered; `budgetBreakdown` still drives Step 4.
+  - **Step 1 Direction** — "Where is this trip?" 5 options; "Other" reveals
+    origin+destination ISO-3166 selects. Writes `itineraries.direction/
+    origin_country/destination_country` (fixed directions → NP/US endpoints).
+  - **Step 2 When & who** — title, date range, group size, budget band + currency,
+    interest chips (existing taxonomy).
+  - **Step 3 From our providers** — grid of PUBLISHED offerings (reuses
+    `OfferingCard`) filtered by `matchOfferings` (`lib/tripPlanner.ts`, pure +
+    tested): direction_tags contains the choice (empty = shown), offering.country
+    matches the destination side, date-window overlap when both set; interests
+    rank-only (loose, never exclude). **Honest empty state** — no fabricated cards:
+    "No published offerings match this trip yet." + Directory link + (if
+    `canPublishOfferings(viewer)`) "Publish your first offering". "Add to
+    itinerary" stages an item with `offering_id` + `business_id`, title +
+    `price_from` from the offering.
+  - **Step 4 Itinerary** — day-by-day builder (per-item day, provider chip →
+    offering detail for offering-linked items) + budget breakdown seeded by real
+    prices (planned-items total). Free-form custom items kept (v1 behavior).
+  - **"Talk to a travel advisor"** (Steps 3–4) — DM via
+    `get_or_create_direct_thread` to a verified tourism-hospitality professional
+    (`sectors` contains tourism-hospitality, verified, not self); falls back to the
+    admin id; prefilled "Travel advisor request —". Human, not AI.
+  - NOT in C1 (C2): festival-calendar overlay, compare tray, flight guidance.
+  - New `lib/tripPlanner.ts` (+`__tests__`, +11 tests: direction endpoints,
+    category mapping, range overlap, match/rank). +27 `tripPlanner` i18n keys × en/ne
+    (direction/country labels reuse the `offerings` namespace). gates: tsc 0 ·
+    vitest 65/65 · build 52/52 both locales. **NOT pushed — hub verifies.**
+- **2026-07-24 (sprint 4) — Settings fix batch (frontend; P0–P7, pushed 5085e53):**
   - **P0 (prod bug) — legal pages now public in every locale.** Root cause:
     `stripLocale` skipped the default locale, so an explicit `/en/terms` kept its
     `/en` prefix and `isPublicPath` failed → logged-out visitors bounced to
