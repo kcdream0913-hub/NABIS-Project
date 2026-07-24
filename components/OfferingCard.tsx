@@ -24,11 +24,18 @@ export default function OfferingCard({
   provider,
   festivalNames,
   manageable = false,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
 }: {
   offering: Offering;
   provider: OfferingCardProvider;
   festivalNames?: Record<string, string>;
   manageable?: boolean;
+  // Planner "compare" context: render a selection checkbox in the card header.
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const t = useTranslations("offerings");
   const tCommon = useTranslations("common");
@@ -50,6 +57,15 @@ export default function OfferingCard({
     <div className="card overflow-hidden">
       <div className="p-4">
         <div className="flex items-center gap-2">
+          {selectable && (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelect}
+              aria-label={t("compareSelect")}
+              className="h-4 w-4 shrink-0 accent-primary"
+            />
+          )}
           <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-chip-ink">
             {t(`types.${offering.type}`)}
           </span>

@@ -430,7 +430,32 @@
     "addCustom": "Add",
     "plannedTotal": "Planned items total",
     "viewOffering": "View offering",
-    "saveError": "Could not save the itinerary. Please try again."
+    "saveError": "Could not save the itinerary. Please try again.",
+    "festivalOverlapTitle": "Your dates overlap these festivals",
+    "peakAdvisory": "Peak season — domestic transport and flights fill early; book ahead.",
+    "filterType": "Type",
+    "filterSeason": "Season",
+    "filterFestival": "Festival",
+    "filterPrice": "Price",
+    "anyType": "Any type",
+    "anySeason": "Any season",
+    "anyFestival": "Any festival",
+    "min": "Min",
+    "max": "Max",
+    "clearFilters": "Clear filters",
+    "noFilterMatches": "No offerings match these filters.",
+    "compare": "Compare",
+    "compareCount": "Compare ({count})",
+    "compareMax": "Up to 4",
+    "compareClear": "Clear",
+    "compareTitle": "Compare offerings",
+    "close": "Close",
+    "cmpPrice": "Price from",
+    "cmpDuration": "Duration",
+    "cmpGroup": "Group size",
+    "cmpSeasons": "Seasons",
+    "cmpFestivals": "Festivals",
+    "cmpLocation": "Location"
   },
   "businessNew": {
     "eyebrow": "Register",
@@ -773,6 +798,7 @@
     "country": {
       "np": "Nepal",
       "us": "United States"
-    }
+    },
+    "compareSelect": "Select to compare"
   }
 }

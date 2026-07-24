@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Map, Plus, Trash2, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, MessagesSquare } from "lucide-react";
+import { Map, Plus, Trash2, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, MessagesSquare, X, PartyPopper } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useApp } from "@/lib/store";
 import { useInterests } from "@/lib/useInterests";
@@ -16,10 +16,24 @@ import {
   destinationCountryFor,
   offeringTypeToCategory,
   matchOfferings,
+  festivalsOverlappingRange,
+  applyOfferingFilters,
+  PEAK_FESTIVALS,
+  type OfferingFilters,
 } from "@/lib/tripPlanner";
-import { pickFestivalName, type Festival, type Offering, type DirectionTag } from "@/lib/offerings";
+import {
+  pickFestivalName,
+  formatMoney,
+  OFFERING_TYPES,
+  SEASONS,
+  type Festival,
+  type Offering,
+  type DirectionTag,
+} from "@/lib/offerings";
 import { trustTier } from "@/lib/trust";
 import { findOrCreateThread } from "@/lib/threads";
+import Avatar from "@/components/Avatar";
+import TrustBadge from "@/components/TrustBadge";
 import OfferingCard, { type OfferingCardProvider } from "@/components/OfferingCard";
 
 const ADMIN_FALLBACK_ID =
@@ -56,6 +70,7 @@ type SavedItem = {
 export default function TripPlannerPage() {
   const t = useTranslations("tripPlanner");
   const tOff = useTranslations("offerings");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const supabase = createClient();
   const { view } = useApp();
@@ -80,10 +95,17 @@ export default function TripPlannerPage() {
 
   // Step 3 — providers
   const [offerings, setOfferings] = useState<OfferingRow[]>([]);
+  const [festivals, setFestivals] = useState<Festival[]>([]);
   const [festivalNames, setFestivalNames] = useState<Record<string, string>>({});
   const [loadingOfferings, setLoadingOfferings] = useState(true);
   const [canPublish, setCanPublish] = useState(false);
   const [advisorId, setAdvisorId] = useState<string>(ADMIN_FALLBACK_ID);
+
+  // Step 3 — filters + compare tray
+  const EMPTY_FILTERS: OfferingFilters = { type: "", season: "", festival: "", priceMin: "", priceMax: "" };
+  const [filters, setFilters] = useState<OfferingFilters>(EMPTY_FILTERS);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
 
   // Step 4 — itinerary
   const [staged, setStaged] = useState<StagedItem[]>([]);
@@ -124,6 +146,7 @@ export default function TripPlannerPage() {
         user ? supabase.from("profiles").select("sectors").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
       ]);
       setOfferings((offs as OfferingRow[]) ?? []);
+      setFestivals((fests as Festival[]) ?? []);
       const fmap: Record<string, string> = {};
       for (const f of (fests as Festival[]) ?? []) fmap[f.slug] = pickFestivalName(locale, f);
       setFestivalNames(fmap);
@@ -167,6 +190,26 @@ export default function TripPlannerPage() {
     () => matchOfferings(offerings as Offering[], { direction, destinationCountry, startDate, endDate }, selectedInterests),
     [offerings, direction, destinationCountry, startDate, endDate, selectedInterests],
   );
+  const visible = useMemo(() => applyOfferingFilters(matched, filters), [matched, filters]);
+  const filtersActive = filters.type || filters.season || filters.festival || filters.priceMin || filters.priceMax;
+
+  // Festivals whose window overlaps the chosen dates (Step 2 overlay).
+  const festMatches = useMemo(
+    () => festivalsOverlappingRange(festivals, startDate, endDate),
+    [festivals, startDate, endDate],
+  );
+  const peakAdvisory =
+    destinationCountry === "np" && festMatches.some((m) => PEAK_FESTIVALS.includes(m.festival.slug));
+
+  const compareList = useMemo(
+    () => compareIds.map((id) => offerings.find((o) => o.id === id)).filter((o): o is OfferingRow => !!o),
+    [compareIds, offerings],
+  );
+  function toggleCompare(id: string) {
+    setCompareIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= 4 ? prev : [...prev, id],
+    );
+  }
 
   const budgetSplit = useMemo(() => computeBudgetBreakdown(budgetAmount), [budgetAmount]);
   const plannedTotal = useMemo(() => staged.reduce((s, i) => s + (i.estimated_cost || 0), 0), [staged]);
@@ -316,6 +359,19 @@ export default function TripPlannerPage() {
   const categoryLabel = (cat: string) =>
     ({ stay: t("categoryStay"), activity: t("categoryActivity"), transport: t("categoryTransport"), food: t("categoryFood"), other: t("categoryOther") })[cat] ?? cat;
 
+  const fmtShort = (iso: string) => {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? iso : new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(d);
+  };
+  const festWindowLabel = (m: (typeof festMatches)[number]) =>
+    m.overlap === "month" || m.overlap === null
+      ? (m.festival.month_hint ?? "")
+      : `${fmtShort(m.overlap.start)} – ${fmtShort(m.overlap.end)}`;
+  function jumpToFestival(slug: string) {
+    setFilters({ ...EMPTY_FILTERS, festival: slug });
+    setStep(3);
+  }
+
   const steps = [t("stepDirection"), t("stepWhen"), t("stepProviders"), t("stepItinerary")];
 
   return (
@@ -447,6 +503,25 @@ export default function TripPlannerPage() {
             </div>
           </div>
 
+          {/* Festival overlay — dates overlapping seeded festivals */}
+          {festMatches.length > 0 && (
+            <div className="mt-4 rounded-md border border-bridge bg-bridge-soft p-3">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-ink">
+                <PartyPopper size={15} className="text-bridge" aria-hidden /> {t("festivalOverlapTitle")}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {festMatches.map((m) => (
+                  <button key={m.festival.slug} onClick={() => jumpToFestival(m.festival.slug)}
+                    className="rounded-full bg-bridge-soft px-2.5 py-1 text-[12px] font-medium text-on-bridge hover:opacity-90">
+                    {pickFestivalName(locale, m.festival)}
+                    {festWindowLabel(m) && <span className="font-normal opacity-80"> ({festWindowLabel(m)})</span>}
+                  </button>
+                ))}
+              </div>
+              {peakAdvisory && <p className="mt-2 text-[13px] text-ink-soft">{t("peakAdvisory")}</p>}
+            </div>
+          )}
+
           <div className="mt-4 flex justify-between">
             <button onClick={() => setStep(1)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium text-ink hover:bg-surface-2"><ArrowLeft size={15} /> {t("back")}</button>
             <button onClick={() => setStep(3)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed">{t("next")} <ArrowRight size={15} /></button>
@@ -465,6 +540,48 @@ export default function TripPlannerPage() {
               </button>
             </div>
 
+            {/* Filter row — on top of the direction/date matching */}
+            {!loadingOfferings && matched.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <label className="text-xs text-ink-soft">
+                  <span className="block">{t("filterType")}</span>
+                  <select value={filters.type} onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
+                    className="mt-0.5 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-ink">
+                    <option value="">{t("anyType")}</option>
+                    {OFFERING_TYPES.map((ty) => <option key={ty} value={ty}>{tOff(`types.${ty}`)}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs text-ink-soft">
+                  <span className="block">{t("filterSeason")}</span>
+                  <select value={filters.season} onChange={(e) => setFilters((f) => ({ ...f, season: e.target.value }))}
+                    className="mt-0.5 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-ink">
+                    <option value="">{t("anySeason")}</option>
+                    {SEASONS.map((s) => <option key={s} value={s}>{tOff(`seasons.${s}`)}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs text-ink-soft">
+                  <span className="block">{t("filterFestival")}</span>
+                  <select value={filters.festival} onChange={(e) => setFilters((f) => ({ ...f, festival: e.target.value }))}
+                    className="mt-0.5 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-ink">
+                    <option value="">{t("anyFestival")}</option>
+                    {festivals.map((f) => <option key={f.slug} value={f.slug}>{pickFestivalName(locale, f)}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs text-ink-soft">
+                  <span className="block">{t("filterPrice")}</span>
+                  <span className="mt-0.5 flex gap-1">
+                    <input type="number" min={0} value={filters.priceMin} onChange={(e) => setFilters((f) => ({ ...f, priceMin: e.target.value }))} placeholder={t("min")} className="w-20 rounded-md border border-border-input px-2 py-1.5 text-sm" />
+                    <input type="number" min={0} value={filters.priceMax} onChange={(e) => setFilters((f) => ({ ...f, priceMax: e.target.value }))} placeholder={t("max")} className="w-20 rounded-md border border-border-input px-2 py-1.5 text-sm" />
+                  </span>
+                </label>
+                {filtersActive && (
+                  <button onClick={() => setFilters(EMPTY_FILTERS)} className="rounded-md border border-border px-2.5 py-1.5 text-[13px] font-medium text-ink hover:bg-surface-2">
+                    {t("clearFilters")}
+                  </button>
+                )}
+              </div>
+            )}
+
             {loadingOfferings ? (
               <p className="mt-3 text-sm text-ink-soft">{t("loading")}</p>
             ) : matched.length === 0 ? (
@@ -475,15 +592,28 @@ export default function TripPlannerPage() {
                   {canPublish && <Link href="/offerings/new" className="font-medium text-primary hover:underline">{t("publishFirst")}</Link>}
                 </div>
               </div>
+            ) : visible.length === 0 ? (
+              <div className="mt-3 rounded-md border border-dashed border-border p-4 text-sm">
+                <p className="text-ink">{t("noFilterMatches")}</p>
+                <button onClick={() => setFilters(EMPTY_FILTERS)} className="mt-1.5 font-medium text-primary hover:underline">{t("clearFilters")}</button>
+              </div>
             ) : (
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {matched.map((o) => {
+                {visible.map((o) => {
                   const row = o as OfferingRow;
                   const provider = providerOf(row);
                   const isAdded = staged.some((s) => s.key === `off-${o.id}`);
+                  const isSelected = compareIds.includes(o.id);
                   return (
                     <div key={o.id} className="space-y-2">
-                      <OfferingCard offering={o} provider={provider} festivalNames={festivalNames} />
+                      <OfferingCard
+                        offering={o}
+                        provider={provider}
+                        festivalNames={festivalNames}
+                        selectable
+                        selected={isSelected}
+                        onToggleSelect={() => toggleCompare(o.id)}
+                      />
                       <button onClick={() => addOffering(row, provider)} disabled={isAdded}
                         className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-bg disabled:opacity-40">
                         {isAdded ? t("added") : <><Plus size={14} /> {t("addToItinerary")}</>}
@@ -498,6 +628,73 @@ export default function TripPlannerPage() {
           <div className="flex justify-between">
             <button onClick={() => setStep(2)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium text-ink hover:bg-surface-2"><ArrowLeft size={15} /> {t("back")}</button>
             <button onClick={() => setStep(4)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed">{t("next")} <ArrowRight size={15} /></button>
+          </div>
+
+          {/* Sticky compare tray */}
+          {compareIds.length > 0 && (
+            <div className="sticky bottom-3 z-10 flex items-center gap-2 rounded-lg border border-border bg-surface p-2.5 shadow-card">
+              <span className="text-sm font-medium text-ink">{t("compareCount", { count: compareIds.length })}</span>
+              <span className="text-[11px] text-ink-soft">{t("compareMax")}</span>
+              <button onClick={() => setShowCompare(true)} disabled={compareIds.length < 2}
+                className="ml-auto rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-on-primary hover:bg-primary-pressed disabled:opacity-50">
+                {t("compare")}
+              </button>
+              <button onClick={() => setCompareIds([])} className="rounded-md border border-border px-2.5 py-1.5 text-[13px] font-medium text-ink hover:bg-surface-2">
+                {t("compareClear")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Compare panel */}
+      {showCompare && compareList.length > 0 && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-2 sm:items-center" onClick={() => setShowCompare(false)}>
+          <div className="max-h-[85vh] w-full max-w-4xl overflow-auto rounded-lg border border-border bg-surface p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold">{t("compareTitle")}</h2>
+              <button onClick={() => setShowCompare(false)} aria-label={t("close")} className="ml-auto rounded p-1 text-ink-soft hover:bg-bg"><X size={16} /></button>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <div className="flex gap-3" style={{ minWidth: `${compareList.length * 12}rem` }}>
+                {compareList.map((o) => {
+                  const provider = providerOf(o);
+                  const isAdded = staged.some((s) => s.key === `off-${o.id}`);
+                  const rows: [string, string][] = [
+                    [t("cmpPrice"), formatMoney(o.price_from, o.price_currency) ? `${formatMoney(o.price_from, o.price_currency)} ${tOff(`units.${o.price_unit}`)}` : "—"],
+                    [t("cmpDuration"), o.duration_days != null ? t("daysCount", { count: o.duration_days }) : "—"],
+                    [t("cmpGroup"), o.group_min != null || o.group_max != null ? `${o.group_min ?? 1}–${o.group_max ?? "∞"}` : "—"],
+                    [t("cmpSeasons"), o.seasons.map((s) => tOff(`seasons.${s}`)).join(", ") || "—"],
+                    [t("cmpFestivals"), o.festival_slugs.map((f) => festivalNames[f] ?? f).join(", ") || "—"],
+                    [t("cmpLocation"), [o.region, o.country ? tOff(`country.${o.country}`) : null].filter(Boolean).join(" · ") || "—"],
+                  ];
+                  return (
+                    <div key={o.id} className="flex w-48 shrink-0 flex-col rounded-md border border-border p-3">
+                      <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold text-chip-ink w-fit">{tOff(`types.${o.type}`)}</span>
+                      <Link href={`/offerings/${o.id}`} className="mt-1.5 text-sm font-semibold text-ink hover:underline">{o.title}</Link>
+                      <dl className="mt-2 space-y-1.5 text-xs">
+                        {rows.map(([label, value]) => (
+                          <div key={label}>
+                            <dt className="text-[10px] uppercase tracking-wide text-ink-soft">{label}</dt>
+                            <dd className="text-ink">{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <Avatar name={provider.name} url={provider.avatarUrl} size={20} shape={provider.ownerType === "business" ? "rounded" : "circle"} />
+                        <span className="truncate text-xs font-medium text-ink">{provider.name}</span>
+                        <TrustBadge tier={provider.tier} label={provider.tier === "bridge" ? tCommon("bridgeVerified") : provider.ownerType === "business" ? tCommon("verifiedBusiness") : tCommon("verified")} />
+
+                      </div>
+                      <button onClick={() => addOffering(o, provider)} disabled={isAdded}
+                        className="mt-3 rounded-md border border-border px-2 py-1.5 text-xs font-medium hover:bg-bg disabled:opacity-40">
+                        {isAdded ? t("added") : t("addToItinerary")}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}

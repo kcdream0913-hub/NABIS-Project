@@ -115,6 +115,94 @@ export function matchOfferings(offerings: Offering[], trip: TripFilter, interest
     .sort((a, b) => interestScore(b, interests) - interestScore(a, interests));
 }
 
+// ── Festival overlap (Step 2 overlay) ─────────────────────────────────────────
+import type { Festival } from "./offerings";
+
+const MONTHS = [
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december",
+];
+
+/** Month numbers (1–12) the trip spans; empty when there are no dates. */
+export function monthsInRange(startDate: string, endDate: string): number[] {
+  const s = startDate || endDate;
+  const e = endDate || startDate;
+  if (!s || !e) return [];
+  const sd = new Date(s), ed = new Date(e);
+  if (isNaN(sd.getTime()) || isNaN(ed.getTime())) return [];
+  const out = new Set<number>();
+  let y = sd.getUTCFullYear(), m = sd.getUTCMonth();
+  const ey = ed.getUTCFullYear(), em = ed.getUTCMonth();
+  for (let i = 0; i < 14 && (y < ey || (y === ey && m <= em)); i++) {
+    out.add(m + 1);
+    m++; if (m > 11) { m = 0; y++; }
+  }
+  return [...out];
+}
+
+/** Month numbers named in a free-text hint like "October–November". */
+export function monthsFromHint(hint: string | null | undefined): number[] {
+  if (!hint) return [];
+  const low = hint.toLowerCase();
+  return MONTHS.map((name, i) => (low.includes(name) ? i + 1 : 0)).filter(Boolean);
+}
+
+// null = no overlap; {start,end} = dated overlap; "month" = month_hint fallback.
+export type FestivalOverlap = { start: string; end: string } | "month" | null;
+
+export function festivalOverlap(f: Festival, startDate: string, endDate: string): FestivalOverlap {
+  const s = startDate || endDate;
+  const e = endDate || startDate;
+  if (!s || !e) return null; // no trip dates → nothing to overlap
+  const sy = new Date(s).getUTCFullYear();
+  const ey = new Date(e).getUTCFullYear();
+  for (let y = sy; y <= ey && y - sy < 3; y++) {
+    const w = f.dates?.[String(y)];
+    if (w?.start && w?.end && rangesOverlap(s, e, w.start, w.end)) {
+      return { start: w.start, end: w.end };
+    }
+  }
+  // fall back to month_hint only when no dated window matched
+  const tripMonths = monthsInRange(startDate, endDate);
+  if (monthsFromHint(f.month_hint).some((m) => tripMonths.includes(m))) return "month";
+  return null;
+}
+
+export function festivalsOverlappingRange(
+  festivals: Festival[],
+  startDate: string,
+  endDate: string,
+): { festival: Festival; overlap: FestivalOverlap }[] {
+  return festivals
+    .map((festival) => ({ festival, overlap: festivalOverlap(festival, startDate, endDate) }))
+    .filter((x) => x.overlap !== null);
+}
+
+// Nepal-bound trips overlapping these get a peak-season advisory.
+export const PEAK_FESTIVALS = ["dashain", "tihar"];
+
+// ── Step 3 filter row ─────────────────────────────────────────────────────────
+export interface OfferingFilters {
+  type: string;
+  season: string;
+  festival: string;
+  priceMin: string;
+  priceMax: string;
+}
+
+export function applyOfferingFilters(offerings: Offering[], f: OfferingFilters): Offering[] {
+  const min = f.priceMin.trim() === "" ? null : Number(f.priceMin);
+  const max = f.priceMax.trim() === "" ? null : Number(f.priceMax);
+  return offerings.filter((o) => {
+    if (f.type && o.type !== f.type) return false;
+    if (f.season && !o.seasons.includes(f.season)) return false;
+    if (f.festival && !o.festival_slugs.includes(f.festival)) return false;
+    if (min != null && (o.price_from == null || o.price_from < min)) return false;
+    if (max != null && o.price_from != null && o.price_from > max) return false;
+    return true;
+  });
+}
+
 // Curated ISO-3166 alpha-2 list for the "Other" direction selects (corridor +
 // common travel destinations — a scannable picker, not the full set).
 export const ISO_COUNTRIES: { code: string; name: string }[] = [

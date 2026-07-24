@@ -123,7 +123,27 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
-- **2026-07-24 (sprint 5) — Trip Planner v2, Commit C1: planner wizard rebuild (frontend, NOT pushed):**
+- **2026-07-24 (sprint 6) — Trip Planner v2, Commit C2: festival overlay + compare + filters (frontend, NOT pushed):**
+  - **Festival overlay (Step 2)** — `festivalsOverlappingRange` (pure + tested):
+    when the date range overlaps a `festivals` row it shows a banner + chips
+    "<festival> (<dates>)"; dated windows (`dates` jsonb, per year) take priority,
+    falling back to `month_hint` when a year has no dates. Nepal-bound trips
+    overlapping dashain/tihar add the peak-season advisory. Chips jump to Step 3
+    pre-filtered to that `festival_slug`. Bilingual via `pickFestivalName`.
+  - **Compare tray (Step 3)** — `OfferingCard` gained optional
+    `selectable`/`selected`/`onToggleSelect` (a header checkbox, additive — other
+    usages unaffected). Select up to 4 → sticky "Compare (n)" bar → side-by-side
+    panel (price+unit, duration, group, seasons, festivals, location, provider +
+    TrustBadge, per-column Add-to-itinerary). Purely client-side.
+  - **Filter row (Step 3)** — type / season / festival / price-range, applied by
+    `applyOfferingFilters` (pure + tested) on top of C1's direction/date matching.
+    Distinct empty states: no trip match (Directory + publish links) vs. no filter
+    match (clear-filters).
+  - +8 tests (festival overlap incl. month_hint fallback, `monthsFromHint`, filter
+    matrix). +26 `tripPlanner` + `offerings.compareSelect` i18n keys × en/ne.
+  - NOT in C2 (Commit D, blocked on Travelpayouts): flight guidance.
+  - gates: tsc 0 · vitest 73/73 · build 52/52 both locales. **NOT pushed — hub verifies.**
+- **2026-07-24 (sprint 5) — Trip Planner v2, Commit C1: planner wizard rebuild (frontend, pushed e56314a):**
   - Replaces the generic form + the fake "Suggested starting points" (curated
     templates + directory-business recommendations) with a real 4-step wizard over
     the live offerings/festivals schema. `recommendationsFor`/RECOMMENDATION_TEMPLATES

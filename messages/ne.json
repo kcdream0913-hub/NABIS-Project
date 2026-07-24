@@ -430,7 +430,32 @@
     "addCustom": "थप्नुहोस्",
     "plannedTotal": "योजनाबद्ध वस्तुहरूको जम्मा",
     "viewOffering": "प्रस्ताव हेर्नुहोस्",
-    "saveError": "यात्रा तालिका सुरक्षित गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+    "saveError": "यात्रा तालिका सुरक्षित गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+    "festivalOverlapTitle": "तपाईंको मितिसँग मिल्ने चाडपर्वहरू",
+    "peakAdvisory": "व्यस्त मौसम — आन्तरिक यातायात र उडानहरू चाँडै भरिन्छन्; अग्रिम बुक गर्नुहोस्।",
+    "filterType": "प्रकार",
+    "filterSeason": "मौसम",
+    "filterFestival": "चाडपर्व",
+    "filterPrice": "मूल्य",
+    "anyType": "कुनै पनि प्रकार",
+    "anySeason": "कुनै पनि मौसम",
+    "anyFestival": "कुनै पनि चाडपर्व",
+    "min": "न्यून",
+    "max": "अधिक",
+    "clearFilters": "फिल्टर हटाउनुहोस्",
+    "noFilterMatches": "यी फिल्टरसँग मिल्ने प्रस्ताव छैन।",
+    "compare": "तुलना गर्नुहोस्",
+    "compareCount": "तुलना ({count})",
+    "compareMax": "बढीमा ४",
+    "compareClear": "हटाउनुहोस्",
+    "compareTitle": "प्रस्तावहरू तुलना गर्नुहोस्",
+    "close": "बन्द गर्नुहोस्",
+    "cmpPrice": "सुरु मूल्य",
+    "cmpDuration": "अवधि",
+    "cmpGroup": "समूह आकार",
+    "cmpSeasons": "मौसमहरू",
+    "cmpFestivals": "चाडपर्वहरू",
+    "cmpLocation": "स्थान"
   },
   "businessNew": {
     "eyebrow": "दर्ता",
@@ -773,6 +798,7 @@
     "country": {
       "np": "नेपाल",
       "us": "संयुक्त राज्य अमेरिका"
-    }
+    },
+    "compareSelect": "तुलनाका लागि छान्नुहोस्"
   }
 }
