@@ -28,10 +28,12 @@ export default function LoginPage() {
     router.refresh();
   }
 
-  async function handleOAuth(providerName: "google" | "apple") {
+  // Only Google is configured in Supabase (verified via GoTrue /settings —
+  // apple = false). A dead OAuth button is worse than none, so Apple is hidden.
+  async function handleGoogle() {
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: providerName,
+      provider: "google",
       options: { redirectTo: `${location.origin}/auth/callback` },
     });
     if (error) setError(error.message);
@@ -48,16 +50,10 @@ export default function LoginPage() {
 
       <div className="space-y-2">
         <button
-          onClick={() => handleOAuth("google")}
+          onClick={handleGoogle}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium hover:bg-bg"
         >
           {t("continueGoogle")}
-        </button>
-        <button
-          onClick={() => handleOAuth("apple")}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2.5 text-sm font-medium hover:bg-bg"
-        >
-          {t("continueApple")}
         </button>
       </div>
 
