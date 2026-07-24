@@ -123,16 +123,49 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-24 (sprint 3) — Trip Planner v2, Commit A (DB only; branch, NOT merged):**
+  - Ref BL-TRIP-01 / D-019: publishers = businesses AND professionals; schema
+    supports all sectors (UI stays tourism-only for now); no live flight API.
+  - Branch `trip-planner-db` (ref `bdgcdmyidnpqyeexfatz`, ~$0.32/day until
+    merged/deleted). Migration `20260724173650_trip_planner_v2.sql` + matching
+    `…rollback.sql`. Additive + backward compatible.
+    - **itineraries** += `direction` (CHECK np_to_us|us_to_np|domestic_np|
+      domestic_us|other), `origin_country`, `destination_country` (all nullable).
+    - **offerings** (new, 27 cols): owner is a business (via
+      `businesses.owner_user_id`) OR a professional (`profile_id = auth.uid()`),
+      enforced by a paired CHECK (`(owner_type='business')=(business_id is not
+      null) and (owner_type='profile')=(profile_id is not null)` → exactly one FK
+      set). type/price_unit/status CHECKs; bilingual title/description; sectors
+      default `tourism-hospitality`; media jsonb. **RLS** split by command (one
+      permissive policy each → no multiple_permissive_policies): SELECT =
+      published OR owner; INSERT/UPDATE/DELETE = owner only; `(select auth.uid())`
+      wrapped (no initplan). No anon. FK columns indexed.
+    - **festivals** (new): `slug` PK, bilingual name, country CHECK, `month_hint`,
+      `dates jsonb`. RLS SELECT-only for authenticated, no write policy. **Seeded
+      14**: 10 Nepal 2026 (losar, shivaratri, holi, nepali-new-year,
+      buddha-jayanti, tiji, teej, indra-jatra, dashain window, tihar) + 4 US-side
+      slugs with no fixed dates (dashain-us, tihar-us, nepali-new-year-us, nabis).
+    - **itinerary_items** += `offering_id` FK → offerings ON DELETE SET NULL (indexed).
+  - **Verified on the branch:** paired CHECK rejects mismatched owner rows; a
+    valid profile-owned offering inserts; RLS — owner sees own draft+published (2),
+    a stranger sees only published (1); a stranger cannot insert under another
+    identity, and a client cannot write `festivals` (both RLS-denied). Test rows
+    reverted; festival seed left intact (offerings 0, profiles 0, festivals 14).
+  - **Advisors (branch):** security = the 3 pre-existing intentional WARN, nothing
+    new; performance = only 2 INFO `unused_index` on offerings (empty-branch
+    artifact — zero unindexed_foreign_keys / initplan / multiple-permissive for
+    the new objects). Client is untyped → no generated-type regen needed.
+  - gates: tsc 0 · vitest 47/47 · build 50/50 both locales. **Commit A NOT pushed,
+    branch NOT merged — hub verifies before Commit B/C (frontend).**
 - **2026-07-24 (sprint 2) — Sprint-1 shipped to prod + signup data now persists:**
   - **bilingual-bio branch MERGED to prod, branch DELETED.** `profiles.bio_ne` +
     `businesses.bio_ne` are live (migration recorded `20260724162707`); prod
     advisors = the 3 pre-existing intentional WARN, nothing new.
   - **The 3 auth-overhaul + bilingual commits are PUSHED** (`1d2cb11` auth
     isolation, `026a970` real sign-up, `18bff91` bilingual bios); prod Vercel
-    deploy `dpl_5piT8Vm…` built from `18bff91`.
-  - **NEW commit `<pending>` — "signup data persists" (branch migration, NOT
-    merged).** Branch `signup-persist` (ref `faobmbmiisgphmravndz`, ~$0.32/day
-    until merged/deleted), migration `20260724165101_signup_data_persist.sql`:
+    deploy `dpl_5piT8Vm…` built from `18bff91` (READY).
+  - **signup-persist PUSHED (`f5ecdd6`) + hub-MERGED to prod** (consents table +
+    extended handle_new_user live). Migration `20260724165101_signup_data_persist.sql`:
     - **`handle_new_user()` extended** to copy `country` + `sectors[]` out of the
       signup `user_metadata` into the new `profiles` row, so a new member lands in
       the right sector directories immediately (previously only
@@ -163,9 +196,10 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
       verifies.** gates: tsc 0 · vitest 47/47 · build 50/50 both locales.
     - **Still flagged (NOT built):** the dedicated `consents` UI/export surface,
       NE Privacy translation before Nepal onboarding, real IP capture.
-  - **LinkedIn OAuth:** gated on `linkedin_oidc` appearing in GoTrue `/settings`
-    (see finding below) — button added only if configured, same hide-if-absent
-    rule as Google/Apple (D-028).
+  - **LinkedIn OAuth:** re-checked GoTrue `/settings` — `linkedin_oidc` is still
+    `false` (also `linkedin` false, `google` true, `apple` false), so **no button
+    was added** (hide-if-not-configured, D-028). Enable `linkedin_oidc` in
+    Supabase → Auth → Providers and it's a one-line add. No commit this pass.
 - **2026-07-24 (sprint) — Auth overhaul + bilingual bios (3 commits, now pushed; bilingual-bio branch now merged — see sprint 2 above):**
   - **COMMIT 1 (`1d2cb11`) — auth isolated from the app shell (route-group split).**
     Logged-out visitors were seeing the full app chrome (rail, top bar, avatar +
