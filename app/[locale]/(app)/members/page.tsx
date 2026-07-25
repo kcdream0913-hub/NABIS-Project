@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useSectors } from "@/lib/useSectors";
+import { localizeCity } from "@/lib/localizePlace";
+import { cleanLookingFor } from "@/lib/businessProfile";
 import MemberCard from "@/components/MemberCard";
 import BusinessCard from "@/components/BusinessCard";
 import type { View } from "@/lib/types";
@@ -32,11 +34,13 @@ type BusinessRow = {
   secondary_sectors: string[];
   verification_status: string;
   logo_url: string | null;
+  credentials: { looking_for?: string[] } | null;
 };
 
 export default function DirectoryPage() {
   const t = useTranslations("directory");
   const tView = useTranslations("view");
+  const locale = useLocale();
   const sectors = useSectors();
   const supabase = createClient();
   const [tab, setTab] = useState<"people" | "businesses">("people");
@@ -58,7 +62,7 @@ export default function DirectoryPage() {
           .order("created_at", { ascending: false }),
         supabase
           .from("businesses")
-          .select("id, name, bio, bio_ne, bio_ne_auto, country_of_registration, primary_sector, secondary_sectors, verification_status, logo_url")
+          .select("id, name, bio, bio_ne, bio_ne_auto, country_of_registration, primary_sector, secondary_sectors, verification_status, logo_url, credentials")
           .order("created_at", { ascending: false }),
       ]);
       setPeople(p ?? []);
@@ -170,7 +174,7 @@ export default function DirectoryPage() {
               headline={m.bio}
               headlineNe={m.bio_ne}
               headlineNeAuto={m.bio_ne_auto}
-              location={m.city}
+              location={localizeCity(locale, m.city)}
               view={m.country ?? undefined}
               viewLabel={m.country ? tView(`${m.country}Short`) : undefined}
               verification={m.verification_status === "verified" ? "verified" : "unverified"}
@@ -199,6 +203,7 @@ export default function DirectoryPage() {
                 secondarySectors={(b.secondary_sectors ?? []).map(
                   (slug) => sectors.find((s) => s.slug === slug)?.name ?? slug
                 )}
+                lookingFor={cleanLookingFor(b.credentials?.looking_for)}
                 view={country ?? undefined}
                 viewLabel={country ? tView(`${country}Short`) : undefined}
                 verificationStatus={b.verification_status === "verified" ? "verified" : "unverified"}

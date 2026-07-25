@@ -11,7 +11,7 @@ import { pickBio, isAutoBio } from "@/lib/bilingual";
 
 export interface BusinessCardProps {
   id: string; name: string; logoUrl?: string | null; bio?: string | null; bioNe?: string | null; bioNeAuto?: boolean | null;
-  primarySector?: string | null; secondarySectors?: string[] | null;
+  primarySector?: string | null; secondarySectors?: string[] | null; lookingFor?: string[] | null;
   view?: "us" | "nepal" | "bridge";
   verificationStatus: "verified" | "unverified"; tier?: "bridge";
   isPaidProvider?: boolean; accessPriceAmount?: number | null; accessPriceCurrency?: string | null;
@@ -21,6 +21,7 @@ export interface BusinessCardProps {
 export default function BusinessCard(b: BusinessCardProps) {
   const t = useTranslations("card");
   const tCommon = useTranslations("common");
+  const tBiz = useTranslations("businessNew");
   const locale = useLocale();
   const isBridge = b.tier === "bridge";
   // Businesses have no corridor tier, so this resolves to "verified" at most.
@@ -53,6 +54,17 @@ export default function BusinessCard(b: BusinessCardProps) {
           {b.primarySector && <SectorChip label={b.primarySector} primary />}
           {(b.secondarySectors ?? []).slice(0, 2).map((s) => <SectorChip key={s} label={s} />)}
         </div>
+
+        {(b.lookingFor ?? []).length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium text-ink-soft">{tBiz("lookingForShort")}</span>
+            {(b.lookingFor ?? []).slice(0, 3).map((k) => (
+              <span key={k} className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                {tBiz(`lookingFor.${k}`)}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 flex gap-2">
           <Link href={`/business/${b.id}`} className="flex-1 rounded-xl bg-primary px-3.5 py-2 text-center text-sm font-semibold text-on-primary transition hover:bg-primary-pressed">{t("contact")}</Link>

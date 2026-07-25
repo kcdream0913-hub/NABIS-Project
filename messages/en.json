@@ -1,6 +1,8 @@
 {
   "nav": {
-    "feed": "Feed / Messages",
+    "feed": "Feed",
+    "messages": "Messages",
+    "unreadMessages": "Unread messages",
     "directory": "Members & Business",
     "channels": "Channels",
     "events": "Events",
@@ -17,6 +19,16 @@
     "signOut": "Sign out",
     "online": "Online",
     "settings": "Settings"
+  },
+  "messages": {
+    "eyebrow": "Direct messages",
+    "title": "Messages",
+    "loading": "Loading…",
+    "emptyTitle": "No conversations yet",
+    "emptyBody": "Message a member from their profile or the directory to start a conversation.",
+    "member": "Member",
+    "unread": "Unread",
+    "selectConversation": "Select a conversation to read it here"
   },
   "card": {
     "message": "Message",
@@ -342,7 +354,30 @@
     "rsvp": "RSVP",
     "loading": "Loading…",
     "hostedBy": "Hosted by {name}",
-    "attendees": "{count, plural, =0 {No RSVPs yet} one {# going} other {# going}}"
+    "attendees": "{count, plural, =0 {No RSVPs yet} one {# going} other {# going}}",
+    "viewList": "List",
+    "viewMonth": "Month",
+    "myEvents": "My events",
+    "noMyEvents": "You haven't RSVP'd to any events yet.",
+    "details": "Details",
+    "notFound": "Event not found.",
+    "backToEvents": "Back to events",
+    "cancelRsvp": "Cancel RSVP",
+    "addToCalendar": "Add to calendar",
+    "googleCalendar": "Google Calendar",
+    "host": "Host",
+    "member": "Member",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "dow": {
+      "0": "Sun",
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat"
+    }
   },
   "channels": {
     "eyebrow": "Messages",
@@ -483,9 +518,52 @@
     "register": "Register business",
     "genericError": "Could not register the business.",
     "primarySector": "Primary sector",
-    "secondarySectors": "Secondary sectors (optional, up to 2)",
-    "secondarySectorsHint": "Select up to 2 more sectors this business also operates in.",
-    "secondaryMaxReached": "Maximum 2 secondary sectors — remove one to add another."
+    "secondarySectors": "Secondary sectors (optional, up to 4)",
+    "secondarySectorsHint": "Select up to 4 more sectors this business also operates in.",
+    "secondaryMaxReached": "Maximum 4 secondary sectors — remove one to add another.",
+    "stepIdentity": "Identity",
+    "stepSectors": "Sectors",
+    "stepPresence": "Presence",
+    "stepReview": "Review",
+    "city": "City",
+    "cityPlaceholder": "e.g. Kathmandu, New York",
+    "bioHint": "A short description in English. The Nepali version is added automatically — refine it later on the edit page.",
+    "next": "Next",
+    "back": "Back",
+    "presenceHeading": "Website & socials",
+    "presenceHint": "Optional links. Leave blank whatever doesn't apply.",
+    "lookingForHeading": "Looking for",
+    "lookingForShort": "Seeking",
+    "lookingForHint": "What would help most from the network? Select any that apply.",
+    "social": {
+      "website": "Website",
+      "linkedin": "LinkedIn",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "x": "X"
+    },
+    "socialPlaceholder": {
+      "website": "https://…",
+      "linkedin": "linkedin.com/company/…",
+      "instagram": "@handle or link",
+      "facebook": "facebook.com/…",
+      "x": "@handle or link"
+    },
+    "lookingFor": {
+      "partnerships": "Partnerships",
+      "buyers": "Buyers",
+      "suppliers": "Suppliers",
+      "investment": "Investment",
+      "talent": "Talent",
+      "media": "Media"
+    }
+  },
+  "businessEdit": {
+    "eyebrow": "Edit",
+    "title": "Edit business",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "denied": "Only the business owner can edit this."
   },
   "profile": {
     "eyebrow": "Account",
@@ -586,6 +664,7 @@
   "business": {
     "verifiedBusiness": "Verified Business",
     "access": "Access",
+    "editBusiness": "Edit",
     "team": "Team",
     "pending": "Pending",
     "verifiedViaBusiness": "verified via business",

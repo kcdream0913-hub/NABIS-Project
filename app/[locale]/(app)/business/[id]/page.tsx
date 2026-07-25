@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContactBusiness from "./contact-business";
 import TeamManager from "./team-manager";
@@ -12,6 +13,8 @@ import OfferingsSection from "@/components/OfferingsSection";
 import { trustTier } from "@/lib/trust";
 import { pickBio, isAutoBio } from "@/lib/bilingual";
 import { canPublishOfferings } from "@/lib/offerings";
+import { localizeCountry, localizeCity } from "@/lib/localizePlace";
+import { SOCIAL_FIELDS, cleanLookingFor } from "@/lib/businessProfile";
 
 export default async function BusinessPage({
   params,
@@ -22,6 +25,7 @@ export default async function BusinessPage({
   const t = await getTranslations("business");
   const tCommon = await getTranslations("common");
   const tSectors = await getTranslations("sectors");
+  const tBiz = await getTranslations("businessNew");
   const locale = await getLocale();
   const roleLabel: Record<string, string> = {
     owner: t("roleOwner"),
@@ -38,6 +42,17 @@ export default async function BusinessPage({
     .single();
 
   if (!business) notFound();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwner = !!user && user.id === business.owner_user_id;
+
+  const cred = (business.credentials ?? {}) as { city?: string | null; looking_for?: unknown };
+  const city = localizeCity(locale, cred.city);
+  const lookingFor = cleanLookingFor(cred.looking_for);
+  const social = (business.social_links ?? {}) as Record<string, string>;
+  const socialEntries = SOCIAL_FIELDS.filter((f) => social[f]);
 
   const sectorName = (slug: string) => {
     try {
@@ -65,7 +80,15 @@ export default async function BusinessPage({
                 label={t("verifiedBusiness")}
                 size="md"
               />
-              <span className="ml-auto">
+              <span className="ml-auto flex items-center gap-1.5">
+                {isOwner && (
+                  <Link
+                    href={`/business/${business.id}/edit`}
+                    className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-ink-soft hover:bg-bg"
+                  >
+                    {t("editBusiness")}
+                  </Link>
+                )}
                 <ReportButton targetType="business" targetId={business.id} />
               </span>
             </div>
@@ -76,7 +99,7 @@ export default async function BusinessPage({
                   {sectorName(slug)}
                 </span>
               ))}
-              <span>· {business.country_of_registration}</span>
+              <span>· {[city, localizeCountry(locale, business.country_of_registration)].filter(Boolean).join(", ")}</span>
             </div>
             {business.is_paid_provider && (
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-bridge-soft px-2.5 py-1 text-sm font-medium text-bridge">
@@ -89,6 +112,36 @@ export default async function BusinessPage({
           const b = pickBio(locale, business.bio, business.bio_ne);
           return b ? <BioText text={b.text} origin={b.origin} auto={isAutoBio(locale, b, business.bio_ne_auto)} className="mt-4 text-sm leading-relaxed" /> : null;
         })()}
+
+        {lookingFor.length > 0 && (
+          <div className="mt-4">
+            <p className="eyebrow text-ink-soft">{tBiz("lookingForHeading")}</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {lookingFor.map((k) => (
+                <span key={k} className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
+                  {tBiz(`lookingFor.${k}`)}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {socialEntries.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {socialEntries.map((f) => (
+              <a
+                key={f}
+                href={social[f]}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary-soft"
+              >
+                {tBiz(`social.${f}`)}
+              </a>
+            ))}
+          </div>
+        )}
+
         <div className="mt-4">
           <ContactBusiness
             ownerUserId={business.owner_user_id}

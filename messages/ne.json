@@ -1,6 +1,8 @@
 {
   "nav": {
-    "feed": "फिड / म्यासेज",
+    "feed": "फिड",
+    "messages": "सन्देशहरू",
+    "unreadMessages": "नपढिएका सन्देशहरू",
     "directory": "सदस्य र व्यवसाय",
     "channels": "च्यानलहरू",
     "events": "कार्यक्रमहरू",
@@ -17,6 +19,16 @@
     "signOut": "साइन आउट",
     "online": "अनलाइन",
     "settings": "सेटिङ"
+  },
+  "messages": {
+    "eyebrow": "प्रत्यक्ष सन्देश",
+    "title": "सन्देशहरू",
+    "loading": "लोड हुँदैछ…",
+    "emptyTitle": "अझै कुनै कुराकानी छैन",
+    "emptyBody": "कुराकानी सुरु गर्न कुनै सदस्यको प्रोफाइल वा डाइरेक्टरीबाट सन्देश पठाउनुहोस्।",
+    "member": "सदस्य",
+    "unread": "नपढिएको",
+    "selectConversation": "यहाँ पढ्न कुनै कुराकानी छान्नुहोस्"
   },
   "card": {
     "message": "म्यासेज",
@@ -220,8 +232,8 @@
     "assistantTooltip": "AI सहायक 'युटिलिटी' चरणमा आउनेछ"
   },
   "view": {
-    "us": "US दृश्य",
-    "usShort": "US",
+    "us": "अमेरिका दृश्य",
+    "usShort": "अमेरिका",
     "nepal": "नेपाल दृश्य",
     "nepalShort": "नेपाल",
     "bridge": "ब्रिज दृश्य",
@@ -342,7 +354,30 @@
     "rsvp": "RSVP",
     "loading": "लोड हुँदैछ…",
     "hostedBy": "{name} द्वारा आयोजित",
-    "attendees": "{count, plural, =0 {अहिलेसम्म RSVP छैन} other {# जना जाँदै}}"
+    "attendees": "{count, plural, =0 {अहिलेसम्म RSVP छैन} other {# जना जाँदै}}",
+    "viewList": "सूची",
+    "viewMonth": "महिना",
+    "myEvents": "मेरा कार्यक्रम",
+    "noMyEvents": "तपाईंले अझै कुनै कार्यक्रममा RSVP गर्नुभएको छैन।",
+    "details": "विवरण",
+    "notFound": "कार्यक्रम फेला परेन।",
+    "backToEvents": "कार्यक्रमहरूमा फर्कनुहोस्",
+    "cancelRsvp": "RSVP रद्द गर्नुहोस्",
+    "addToCalendar": "पात्रोमा थप्नुहोस्",
+    "googleCalendar": "Google Calendar",
+    "host": "आयोजक",
+    "member": "सदस्य",
+    "prevMonth": "अघिल्लो महिना",
+    "nextMonth": "अर्को महिना",
+    "dow": {
+      "0": "आइत",
+      "1": "सोम",
+      "2": "मङ्गल",
+      "3": "बुध",
+      "4": "बिहि",
+      "5": "शुक्र",
+      "6": "शनि"
+    }
   },
   "channels": {
     "eyebrow": "म्यासेज",
@@ -483,9 +518,52 @@
     "register": "व्यवसाय दर्ता गर्नुहोस्",
     "genericError": "व्यवसाय दर्ता गर्न सकिएन।",
     "primarySector": "प्राथमिक सेक्टर",
-    "secondarySectors": "गौण सेक्टरहरू (वैकल्पिक, बढीमा २)",
-    "secondarySectorsHint": "यो व्यवसाय सक्रिय रहेका थप २ सम्म सेक्टर छान्नुहोस्।",
-    "secondaryMaxReached": "बढीमा २ गौण सेक्टर — थप्न एउटा हटाउनुहोस्।"
+    "secondarySectors": "गौण सेक्टरहरू (वैकल्पिक, बढीमा ४)",
+    "secondarySectorsHint": "यो व्यवसाय सक्रिय रहेका थप ४ सम्म सेक्टर छान्नुहोस्।",
+    "secondaryMaxReached": "बढीमा ४ गौण सेक्टर — थप्न एउटा हटाउनुहोस्।",
+    "stepIdentity": "परिचय",
+    "stepSectors": "सेक्टर",
+    "stepPresence": "उपस्थिति",
+    "stepReview": "समीक्षा",
+    "city": "सहर",
+    "cityPlaceholder": "जस्तै काठमाडौँ, न्युयोर्क",
+    "bioHint": "अङ्ग्रेजीमा छोटो विवरण। नेपाली संस्करण स्वतः थपिन्छ — पछि सम्पादन पृष्ठमा परिमार्जन गर्न सक्नुहुन्छ।",
+    "next": "अर्को",
+    "back": "पछाडि",
+    "presenceHeading": "वेबसाइट र सामाजिक सञ्जाल",
+    "presenceHint": "वैकल्पिक लिङ्कहरू। लागू नहुनेलाई खाली छोड्नुहोस्।",
+    "lookingForHeading": "खोजिरहेको",
+    "lookingForShort": "खोजी",
+    "lookingForHint": "सञ्जालबाट के सबैभन्दा उपयोगी हुन्छ? लागू हुने कुनै पनि छान्नुहोस्।",
+    "social": {
+      "website": "वेबसाइट",
+      "linkedin": "LinkedIn",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "x": "X"
+    },
+    "socialPlaceholder": {
+      "website": "https://…",
+      "linkedin": "linkedin.com/company/…",
+      "instagram": "@ह्यान्डल वा लिङ्क",
+      "facebook": "facebook.com/…",
+      "x": "@ह्यान्डल वा लिङ्क"
+    },
+    "lookingFor": {
+      "partnerships": "साझेदारी",
+      "buyers": "क्रेता",
+      "suppliers": "आपूर्तिकर्ता",
+      "investment": "लगानी",
+      "talent": "प्रतिभा",
+      "media": "मिडिया"
+    }
+  },
+  "businessEdit": {
+    "eyebrow": "सम्पादन",
+    "title": "व्यवसाय सम्पादन",
+    "save": "परिवर्तनहरू सुरक्षित गर्नुहोस्",
+    "saving": "सुरक्षित गर्दै…",
+    "denied": "यो सम्पादन गर्न व्यवसायको मालिक मात्र सक्नुहुन्छ।"
   },
   "profile": {
     "eyebrow": "खाता",
@@ -586,6 +664,7 @@
   "business": {
     "verifiedBusiness": "प्रमाणित व्यवसाय",
     "access": "पहुँच",
+    "editBusiness": "सम्पादन",
     "team": "टोली",
     "pending": "बाँकी",
     "verifiedViaBusiness": "व्यवसायमार्फत प्रमाणित",

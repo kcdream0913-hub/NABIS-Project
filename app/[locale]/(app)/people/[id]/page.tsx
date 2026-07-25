@@ -11,6 +11,7 @@ import { trustTier } from "@/lib/trust";
 import { pickBio, isAutoBio } from "@/lib/bilingual";
 import { canPublishOfferings } from "@/lib/offerings";
 import { readPreferences } from "@/lib/preferences";
+import { localizeCity } from "@/lib/localizePlace";
 
 export default async function PersonPage({
   params,
@@ -48,7 +49,7 @@ export default async function PersonPage({
                 <ReportButton targetType="profile" targetId={person.id} />
               </span>
             </div>
-            <p className="mt-0.5 text-sm text-ink-soft">{person.city}</p>
+            <p className="mt-0.5 text-sm text-ink-soft">{localizeCity(locale, person.city)}</p>
           </div>
         </div>
         {bio && <BioText text={bio.text} origin={bio.origin} auto={isAutoBio(locale, bio, person.bio_ne_auto)} className="mt-4 text-sm leading-relaxed" />}
