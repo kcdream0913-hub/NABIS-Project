@@ -8,7 +8,7 @@ reaches the pilot (spec R11 / D-001). The six generic sectors
 policy-immigration-legal, real-estate-home-improvement) share one generic service
 list — its chips appear once here.
 
-Rows: 101
+Rows: 150
 
 | key | EN (source) | NE (draft) | corrected NE |
 |---|---|---|---|
@@ -111,5 +111,54 @@ Rows: 101
 | `scaffold.ne.years` | , operating for | , जुन <years>देखि सञ्चालनमा छ | |
 | `scaffold.ne.offer` | We offer <list>. | हामी <list> सेवा उपलब्ध गराउँछौं। | |
 | `scaffold.ne.work` | We work with <list>. | हामी <list>सँग काम गर्छौं। | |
+| `guided.forkEyebrow` | Register your business | आफ्नो व्यवसाय दर्ता गर्नुहोस् | |
+| `guided.forkQuestion` | Where is your business registered? | तपाईंको व्यवसाय कहाँ दर्ता भएको हो? | |
+| `guided.forkUS` | United States | संयुक्त राज्य अमेरिका | |
+| `guided.forkNepal` | Nepal | नेपाल | |
+| `guided.forkElsewhere` | Registered somewhere else? Choose the country whose rules your business follows. | अन्य कतै दर्ता भएको? तपाईंको व्यवसायले पालना गर्ने नियम भएको देश छान्नुहोस्। | |
+| `guided.switchToManual` | Fill in a standard form instead | बरु सामान्य फारम भर्नुहोस् | |
+| `guided.switchToGuided` | Build my profile step by step instead | बरु चरण-चरणमा प्रोफाइल बनाउनुहोस् | |
+| `guided.questionOf` | Question {n} of {total} | प्रश्न {n} / {total} | |
+| `guided.qSector` | What kind of business is this? | यो कस्तो प्रकारको व्यवसाय हो? | |
+| `guided.qSecondary` | Anything else it does? | अरू केही गर्छ? | |
+| `guided.qSecondaryHint` | Optional — add up to 4 more. | वैकल्पिक — थप ४ सम्म थप्नुहोस्। | |
+| `guided.qName` | What is your business called? | तपाईंको व्यवसायको नाम के हो? | |
+| `guided.nameLabel` | Business name | व्यवसायको नाम | |
+| `guided.nameRequired` | Please enter your business name. | कृपया आफ्नो व्यवसायको नाम लेख्नुहोस्। | |
+| `guided.qCity` | Which city? | कुन सहर? | |
+| `guided.cityLabel` | City | सहर | |
+| `guided.cityPlaceholder` | e.g. Kathmandu | जस्तै काठमाडौँ | |
+| `guided.cityRequired` | Please enter your city. | कृपया आफ्नो सहर लेख्नुहोस्। | |
+| `guided.qServices` | What do you sell or do? | तपाईं के बेच्नुहुन्छ वा गर्नुहुन्छ? | |
+| `guided.somethingElse` | Something else (optional) | अरू केही (वैकल्पिक) | |
+| `guided.qCustomers` | Who are your customers? | तपाईंका ग्राहक को हुन्? | |
+| `guided.qYears` | How long have you been in business? | तपाईंले कति समयदेखि व्यवसाय गर्दै हुनुहुन्छ? | |
+| `guided.qDifferentiator` | Anything that makes you different? | तपाईंलाई फरक बनाउने केही कुरा? | |
+| `guided.optionalHint` | Optional — you can skip this. | वैकल्पिक — तपाईं यो छाड्न सक्नुहुन्छ। | |
+| `guided.differentiatorLabel` | In your own words | आफ्नै शब्दमा | |
+| `guided.qCrossborder` | Do you want to work with buyers or partners in the US? | के तपाईं अमेरिकाका खरिदकर्ता वा साझेदारसँग काम गर्न चाहनुहुन्छ? | |
+| `guided.reviewEyebrow` | Review | समीक्षा | |
+| `guided.reviewTitle` | Here's your profile | तपाईंको प्रोफाइल यहाँ छ | |
+| `guided.reviewHint` | We wrote this from your answers, in both languages. Edit anything that isn't right. | हामीले तपाईंका उत्तरहरूबाट यो दुवै भाषामा लेख्यौं। नमिलेको जुनसुकै कुरा सम्पादन गर्नुहोस्। | |
+| `guided.bioEnLabel` | Bio (English) | परिचय (English) | |
+| `guided.bioNeLabel` | Bio (नेपाली) | परिचय (नेपाली) | |
+| `guided.regenerate` | Regenerate | पुनः बनाउनुहोस् | |
+| `guided.looksRight` | This looks right | यो ठिक छ | |
+| `guided.saving` | Saving… | सुरक्षित गर्दै… | |
+| `guided.back` | Back | पछाडि | |
+| `guided.continue` | Continue | जारी राख्नुहोस् | |
+| `guided.skip` | Continue / Skip | जारी राख्नुहोस् / छाड्नुहोस् | |
+| `guided.saveError` | Could not save. Please try again. | सुरक्षित गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्। | |
+| `businessEdit.eyebrow` | Edit | सम्पादन | |
+| `businessEdit.title` | Edit business | व्यवसाय सम्पादन | |
+| `businessEdit.save` | Save changes | परिवर्तनहरू सुरक्षित गर्नुहोस् | |
+| `businessEdit.denied` | Only the business owner can edit this. | यो सम्पादन गर्न व्यवसायको मालिक मात्र सक्नुहुन्छ। | |
+| `businessEdit.regenerateBio` | Regenerate bio from answers | उत्तरहरूबाट परिचय पुनः बनाउनुहोस् | |
+| `businessEdit.regenerateHint` | Rewrites both bios from your guided answers — your manual edits will be replaced. | तपाईंका निर्देशित उत्तरहरूबाट दुवै परिचय पुनः लेखिन्छ — तपाईंका हस्तसम्पादन प्रतिस्थापन हुनेछन्। | |
+| `businessEdit.websiteLabel` | Website | वेबसाइट | |
+| `businessEdit.phoneLabel` | Phone | फोन | |
+| `businessEdit.addressLabel` | Address | ठेगाना | |
+| `businessEdit.answersHeading` | Guided answers | निर्देशित उत्तरहरू | |
+| `businessEdit.answersHint` | Used to compose your bio. Update them, then regenerate. | तपाईंको परिचय बनाउन प्रयोग हुन्छ। अद्यावधिक गरी पुनः बनाउनुहोस्। | |
 | `businessNew.plannedPriceTitle` | Planned access price (optional) | योजनाबद्ध पहुँच मूल्य (वैकल्पिक) | |
 | `businessNew.plannedPriceHint` | Recorded for when paid access launches. Contact stays free until then — charging isn't live yet. | सशुल्क पहुँच सुरु हुँदा प्रयोग गर्न अभिलेख गरिन्छ। त्यससम्म सम्पर्क निःशुल्क रहन्छ — अहिले शुल्क लिने सुविधा सक्रिय छैन। | |

@@ -14,6 +14,13 @@ import {
   cleanSocialLinks,
   cleanLookingFor,
 } from "@/lib/businessProfile";
+import ChipMultiSelect from "../../new/_components/guided/ChipMultiSelect";
+import ChipSingleSelect from "../../new/_components/guided/ChipSingleSelect";
+import {
+  SERVICE_CATALOG, CUSTOMER_CHIPS, YEARS_CHIPS, CROSSBORDER_CHIPS, type SectorSlug,
+} from "../../new/_lib/serviceCatalog";
+import { EMPTY_ANSWERS, parseAnswers, type Answers } from "../../new/_lib/answers";
+import { assembleBio } from "../../new/_lib/bioAssembler";
 
 const INPUT = "mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary";
 const SELECT = "mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm";
@@ -39,6 +46,12 @@ export default function EditBusinessPage() {
   const [secondarySectors, setSecondarySectors] = useState<string[]>([]);
   const [social, setSocial] = useState<Record<string, string>>({});
   const [lookingFor, setLookingFor] = useState<string[]>([]);
+  const [website, setWebsite] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [answers, setAnswers] = useState<Answers>(EMPTY_ANSWERS);
+  const [isGuided, setIsGuided] = useState(false);
+  const [bioNeAuto, setBioNeAuto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +80,16 @@ export default function EditBusinessPage() {
       setSecondarySectors((b.secondary_sectors as string[]) ?? []);
       setSocial((b.social_links ?? {}) as Record<string, string>);
       setLookingFor(cleanLookingFor(cred.looking_for));
+      setWebsite(b.website_url ?? "");
+      setPhone(b.phone ?? "");
+      setAddressLine(b.address_line ?? "");
+      setBioNeAuto(!!b.bio_ne_auto);
+      setIsGuided(b.import_source === "guided");
+      try {
+        setAnswers(parseAnswers(b.profile_answers));
+      } catch {
+        setAnswers(EMPTY_ANSWERS);
+      }
       setState("ok");
     }
     load();
@@ -83,13 +106,17 @@ export default function EditBusinessPage() {
         country_of_registration: country,
         bio,
         bio_ne: bioNe.trim() || null,
-        // Editing here means the owner reviewed the Nepali bio — no longer a draft.
-        bio_ne_auto: false,
+        // Owner-typed bios are not machine drafts; a fresh Regenerate sets bioNeAuto true.
+        bio_ne_auto: bioNeAuto,
         city: city.trim() || null,
+        website_url: website.trim() || null,
+        phone: phone.trim() || null,
+        address_line: addressLine.trim() || null,
         primary_sector: primarySector,
         secondary_sectors: secondarySectors,
         credentials: { looking_for: lookingFor },
         social_links: cleanSocialLinks(social),
+        profile_answers: answers,
       })
       .eq("id", id);
     setSaving(false);
@@ -138,7 +165,23 @@ export default function EditBusinessPage() {
         </label>
         <label className="block text-sm">
           <span className={LABEL}>{t("bioNe")}</span>
-          <textarea value={bioNe} onChange={(e) => setBioNe(e.target.value)} rows={3} lang="ne" className={INPUT} />
+          <textarea value={bioNe} onChange={(e) => { setBioNe(e.target.value); setBioNeAuto(false); }} rows={3} lang="ne" className={INPUT} />
+        </label>
+
+        {/* Contact / web — real columns added by BL-BIZ-01, editable here (A-3). */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm">
+            <span className={LABEL}>{te("websiteLabel")}</span>
+            <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" inputMode="url" className={INPUT} />
+          </label>
+          <label className="block text-sm">
+            <span className={LABEL}>{te("phoneLabel")}</span>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" className={INPUT} />
+          </label>
+        </div>
+        <label className="block text-sm">
+          <span className={LABEL}>{te("addressLabel")}</span>
+          <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} className={INPUT} />
         </label>
 
         <label className="block text-sm">
@@ -219,6 +262,56 @@ export default function EditBusinessPage() {
             })}
           </div>
         </div>
+
+        {/* Guided answers + regenerate — only for guided-built businesses (A-3). */}
+        {isGuided && (
+          <div className="rounded-md border border-border bg-bg p-3">
+            <p className="text-sm font-semibold">{te("answersHeading")}</p>
+            <p className="mt-0.5 text-xs text-ink-soft">{te("answersHint")}</p>
+
+            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qServices")}</p>
+            <div className="mt-1.5">
+              <ChipMultiSelect
+                chips={primarySector ? SERVICE_CATALOG[primarySector as SectorSlug] : []}
+                selected={answers.services}
+                onToggle={(id) => setAnswers((a) => ({ ...a, services: a.services.includes(id) ? a.services.filter((x) => x !== id) : [...a.services, id] }))}
+              />
+            </div>
+
+            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qCustomers")}</p>
+            <div className="mt-1.5">
+              <ChipMultiSelect
+                chips={CUSTOMER_CHIPS}
+                selected={answers.customers}
+                onToggle={(id) => setAnswers((a) => ({ ...a, customers: a.customers.includes(id) ? a.customers.filter((x) => x !== id) : [...a.customers, id] }))}
+              />
+            </div>
+
+            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qYears")}</p>
+            <div className="mt-1.5">
+              <ChipSingleSelect chips={YEARS_CHIPS} value={answers.years} onSelect={(id) => setAnswers((a) => ({ ...a, years: id }))} />
+            </div>
+
+            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qCrossborder")}</p>
+            <div className="mt-1.5">
+              <ChipSingleSelect chips={CROSSBORDER_CHIPS} value={answers.crossborder} onSelect={(id) => setAnswers((a) => ({ ...a, crossborder: id as Answers["crossborder"] }))} />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!primarySector) return;
+                setBio(assembleBio({ name, city: city || null, primarySector: primarySector as SectorSlug, answers, locale: "en" }));
+                setBioNe(assembleBio({ name, city: city || null, primarySector: primarySector as SectorSlug, answers, locale: "ne" }));
+                setBioNeAuto(true); // regenerated = machine draft again
+              }}
+              className="mt-3 rounded-md border border-border-input px-3.5 py-2 text-sm font-medium text-ink-soft hover:bg-surface-2"
+            >
+              {te("regenerateBio")}
+            </button>
+            <p className="mt-1 text-xs text-ink-soft">{te("regenerateHint")}</p>
+          </div>
+        )}
 
         {error && <p className="text-sm text-accent" role="alert">{error}</p>}
 

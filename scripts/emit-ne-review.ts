@@ -27,9 +27,22 @@ rows.push({ key: "scaffold.ne.years", en: BIO_SCAFFOLD.en.s1Years, ne: `${BIO_SC
 rows.push({ key: "scaffold.ne.offer", en: `${BIO_SCAFFOLD.en.offer} <list>.`, ne: `${BIO_SCAFFOLD.ne.offer} <list> ${BIO_SCAFFOLD.ne.offerSuffix}${BIO_SCAFFOLD.ne.terminator}` });
 rows.push({ key: "scaffold.ne.work", en: `${BIO_SCAFFOLD.en.work} <list>.`, ne: `${BIO_SCAFFOLD.ne.work} <list>${BIO_SCAFFOLD.ne.workSuffix}${BIO_SCAFFOLD.ne.terminator}` });
 
-// Also the two new messages/*.json keys added in this batch (§0 A-1).
-rows.push({ key: "businessNew.plannedPriceTitle", en: "Planned access price (optional)", ne: "योजनाबद्ध पहुँच मूल्य (वैकल्पिक)" });
-rows.push({ key: "businessNew.plannedPriceHint", en: "Recorded for when paid access launches. Contact stays free until then — charging isn't live yet.", ne: "सशुल्क पहुँच सुरु हुँदा प्रयोग गर्न अभिलेख गरिन्छ। त्यससम्म सम्पर्क निःशुल्क रहन्छ — अहिले शुल्क लिने सुविधा सक्रिय छैन।" });
+// Plus the new UI namespaces added in this batch, read from the bundles so the
+// review list stays in sync with what actually ships.
+import { readFileSync } from "node:fs";
+const here = dirname(fileURLToPath(import.meta.url));
+const en = JSON.parse(readFileSync(join(here, "..", "messages", "en.json"), "utf8"));
+const ne = JSON.parse(readFileSync(join(here, "..", "messages", "ne.json"), "utf8"));
+for (const nsName of ["guided", "businessEdit"] as const) {
+  const enNs = en[nsName] ?? {};
+  const neNs = ne[nsName] ?? {};
+  for (const k of Object.keys(enNs)) {
+    if (typeof enNs[k] === "string") rows.push({ key: `${nsName}.${k}`, en: enNs[k], ne: neNs[k] ?? "" });
+  }
+}
+for (const k of ["plannedPriceTitle", "plannedPriceHint"]) {
+  rows.push({ key: `businessNew.${k}`, en: en.businessNew?.[k] ?? "", ne: ne.businessNew?.[k] ?? "" });
+}
 
 // De-duplicate by NE value (the six generic sectors share one service list, so its
 // six chips would otherwise repeat six times). Keep the first key seen.
