@@ -30,12 +30,24 @@ export async function updateSession(request: NextRequest, response: NextResponse
 
   const { locale, path } = stripLocale(request.nextUrl.pathname);
 
-  // Login is the front door: unauthenticated visitors land there, never on the
-  // app itself. Redirect keeps whatever locale they were on.
+  // Login is the front door for the app: unauthenticated visitors on a protected
+  // route land there. Public marketing + auth routes (incl. "/") are exempt.
   if (!user && !isPublicPath(path)) {
     const url = request.nextUrl.clone();
     url.pathname = withLocalePrefix(locale, "/login");
     return NextResponse.redirect(url);
+  }
+
+  // Logged-out visitors at "/" get the marketing homepage, served in place via a
+  // REWRITE so the URL stays "/" (the app's Feed also lives at "/" for logged-in
+  // users — they fall through to it, unchanged). Internal target is always
+  // locale-prefixed so the [locale] segment resolves.
+  if (!user && path === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}/home`;
+    const rewrite = NextResponse.rewrite(url, { request: { headers: request.headers } });
+    response.cookies.getAll().forEach((c) => rewrite.cookies.set(c));
+    return rewrite;
   }
 
   // Already signed in — keep them out of the auth screens.

@@ -79,12 +79,21 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/privacy")).toBe(true);
   });
 
-  it("treats the home feed and other app routes as non-public", () => {
-    expect(isPublicPath("/")).toBe(false);
+  it("treats app routes as non-public", () => {
     expect(isPublicPath("/members")).toBe(false);
     expect(isPublicPath("/profile")).toBe(false);
     // /settings/privacy must NOT be caught by the /privacy public prefix
     expect(isPublicPath("/settings/privacy")).toBe(false);
+  });
+
+  it("treats '/' and the marketing routes as public (homepage renders at '/')", () => {
+    // "/" is public as an EXACT match — the marketing homepage renders there for
+    // logged-out visitors; a prefix check would wrongly make everything public.
+    expect(isPublicPath("/")).toBe(true);
+    expect(isPublicPath("/home")).toBe(true);
+    expect(isPublicPath("/welcome-tour")).toBe(true);
+    // but not an arbitrary deep path
+    expect(isPublicPath("/members")).toBe(false);
   });
 });
 

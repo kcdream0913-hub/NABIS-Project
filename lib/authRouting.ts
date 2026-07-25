@@ -8,6 +8,10 @@ export const PUBLIC_PATHS = [
   "/auth/callback",
   "/terms",
   "/privacy",
+  // Public marketing routes (the homepage is served at "/" via a rewrite; see
+  // isPublicPath's exact "/" case and updateSession).
+  "/home",
+  "/welcome-tour",
 ];
 
 // "/ne/signup" -> { locale: "ne", path: "/signup" }; "/signup" -> { locale: "en", path: "/signup" }.
@@ -30,5 +34,8 @@ export function withLocalePrefix(locale: string, path: string): string {
 }
 
 export function isPublicPath(path: string): boolean {
+  // "/" is public (the marketing homepage renders there for logged-out visitors),
+  // but as an EXACT match — a prefix check would make every path public.
+  if (path === "/") return true;
   return PUBLIC_PATHS.some((p) => path.startsWith(p));
 }
