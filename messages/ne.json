@@ -245,6 +245,19 @@
     "en": "English",
     "ne": "नेपाली"
   },
+  "marketing": {
+    "toggleToDark": "Switch to dark theme",
+    "toggleToLight": "Switch to light theme",
+    "emailPlaceholder": "you@email.com",
+    "requestCta": "Request an invitation",
+    "requesting": "Sending…",
+    "requestSent": "Thank you — that's with us now. Watch your inbox; we usually answer within two to five business days.",
+    "requestError": "Something went wrong. Please try again.",
+    "tourBack": "Back",
+    "tourContinue": "Continue",
+    "tourFinal": "Continue to sign up",
+    "tourSkip": "Skip to sign in"
+  },
   "common": {
     "cancel": "रद्द गर्नुहोस्",
     "save": "सेभ गर्नुहोस्",

@@ -1,0 +1,114 @@
+/* BridgeLink marketing — design tokens (ported from bridgelink-site/css/theme.css).
+   Light = :root; Dark tokens hang off `.dark` to match the app's theme mechanism
+   (ThemeProvider toggles `.dark` on <html>; the app's head boot script sets it
+   before paint, so the marketing pages carry the same theme with no boot script
+   of their own). Fonts stay self-hosted from /public/assets/fonts so the ported
+   inline styles' literal 'Geist' / 'Newsreader' / 'Geist Mono' families resolve
+   verbatim (pixel fidelity over next/font's hashed family names). */
+
+@font-face { font-family:'Geist'; font-style:normal; font-weight:400 500; font-display:swap; src:url('/assets/fonts/geist.woff2') format('woff2'); }
+@font-face { font-family:'Geist Mono'; font-style:normal; font-weight:400 500; font-display:swap; src:url('/assets/fonts/geist-mono.woff2') format('woff2'); }
+@font-face { font-family:'Newsreader'; font-style:normal; font-weight:400 500; font-display:swap; src:url('/assets/fonts/newsreader.woff2') format('woff2'); }
+
+:root {
+  color-scheme: light;
+  --bg:        #F7F4ED;
+  --bg-deep:   #EDE8DC;
+  --surface:   #FDFBF5;
+  --field:     #F2EEE4;
+  --bg-92:     rgba(247,244,237,0.92);
+  --nav-bg:    rgba(247,244,237,0.82);
+  --ink:       #1E1C18;
+  --ink-mid:   #56514A;
+  --ink-low:   #6E685F;
+  --ink-faint: #8A8377;
+  --glacier:        #3B736C;
+  --glacier-strong: #2F625C;
+  --btn:            #3B736C;
+  --btn-hover:      #2F625C;
+  --stone:          #A8987F;
+  --gold:           #7A6B52;
+  --line-03: rgba(30,28,24,0.03);
+  --line-05: rgba(30,28,24,0.05);
+  --line-10: rgba(30,28,24,0.10);
+  --line-12: rgba(30,28,24,0.12);
+  --line-14: rgba(30,28,24,0.14);
+  --line-18: rgba(30,28,24,0.18);
+  --line-30: rgba(30,28,24,0.30);
+  --glacier-wash-09: rgba(59,115,108,0.09);
+  --glacier-wash-10: rgba(59,115,108,0.10);
+  --glacier-wash-14: rgba(59,115,108,0.14);
+  --gold-wash-11: rgba(181,148,90,0.11);
+  --gold-wash-12: rgba(181,148,90,0.12);
+  --gold-wash-14: rgba(181,148,90,0.14);
+  --bg-deep-06: rgba(237,232,220,0.06);
+  --sel: rgba(59,115,108,0.18);
+}
+
+.dark {
+  color-scheme: dark;
+  --bg:        #131211;
+  --bg-deep:   #181715;
+  --surface:   #1D1C19;
+  --field:     #232220;
+  --bg-92:     rgba(19,18,17,0.92);
+  --nav-bg:    rgba(19,18,17,0.80);
+  --ink:       #EDE8DE;
+  --ink-mid:   #A8A296;
+  --ink-low:   #8D877C;
+  --ink-faint: #736D63;
+  --glacier:        #6FA39C;
+  --glacier-strong: #83B3AB;
+  --btn:            #3B736C;
+  --btn-hover:      #2F625C;
+  --stone:          #C2B7A6;
+  --gold:           #A8946E;
+  --line-03: rgba(237,232,222,0.04);
+  --line-05: rgba(237,232,222,0.06);
+  --line-10: rgba(237,232,222,0.09);
+  --line-12: rgba(237,232,222,0.11);
+  --line-14: rgba(237,232,222,0.13);
+  --line-18: rgba(237,232,222,0.17);
+  --line-30: rgba(237,232,222,0.28);
+  --glacier-wash-09: rgba(111,163,156,0.08);
+  --glacier-wash-10: rgba(111,163,156,0.10);
+  --glacier-wash-14: rgba(111,163,156,0.13);
+  --gold-wash-11: rgba(192,160,110,0.08);
+  --gold-wash-12: rgba(192,160,110,0.09);
+  --gold-wash-14: rgba(192,160,110,0.10);
+  --bg-deep-06: rgba(24,23,21,0.06);
+  --sel: rgba(111,163,156,0.28);
+}
+
+/* Marketing routes own the document background while active. */
+.bl-marketing { background: var(--bg); }
+.bl-marketing ::selection { background: var(--sel); color: var(--ink); }
+.bl-marketing a { text-decoration: none; }
+
+/* theme switch: brief cross-fade on colors only */
+html.theme-anim, html.theme-anim * {
+  transition: background-color 260ms ease, border-color 260ms ease, color 260ms ease !important;
+}
+
+/* theme toggle button */
+.bl-toggle {
+  display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; flex:0 0 auto;
+  border:1px solid var(--line-12); border-radius:10px;
+  background:transparent; color:var(--ink-mid); cursor:pointer;
+  transition: background 180ms, color 180ms, border-color 180ms;
+}
+.bl-toggle:hover { background: var(--line-05); color: var(--ink); }
+.bl-toggle svg { width:16px; height:16px; }
+
+@keyframes railDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes wordUp { from { opacity: 0; transform: translateY(105%); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes navDrop { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes slowZoom { from { transform: scale(1.06); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .bl-marketing * { animation: none !important; } }
+
+/* keyboard focus */
+.bl-marketing a:focus-visible, .bl-marketing button:focus-visible, .bl-marketing input:focus-visible {
+  outline: 2px solid var(--glacier); outline-offset: 2px;
+}
