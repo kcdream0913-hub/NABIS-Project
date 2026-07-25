@@ -48,8 +48,8 @@ export default async function BusinessPage({
   } = await supabase.auth.getUser();
   const isOwner = !!user && user.id === business.owner_user_id;
 
-  const cred = (business.credentials ?? {}) as { city?: string | null; looking_for?: unknown };
-  const city = localizeCity(locale, cred.city);
+  const cred = (business.credentials ?? {}) as { looking_for?: unknown };
+  const city = localizeCity(locale, business.city);
   const lookingFor = cleanLookingFor(cred.looking_for);
   const social = (business.social_links ?? {}) as Record<string, string>;
   const socialEntries = SOCIAL_FIELDS.filter((f) => social[f]);

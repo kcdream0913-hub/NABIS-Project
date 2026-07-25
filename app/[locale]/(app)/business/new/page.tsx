@@ -38,7 +38,9 @@ export default function NewBusinessPage() {
   const [lookingFor, setLookingFor] = useState<string[]>([]);
   // Review
   const [regNumber, setRegNumber] = useState("");
-  const [isPaidProvider, setIsPaidProvider] = useState(false);
+  // Intended access price only — recorded for when payments launch. is_paid_provider
+  // is trigger-protected (forced false for non-admin writers, silently), so the
+  // client never sends it and never claims charging is live. See BL-BIZ-02 §0/A-1.
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
 
@@ -70,13 +72,14 @@ export default function NewBusinessPage() {
         // bio_ne is left for the translation worker; owners edit it on the
         // business edit page. bio_ne_auto stays false (nothing machine-made yet).
         bio_ne_auto: false,
-        // City has no column of its own; it lives with looking_for in credentials.
-        credentials: { city: city.trim() || null, looking_for: lookingFor },
+        city: city.trim() || null,
+        credentials: { looking_for: lookingFor },
         social_links: cleanSocialLinks(social),
         owner_user_id: user.id,
-        verification_status: "unverified",
-        is_paid_provider: isPaidProvider,
-        access_price_amount: isPaidProvider ? Number(price) : null,
+        // NB: is_paid_provider and verification_status are trigger-protected — never
+        // sent from the client (would be a silent no-op). Only the intended price is
+        // recorded; contact charging turns on when the payments rail launches.
+        access_price_amount: price.trim() ? Number(price) : null,
         access_price_currency: currency,
       })
       .select()
@@ -261,31 +264,22 @@ export default function NewBusinessPage() {
               <span className="mt-1 block text-xs text-ink-soft">{t("regNumberHint")}</span>
             </label>
 
-            {/* Paid access — spec §5.13. Requires Tier 2 (registration number). */}
+            {/* Access price is RECORDED only. Charging is not live — is_paid_provider
+                is trigger-protected and there is no payments rail yet (A-1). No toggle
+                that implies charging is on. */}
             <div className="rounded-md border border-border bg-bg p-3">
-              <label className="flex items-center gap-2 text-sm font-medium">
+              <p className="text-sm font-medium">{t("plannedPriceTitle")}</p>
+              <p className="mt-1 text-xs text-ink-soft">{t("plannedPriceHint")}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
                 <input
-                  type="checkbox"
-                  checked={isPaidProvider}
-                  disabled={!regNumber}
-                  onChange={(e) => setIsPaidProvider(e.target.checked)}
-                  className="h-4 w-4 accent-primary disabled:opacity-40"
+                  type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)}
+                  placeholder={t("amount")} className="w-32 rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
                 />
-                {t("chargeFee")}
-              </label>
-              <p className="mt-1 text-xs text-ink-soft">{regNumber ? t("chargeFeeHintUnlocked") : t("chargeFeeHintLocked")}</p>
-              {isPaidProvider && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <input
-                    type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)}
-                    placeholder={t("amount")} className="w-32 rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
-                  />
-                  <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="rounded-md border border-border bg-surface px-3 py-2 text-sm">
-                    <option>USD</option>
-                    <option>NPR</option>
-                  </select>
-                </div>
-              )}
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="rounded-md border border-border bg-surface px-3 py-2 text-sm">
+                  <option>USD</option>
+                  <option>NPR</option>
+                </select>
+              </div>
             </div>
           </>
         )}

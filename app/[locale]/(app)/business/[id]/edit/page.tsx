@@ -57,10 +57,10 @@ export default function EditBusinessPage() {
         setState("denied");
         return;
       }
-      const cred = (b.credentials ?? {}) as { city?: string | null; looking_for?: unknown };
+      const cred = (b.credentials ?? {}) as { looking_for?: unknown };
       setName(b.name ?? "");
       setCountry(b.country_of_registration ?? "United States");
-      setCity(cred.city ?? "");
+      setCity(b.city ?? "");
       setBio(b.bio ?? "");
       setBioNe(b.bio_ne ?? "");
       setPrimarySector(b.primary_sector ?? "");
@@ -85,9 +85,10 @@ export default function EditBusinessPage() {
         bio_ne: bioNe.trim() || null,
         // Editing here means the owner reviewed the Nepali bio — no longer a draft.
         bio_ne_auto: false,
+        city: city.trim() || null,
         primary_sector: primarySector,
         secondary_sectors: secondarySectors,
-        credentials: { city: city.trim() || null, looking_for: lookingFor },
+        credentials: { looking_for: lookingFor },
         social_links: cleanSocialLinks(social),
       })
       .eq("id", id);
