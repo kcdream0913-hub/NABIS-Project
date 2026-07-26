@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import ThemeToggle from "../_components/ThemeToggle";
 import MarketingLocaleSwitch from "../_components/MarketingLocaleSwitch";
 import RequestInviteForm from "../_components/RequestInviteForm";
@@ -13,11 +14,25 @@ import RequestInviteForm from "../_components/RequestInviteForm";
 // approved Nepali dictionary). Served at "/" for logged-out visitors via a
 // middleware rewrite. The hero headline animates word-by-word in English; Nepali
 // (Devanagari) renders as a single line — never split into animated word spans.
-export const metadata: Metadata = {
-  title: "BridgeLink — The US–Nepal corridor, in one room",
-  description:
-    "An invite-only, verified professional network for the operators, investors, and diaspora professionals moving capital, projects, and people between the United States and Nepal.",
-};
+// SEO guard: this page's route file is "/[locale]/home", but the homepage is
+// served at "/" (and "/ne") via a middleware rewrite. Without a canonical, a
+// crawler that reaches "/home" or "/ne/home" directly would index a duplicate of
+// the homepage. The canonical always points at the locale ROOT, so it is
+// self-referential when served at "/" and dedupes when hit at "/home".
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const canonical = locale === routing.defaultLocale ? "/" : `/${locale}`;
+  return {
+    title: "BridgeLink — The US–Nepal corridor, in one room",
+    description:
+      "An invite-only, verified professional network for the operators, investors, and diaspora professionals moving capital, projects, and people between the United States and Nepal.",
+    alternates: { canonical },
+  };
+}
 
 const MONO = "'Geist Mono',monospace";
 const GEIST = "'Geist',sans-serif";

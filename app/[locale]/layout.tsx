@@ -26,6 +26,11 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for canonical/og URLs. The marketing homepage is served at "/"
+  // but its route file lives at "/[locale]/home", so pages set canonicals against
+  // this to avoid the homepage being indexed at both "/" and "/home" (see the
+  // home page's generateMetadata).
+  metadataBase: new URL("https://nabis-project.vercel.app"),
   title: "BridgeLink",
   description: "The invite-only professional network for the US–Nepal corridor.",
 };
