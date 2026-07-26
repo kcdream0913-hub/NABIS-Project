@@ -12,10 +12,19 @@ export default defineConfig({
   fullyParallel: true,
   retries: 0,
   webServer: {
-    command: `npm run dev -- --port ${PORT}`,
-    url: `${HOST}/signup`,
+    // Run the smoke suite against a PRODUCTION build — the same artifact Vercel
+    // serves — not `next dev`. This is what catches build-only / hydration
+    // failures (the class of bug that has bitten this repo). Self-contained so it
+    // works identically in CI and locally: build, then start.
+    command: `npm run build && npx next start --port ${PORT}`,
+    // Readiness probe: a public marketing route that returns 200 for logged-out
+    // visitors and doesn't depend on an auth cookie.
+    url: `${HOST}/guidelines`,
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    // Generous: a cold `next build` (~1 min) plus start must fit inside this.
+    timeout: 180_000,
+    stdout: "pipe",
+    stderr: "pipe",
   },
   use: {
     baseURL: HOST,

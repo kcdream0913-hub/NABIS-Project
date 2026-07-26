@@ -6,11 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel an in-progress run when a newer commit is pushed to the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit:
     name: Typecheck, build, unit tests
     runs-on: ubuntu-latest
     env:
+      # Build reads these (NEXT_PUBLIC_* are inlined at build time). Configured as
+      # repo Actions secrets; the app also tolerates their absence at build (the
+      # client is only constructed at request time), but keeping them set mirrors
+      # the Vercel build environment.
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
@@ -19,6 +28,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # `npm ci` requires package-lock.json to be in sync with package.json for
+      # the SAME npm major it runs under (Node 22 ships npm 10). The lockfile is
+      # kept cross-compatible with npm 10 and 11 — if this step ever fails with
+      # "Missing: <pkg> from lock file", run `npm install` locally and commit the
+      # updated lockfile.
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
@@ -40,9 +54,11 @@ jobs:
       - run: npm ci
       - name: Check secrets are actually present (never prints values)
         run: |
-          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "::error::NEXT_PUBLIC_SUPABASE_URL is EMPTY/MISSING"; else echo "NEXT_PUBLIC_SUPABASE_URL is set, length ${#NEXT_PUBLIC_SUPABASE_URL}"; fi
-          if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then echo "::error::NEXT_PUBLIC_SUPABASE_ANON_KEY is EMPTY/MISSING"; else echo "NEXT_PUBLIC_SUPABASE_ANON_KEY is set, length ${#NEXT_PUBLIC_SUPABASE_ANON_KEY}"; fi
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "::error::NEXT_PUBLIC_SUPABASE_URL is EMPTY/MISSING"; exit 1; else echo "NEXT_PUBLIC_SUPABASE_URL is set, length ${#NEXT_PUBLIC_SUPABASE_URL}"; fi
+          if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then echo "::error::NEXT_PUBLIC_SUPABASE_ANON_KEY is EMPTY/MISSING"; exit 1; else echo "NEXT_PUBLIC_SUPABASE_ANON_KEY is set, length ${#NEXT_PUBLIC_SUPABASE_ANON_KEY}"; fi
       - run: npx playwright install --with-deps chromium
+      # Playwright's webServer builds the app and runs `next start`, then the smoke
+      # suite hits the built app unauthenticated (/, /ne, /welcome-tour, /guidelines).
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
