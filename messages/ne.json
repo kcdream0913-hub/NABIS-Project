@@ -40,7 +40,9 @@
     "react": "मन पराउनुहोस्",
     "comment": "टिप्पणी",
     "share": "सेयर",
-    "postedBy": "{name} द्वारा पोस्ट गरिएको"
+    "postedBy": "{name} द्वारा पोस्ट गरिएको",
+    "seeOriginal": "मूल हेर्नुहोस्",
+    "showTranslation": "अनुवाद हेर्नुहोस्"
   },
   "settings": {
     "eyebrow": "खाता र प्राथमिकता",

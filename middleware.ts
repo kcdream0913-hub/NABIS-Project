@@ -14,10 +14,14 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Skip static assets, the Next internals, and the OAuth callback — the
-  // callback URL is registered with the auth provider verbatim and must
-  // never gain a locale prefix or a redirect in front of it.
+  // Skip static assets, the Next internals, the OAuth callback, and API routes.
+  // The callback URL is registered with the auth provider verbatim and must
+  // never gain a locale prefix or a redirect in front of it. API routes
+  // (/api/*) handle their OWN auth and are not locale-scoped — running the
+  // intl+auth middleware on them would rewrite the path to a locale segment
+  // (breaking the route → 404) and redirect unauthenticated calls to /login
+  // (307) instead of letting the route return a JSON 401.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

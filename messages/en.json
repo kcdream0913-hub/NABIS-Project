@@ -40,7 +40,9 @@
     "react": "Like",
     "comment": "Comment",
     "share": "Share",
-    "postedBy": "Posted by {name}"
+    "postedBy": "Posted by {name}",
+    "seeOriginal": "See original",
+    "showTranslation": "Show translation"
   },
   "settings": {
     "eyebrow": "Account & preferences",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useApp } from "@/lib/store";
+import { detectBodyLang } from "@/lib/detectLang";
 
 export default function Composer({
   isVerified,
@@ -31,10 +32,15 @@ export default function Composer({
     // Posts are stamped with the active country view (spec §5.6: the feed
     // is view-aware). Server-side Bridge-authoring rules (BL-TRUST-01 C3)
     // arrive with the per-track trust model — this is the display layer.
+    // Detect the post's language now (Devanagari majority-script heuristic) so
+    // viewers in the other locale get an auto-translation. Same rule as the DB
+    // backfill — the two must never diverge.
+    const trimmed = body.trim();
     await supabase.from("posts").insert({
       author_id: user.id,
       posted_as: "user",
-      body: body.trim(),
+      body: trimmed,
+      body_lang: detectBodyLang(trimmed),
       view,
     });
     setBody("");

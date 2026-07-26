@@ -25,6 +25,9 @@ type FeedBusiness = {
 type Post = {
   id: string;
   body: string;
+  body_lang: string | null;
+  body_translated: string | null;
+  body_translated_lang: string | null;
   created_at: string;
   posted_as: string;
   view: string | null;
@@ -51,7 +54,7 @@ export default function HomePage() {
     const { data } = await supabase
       .from("posts")
       .select(
-        "id, body, created_at, posted_as, view, profiles:author_id ( name, avatar_url, verification_status, bridge ), businesses:business_id ( name, logo_url, verification_status )"
+        "id, body, body_lang, body_translated, body_translated_lang, created_at, posted_as, view, profiles:author_id ( name, avatar_url, verification_status, bridge ), businesses:business_id ( name, logo_url, verification_status )"
       )
       .or(`view.eq.${view},view.is.null`)
       .order("created_at", { ascending: false })
@@ -114,6 +117,9 @@ export default function HomePage() {
     return {
       id: p.id,
       body: p.body,
+      bodyLang: p.body_lang === "ne" ? "ne" : "en",
+      bodyTranslated: p.body_translated,
+      bodyTranslatedLang: p.body_translated_lang === "ne" ? "ne" : p.body_translated_lang === "en" ? "en" : null,
       created_at: p.created_at,
       view: postView,
       posted_as: p.posted_as === "business" ? "business" : "user",
