@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import ThemeToggle from "../_components/ThemeToggle";
+import MarketingLocaleSwitch from "../_components/MarketingLocaleSwitch";
 
 const MONO = "'Geist Mono',monospace";
 const GEIST = "'Geist',sans-serif";
@@ -71,6 +72,7 @@ export default function WelcomeTour() {
         </Link>
         <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <Link href="/login" style={{ font: `400 13px/1 ${GEIST}`, color: "var(--ink-faint)" }}>{t("tourSkip")}</Link>
+          <MarketingLocaleSwitch />
           <ThemeToggle />
         </span>
       </div>
