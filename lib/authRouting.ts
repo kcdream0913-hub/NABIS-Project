@@ -12,6 +12,7 @@ export const PUBLIC_PATHS = [
   // isPublicPath's exact "/" case and updateSession).
   "/home",
   "/welcome-tour",
+  "/guidelines",
 ];
 
 // "/ne/signup" -> { locale: "ne", path: "/signup" }; "/signup" -> { locale: "en", path: "/signup" }.

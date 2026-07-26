@@ -92,6 +92,8 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/")).toBe(true);
     expect(isPublicPath("/home")).toBe(true);
     expect(isPublicPath("/welcome-tour")).toBe(true);
+    expect(isPublicPath("/guidelines")).toBe(true);
+    expect(isPublicPath("/guidelines#data")).toBe(true);
     // but not an arbitrary deep path
     expect(isPublicPath("/members")).toBe(false);
   });

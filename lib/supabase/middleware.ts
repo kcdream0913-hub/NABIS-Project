@@ -40,14 +40,17 @@ export async function updateSession(request: NextRequest, response: NextResponse
 
   // Logged-out visitors at "/" get the marketing homepage, served in place via a
   // REWRITE so the URL stays "/" (the app's Feed also lives at "/" for logged-in
-  // users — they fall through to it, unchanged). Internal target is always
-  // locale-prefixed so the [locale] segment resolves.
+  // users — they fall through to it, unchanged). We repoint next-intl's OWN
+  // response at "/<locale>/home" (by overriding its rewrite header) rather than
+  // building a fresh NextResponse.rewrite: next-intl already injected the resolved
+  // locale onto this response's request headers, and a new response would drop
+  // that — making "/ne" render in English (the default fallback) instead of
+  // Nepali. Reusing `response` also preserves any refreshed Supabase cookies.
   if (!user && path === "/") {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/home`;
-    const rewrite = NextResponse.rewrite(url, { request: { headers: request.headers } });
-    response.cookies.getAll().forEach((c) => rewrite.cookies.set(c));
-    return rewrite;
+    response.headers.set("x-middleware-rewrite", url.toString());
+    return response;
   }
 
   // Already signed in — keep them out of the auth screens.

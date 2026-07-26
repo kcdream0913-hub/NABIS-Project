@@ -9,46 +9,37 @@ const MONO = "'Geist Mono',monospace";
 const GEIST = "'Geist',sans-serif";
 const SERIF = "'Newsreader',serif";
 
-// Ported from bridgelink-site/onboarding.html — the 3-step pre-signup tour. Named
-// /welcome-tour to avoid colliding with the app's post-signup onboarding. Final
-// button → /signup; "Skip" → /login (D-033 links: no Google/marketing sign-in).
-const STEPS = [
-  {
-    eyebrow: "Getting started · 1 of 3",
-    title: "One room for the whole corridor.",
-    lede: "BridgeLink is an invite-only network for people doing real work between the United States and Nepal — operators, investors, diaspora professionals, and tourism leaders.",
-    points: [
-      "A member directory you can actually trust, organized by sector and side of the corridor.",
-      "Events, trips, and working conversations — not a feed of announcements.",
-      "Built for people who move capital, projects, and people. Not an audience.",
-    ],
-  },
-  {
-    eyebrow: "Getting started · 2 of 3",
-    title: "Everyone here has been checked.",
-    lede: "Bridge Verified means a person confirmed who you are before you entered the room. That's the entire premise — and it applies to everyone equally.",
-    points: [
-      "Identity checked — a real person, under their real name.",
-      "Entity or role confirmed — the company, fund, or position is what it says.",
-      "Sector tagged, publicly — so counterparts know what you actually do.",
-    ],
-  },
-  {
-    eyebrow: "Getting started · 3 of 3",
-    title: "What happens next.",
-    lede: "Sign up if you're ready. If you've been invited, your invitation email is your way in. If not, request access from the homepage — a person reads every request.",
-    points: [
-      "Create your account with the email your invitation was sent to.",
-      "Complete your profile — sector, side of the corridor, what you move.",
-      "Verification review usually completes within a few days.",
-    ],
-  },
-];
+// Ported from bridgelink-site-v3/onboarding.html — the 3-step pre-signup tour.
+// Named /welcome-tour to avoid colliding with the app's post-signup onboarding.
+// All copy renders from the "marketing.tour" i18n namespace (en + the approved
+// Nepali dictionary). Final button → /signup ("Create your account"); "Skip" →
+// /login (D-033 links: no Google/marketing sign-in).
 
 export default function WelcomeTour() {
   const t = useTranslations("marketing");
   const router = useRouter();
   const [i, setI] = useState(0);
+
+  const STEPS = [
+    {
+      eyebrow: t("tour.s1Eyebrow"),
+      title: t("tour.s1Title"),
+      lede: t("tour.s1Lede"),
+      points: [t("tour.s1P1"), t("tour.s1P2"), t("tour.s1P3")],
+    },
+    {
+      eyebrow: t("tour.s2Eyebrow"),
+      title: t("tour.s2Title"),
+      lede: t("tour.s2Lede"),
+      points: [t("tour.s2P1"), t("tour.s2P2"), t("tour.s2P3")],
+    },
+    {
+      eyebrow: t("tour.s3Eyebrow"),
+      title: t("tour.s3Title"),
+      lede: t("tour.s3Lede"),
+      points: [t("tour.s3P1"), t("tour.s3P2"), t("tour.s3P3")],
+    },
+  ];
   const last = i === STEPS.length - 1;
 
   useEffect(() => {
