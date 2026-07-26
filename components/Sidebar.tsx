@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { LogOut } from "lucide-react";
@@ -41,6 +41,12 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const router = useRouter();
   const { setSidebarOpen } = useApp();
   const supabase = createClient();
+  // Unique per Sidebar instance. AppShell mounts TWO Sidebars on mobile (the
+  // hidden desktop rail + the drawer) and the browser Supabase client is a
+  // singleton, so a shared channel name made the second mount call `.on()` on an
+  // already-subscribed channel — which throws synchronously and (without an
+  // error boundary) blanked the whole app when the side menu opened.
+  const channelId = useId();
   const [name, setName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -110,7 +116,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
     // RLS scopes realtime to my own threads' messages; a new one from someone
     // else lights the dot immediately.
     const channel = supabase
-      .channel("sidebar-dm-unread")
+      .channel(`sidebar-dm-unread-${channelId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
         const {
           data: { user },
