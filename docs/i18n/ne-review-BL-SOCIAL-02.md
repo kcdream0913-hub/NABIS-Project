@@ -1,7 +1,7 @@
 # NE review — BL-SOCIAL-02 (feed social actions + media)
 
 AI-drafted Nepali strings for the `social` namespace + `nav.bookmarks`. Per R9 these
-need a native-speaker (KC) review before Nepal-side launch. 88 rows.
+need a native-speaker (KC) review before Nepal-side launch. 89 rows.
 
 | Key | English | Nepali (draft) |
 |---|---|---|
@@ -85,6 +85,7 @@ need a native-speaker (KC) review before Nepal-side launch. 88 rows.
 | social.mediaError.noMixing | Add up to 4 images or 1 video, not both. | ४ तस्बिर वा १ भिडियो थप्नुहोस्, दुवै होइन। |
 | social.mediaError.imageTooLarge | Images must be 10MB or smaller. | तस्बिर १०MB वा सोभन्दा सानो हुनुपर्छ। |
 | social.mediaError.videoTooLarge | Video must be 50MB or smaller. | भिडियो ५०MB वा सोभन्दा सानो हुनुपर्छ। |
+| social.mediaError.videoUnreadable | We couldn’t read this video’s length. Please try a different file. | यो भिडियोको लम्बाइ पढ्न सकिएन। कृपया अर्को फाइल प्रयास गर्नुहोस्। |
 | social.mediaError.videoTooLong | Video must be 90 seconds or shorter. | भिडियो ९० सेकेन्ड वा सोभन्दा छोटो हुनुपर्छ। |
 | social.bookmarksEyebrow | Saved | सुरक्षित |
 | social.bookmarksTitle | Bookmarks | बुकमार्कहरू |

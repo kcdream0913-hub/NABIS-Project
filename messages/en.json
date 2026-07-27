@@ -1224,6 +1224,7 @@
       "noMixing": "Add up to 4 images or 1 video, not both.",
       "imageTooLarge": "Images must be 10MB or smaller.",
       "videoTooLarge": "Video must be 50MB or smaller.",
+      "videoUnreadable": "We couldn’t read this video’s length. Please try a different file.",
       "videoTooLong": "Video must be 90 seconds or shorter."
     },
     "bookmarksEyebrow": "Saved",

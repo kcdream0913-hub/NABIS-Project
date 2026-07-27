@@ -66,6 +66,7 @@ export type MediaError =
   | "no-mixing"
   | "image-too-large"
   | "video-too-large"
+  | "video-unreadable"
   | "video-too-long";
 
 export type MediaValidation = { ok: true } | { ok: false; reason: MediaError };
@@ -95,8 +96,11 @@ export function validateMediaSelection(
   }
   for (const vid of videos) {
     if (vid.bytes > VIDEO_MAX_BYTES) return { ok: false, reason: "video-too-large" };
-    if (!vid.durationMs || vid.durationMs > VIDEO_MAX_MS)
-      return { ok: false, reason: "video-too-long" };
+    // A missing / zero / non-finite (Infinity/NaN) duration means we could not
+    // read the clip's length — report THAT, never a false "too long".
+    if (vid.durationMs == null || !Number.isFinite(vid.durationMs) || vid.durationMs <= 0)
+      return { ok: false, reason: "video-unreadable" };
+    if (vid.durationMs > VIDEO_MAX_MS) return { ok: false, reason: "video-too-long" };
   }
   return { ok: true };
 }
@@ -171,6 +175,7 @@ const HUMAN: Record<MediaError, string> = {
   "no-mixing": "noMixing",
   "image-too-large": "imageTooLarge",
   "video-too-large": "videoTooLarge",
+  "video-unreadable": "videoUnreadable",
   "video-too-long": "videoTooLong",
 };
 

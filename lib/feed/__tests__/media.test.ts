@@ -79,6 +79,41 @@ describe("validateMediaSelection", () => {
   it("accepts exactly 1 valid video", () => {
     expect(validateMediaSelection([vid(1000, 30_000)])).toEqual({ ok: true });
   });
+
+  it("accepts a valid short (3s) video — regression for the Infinity-duration bug", () => {
+    expect(validateMediaSelection([vid(1000, 3_000)])).toEqual({ ok: true });
+  });
+
+  // A non-finite / missing / zero duration is "unreadable", NOT "too long" — the
+  // exact misclassification that blocked valid short videos when v.duration came
+  // back as Infinity.
+  it("reports Infinity duration as unreadable, not too-long", () => {
+    expect(validateMediaSelection([vid(1000, Infinity)])).toEqual({
+      ok: false,
+      reason: "video-unreadable",
+    });
+  });
+
+  it("reports NaN duration as unreadable", () => {
+    expect(validateMediaSelection([vid(1000, Number.NaN)])).toEqual({
+      ok: false,
+      reason: "video-unreadable",
+    });
+  });
+
+  it("reports a missing duration as unreadable", () => {
+    expect(validateMediaSelection([{ mime: "video/mp4", bytes: 1000 }])).toEqual({
+      ok: false,
+      reason: "video-unreadable",
+    });
+  });
+
+  it("reports a zero duration as unreadable", () => {
+    expect(validateMediaSelection([vid(1000, 0)])).toEqual({
+      ok: false,
+      reason: "video-unreadable",
+    });
+  });
 });
 
 describe("mediaKind / path / ext", () => {

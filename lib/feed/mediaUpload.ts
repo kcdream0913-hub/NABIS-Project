@@ -63,16 +63,44 @@ async function loadVideoMeta(file: Blob): Promise<VideoMeta | null> {
     const v = document.createElement("video");
     v.preload = "metadata";
     v.muted = true;
-    v.onloadedmetadata = () => {
-      const meta = {
-        durationMs: Math.round((v.duration || 0) * 1000),
-        width: v.videoWidth,
-        height: v.videoHeight,
-      };
+
+    let settled = false;
+    const done = (durationSec: number) => {
+      if (settled) return;
+      settled = true;
+      const width = v.videoWidth;
+      const height = v.videoHeight;
       URL.revokeObjectURL(url);
-      resolve(meta);
+      // A non-finite/zero duration collapses to 0 — validateMediaSelection then
+      // reports it as "unreadable", NEVER a false "too long" (the old code passed
+      // Infinity straight through as durationMs = Infinity > 90000).
+      const durationMs = Number.isFinite(durationSec) && durationSec > 0 ? Math.round(durationSec * 1000) : 0;
+      resolve({ durationMs, width, height });
+    };
+
+    v.onloadedmetadata = () => {
+      if (Number.isFinite(v.duration) && v.duration > 0) {
+        done(v.duration);
+        return;
+      }
+      // Chromium/WebKit quirk: for some blob-URL MP4s, duration is Infinity/NaN at
+      // loadedmetadata. Seeking past the end forces the browser to compute the real
+      // duration, which then arrives on the next timeupdate. This is the canonical
+      // fix, not a workaround around a workaround.
+      const onTimeUpdate = () => {
+        v.removeEventListener("timeupdate", onTimeUpdate);
+        done(v.duration);
+      };
+      v.addEventListener("timeupdate", onTimeUpdate);
+      try {
+        v.currentTime = 1e101;
+      } catch {
+        done(Number.NaN);
+      }
     };
     v.onerror = () => {
+      if (settled) return;
+      settled = true;
       URL.revokeObjectURL(url);
       reject(new Error("video metadata error"));
     };
@@ -165,7 +193,7 @@ export async function uploadPostMediaFile(
   // video
   onStage?.("processing");
   const meta = await loadVideoMeta(file);
-  if (!meta) throw new Error("video-meta-failed"); // fail closed
+  if (!meta || meta.durationMs <= 0) throw new Error("video-meta-failed"); // fail closed
   const poster = await generatePoster(file, { loadMeta: async () => meta, capture: capturePoster });
   if (!poster) throw new Error("poster-failed"); // a video without a poster is rejected
   const path = mediaPath(uid, uuid, extForMime(file.type));
