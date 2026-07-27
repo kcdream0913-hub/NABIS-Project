@@ -123,6 +123,28 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-27 — Batch M-FIX (P0 translation-cache vuln + E2EE-readiness RPC fixes; app fix committed locally, migrations prepared but NOT applied, NOT pushed — hub signs off):**
+  - **P0 fixed (client-first).** `cache_post_translation` (SECURITY DEFINER, EXECUTE
+    → `authenticated`) let ANY signed-in account write an arbitrary translation onto
+    any post where `body_translated is null` (first-writer-wins, no ownership/length
+    check). Translation is already server-side (Anthropic via `/api/posts/translate`;
+    the client sends `postId` only), so the fix keeps server translate and moves the
+    CACHE WRITE to a server-only service-role guarded `UPDATE` (`lib/supabase/service.ts`
+    — returns null + degrades to ephemeral when `SUPABASE_SERVICE_ROLE_KEY` is unset,
+    which it is locally), behind a length cap (≤ 4× source, floor 240) + target-lang
+    check. `PostCard` unchanged (already sends `postId` only). Forward migration
+    `20260727120000_drop_cache_post_translation_rpc.sql` revokes authenticated EXECUTE
+    + drops the RPC — **hub applies AFTER the app ships** (client-first; restriction-
+    first only degrades, never hard-breaks).
+  - **E2EE-readiness RPC fixes (files only, NOT applied):**
+    `20260727121000_messaging_e2ee_rpc_fixes.sql` (+ `.rollback.sql`): `edit_message`
+    gains `p_body_iv` (default null); `schema_version = 1` requires a fresh IV and
+    rejects IV reuse (writes body + body_iv atomically); `schema_version = 0` rejects
+    a non-null IV. `delete_message_for_everyone` also nulls `body_iv`.
+  - **Parked-commit reconcile:** `2b08f06` and `e3cb090` are BOTH already ancestors of
+    `origin/main` (shipped as their own pushed commits, nothing local/dropped).
+  - **D-033 completion doc absent** from the repo (`features/BL-BIZ-02b-…` does not
+    exist) — flagged, not guessed. gates: tsc 0 · vitest 195/195 · build 64/64.
 - **2026-07-26 (later) — Messenger Phase 1.5 E2EE FOUNDATION (DB on prod + verified crypto core; client UI integration deliberately NOT shipped — browser-verification gate):**
   - Migration `20260726160000_messaging_e2ee` (applied to prod; verified first on a
     disposable branch — advisors clean, **8/8 RLS proofs**, ciphertext-opacity demo,

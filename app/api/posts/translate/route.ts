@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { getTranslationProvider } from "@/lib/translation";
 import type { BodyLang } from "@/lib/detectLang";
 
@@ -70,16 +71,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "translate_unavailable" }, { status: 503 });
   }
 
-  // Cache it via a SECURITY DEFINER RPC (owner-agnostic — the caller isn't the
-  // post owner). The function is auth-gated, writes ONLY the two translation
-  // columns, and only when still null, so it's write-once even under concurrent
-  // requests. Best-effort: a failed cache still returns the translation (the
-  // feed must never block on translation).
-  await supabase.rpc("cache_post_translation", {
-    p_post_id: postId,
-    p_translation: translated,
-    p_lang: target,
-  });
+  // Cache server-side with the SERVICE ROLE — never a client-callable RPC. The
+  // translation is computed from the post's OWN body above, so nothing
+  // attacker-controlled is ever persisted (the old cache_post_translation RPC let
+  // any authenticated caller write an arbitrary translation onto any post). Guards:
+  // a length cap (a translation must not dwarf its source — with a small floor so
+  // tiny posts aren't falsely rejected) and a sane target language. The `.is(null)`
+  // filter keeps it write-once even under concurrent requests. Best-effort — a
+  // missing service key or failed write still returns the translation (the feed
+  // never blocks on translation; it simply isn't persisted, and re-translates next
+  // time).
+  const withinCap = translated.length <= Math.max(post.body.length * 4, 240);
+  const targetOk = target === "en" || target === "ne";
+  const service = createServiceClient();
+  let cached = false;
+  if (service && withinCap && targetOk) {
+    const { error } = await service
+      .from("posts")
+      .update({ body_translated: translated, body_translated_lang: target })
+      .eq("id", postId)
+      .is("body_translated", null);
+    cached = !error;
+  }
 
-  return NextResponse.json({ translated, lang: target, cached: false });
+  return NextResponse.json({ translated, lang: target, cached });
 }
