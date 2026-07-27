@@ -98,18 +98,15 @@ export default function PostActionBar({
     setCounts(nc);
     setMine(next);
 
-    // post_reactions has INSERT-own + DELETE-own policies but NO UPDATE policy, so
-    // an upsert's ON CONFLICT DO UPDATE path would be RLS-denied. Change-of-kind is
-    // therefore delete-then-insert; add is a plain insert; remove is a delete.
-    let error: unknown = null;
-    if (!next) {
-      ({ error } = await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", userId));
-    } else if (!prevMine) {
-      ({ error } = await supabase.from("post_reactions").insert({ post_id: postId, user_id: userId, kind: next }));
-    } else {
-      const del = await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", userId);
-      error = del.error ?? (await supabase.from("post_reactions").insert({ post_id: postId, user_id: userId, kind: next })).error;
-    }
+    // Add or change = a single upsert on the (post_id, user_id) PK, so a
+    // change-of-kind emits ONE realtime UPDATE (not a DELETE+INSERT that would make
+    // the reaction blink off/on for other live viewers). Relies on the prod
+    // post_reactions_update_own policy. Remove = a delete.
+    const { error } = next
+      ? await supabase
+          .from("post_reactions")
+          .upsert({ post_id: postId, user_id: userId, kind: next }, { onConflict: "post_id,user_id" })
+      : await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", userId);
     if (error) {
       setCounts(prevCounts);
       setMine(prevMine);
