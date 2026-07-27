@@ -1,10 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { ImagePlus, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useApp } from "@/lib/store";
 import { detectBodyLang } from "@/lib/detectLang";
+import {
+  validateMediaSelection,
+  mediaErrorKey,
+  mediaKind,
+  MEDIA_ACCEPT,
+  type PostMedia,
+  type MediaCandidate,
+} from "@/lib/feed/media";
+import {
+  uploadPostMediaFile,
+  deletePostMediaObjects,
+  readMediaCandidate,
+} from "@/lib/feed/mediaUpload";
 
 export default function Composer({
   isVerified,
@@ -14,14 +28,83 @@ export default function Composer({
   onPosted: () => void;
 }) {
   const t = useTranslations("composer");
+  const tSocial = useTranslations("social");
   const supabase = createClient();
   const { view } = useApp();
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
+  const [media, setMedia] = useState<PostMedia[]>([]);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const candidatesOf = (list: PostMedia[]): MediaCandidate[] =>
+    list.map((m) => (m.type === "video" ? { mime: m.mime, bytes: m.bytes, durationMs: m.duration_ms } : { mime: m.mime, bytes: m.bytes }));
+
+  async function onPick(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setError(null);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setBusy(true);
+    try {
+      // Read candidates (video durations) and validate the WHOLE selection up
+      // front (§4.3) so we never upload a set the trigger would reject.
+      const newFiles = Array.from(files);
+      const newCandidates = await Promise.all(newFiles.map(readMediaCandidate));
+      const combined = [...candidatesOf(media), ...newCandidates];
+      const check = validateMediaSelection(combined);
+      if (!check.ok) {
+        setError(tSocial(`mediaError.${mediaErrorKey(check.reason)}`));
+        return;
+      }
+      // Upload the new files one at a time, keeping a local preview per file.
+      const added: PostMedia[] = [];
+      const newPreviews: Record<string, string> = {};
+      for (const file of newFiles) {
+        if (!mediaKind(file.type)) continue;
+        const descriptor = await uploadPostMediaFile(supabase, user.id, file);
+        added.push(descriptor);
+        try {
+          newPreviews[descriptor.path] = URL.createObjectURL(file);
+        } catch {
+          /* preview is best-effort */
+        }
+      }
+      setMedia((prev) => [...prev, ...added]);
+      setPreviews((prev) => ({ ...prev, ...newPreviews }));
+    } catch {
+      setError(tSocial("mediaUploadFailed"));
+    } finally {
+      setBusy(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
+
+  async function removeMedia(item: PostMedia) {
+    setMedia((prev) => prev.filter((m) => m.path !== item.path));
+    setPreviews((prev) => {
+      const url = prev[item.path];
+      if (url) URL.revokeObjectURL(url);
+      const next = { ...prev };
+      delete next[item.path];
+      return next;
+    });
+    await deletePostMediaObjects(supabase, [item]);
+  }
+
+  function setAlt(path: string, alt: string) {
+    setMedia((prev) => prev.map((m) => (m.type === "image" && m.path === path ? { ...m, alt } : m)));
+  }
 
   async function publish() {
-    if (!body.trim()) return;
+    if (!body.trim() && media.length === 0) return;
     setPosting(true);
+    setError(null);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -29,21 +112,26 @@ export default function Composer({
       setPosting(false);
       return;
     }
-    // Posts are stamped with the active country view (spec §5.6: the feed
-    // is view-aware). Server-side Bridge-authoring rules (BL-TRUST-01 C3)
-    // arrive with the per-track trust model — this is the display layer.
-    // Detect the post's language now (Devanagari majority-script heuristic) so
-    // viewers in the other locale get an auto-translation. Same rule as the DB
-    // backfill — the two must never diverge.
     const trimmed = body.trim();
-    await supabase.from("posts").insert({
+    const { error: insErr } = await supabase.from("posts").insert({
       author_id: user.id,
       posted_as: "user",
-      body: trimmed,
+      body: trimmed || "",
       body_lang: detectBodyLang(trimmed),
       view,
+      media,
     });
+    if (insErr) {
+      // Post failed → clean up the uploaded objects so we leave no orphans (§4.3).
+      await deletePostMediaObjects(supabase, media);
+      setError(tSocial("postFailed"));
+      setPosting(false);
+      return;
+    }
     setBody("");
+    setMedia([]);
+    Object.values(previews).forEach((u) => URL.revokeObjectURL(u));
+    setPreviews({});
     setPosting(false);
     onPosted();
   }
@@ -68,15 +156,84 @@ export default function Composer({
         placeholder={t("placeholder")}
         className="w-full resize-none border-none p-0 text-sm outline-none placeholder:text-ink-soft"
       />
-      <div className="mt-2 flex justify-end">
+
+      {media.length > 0 && (
+        <div className="mt-2 grid grid-cols-4 gap-2">
+          {media.map((m) => (
+            <div key={m.path} className="relative">
+              <div className="relative aspect-square overflow-hidden rounded-md bg-surface-2">
+                <StagedThumb item={m} preview={previews[m.path]} />
+                <button
+                  type="button"
+                  onClick={() => removeMedia(m)}
+                  aria-label={tSocial("removeMedia")}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+              {m.type === "image" && (
+                <input
+                  value={m.alt ?? ""}
+                  onChange={(e) => setAlt(m.path, e.target.value)}
+                  placeholder={tSocial("altPlaceholder")}
+                  className="mt-1 w-full rounded border border-border-input px-1.5 py-1 text-[11px] outline-none focus:border-primary"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && <p className="mt-2 text-xs text-accent" role="alert">{error}</p>}
+
+      <div className="mt-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => fileInput.current?.click()}
+          disabled={busy}
+          aria-label={tSocial("addMedia")}
+          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-ink-soft hover:bg-surface-2 disabled:opacity-50"
+        >
+          {busy ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
+          {tSocial("addMedia")}
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept={MEDIA_ACCEPT.join(",")}
+          multiple
+          hidden
+          onChange={(e) => onPick(e.target.files)}
+        />
         <button
           onClick={publish}
-          disabled={!body.trim() || posting}
+          disabled={(!body.trim() && media.length === 0) || posting || busy}
           className="rounded-md bg-primary px-3.5 py-1.5 text-sm font-medium text-on-primary hover:bg-primary-pressed disabled:opacity-40"
         >
           {posting ? t("posting") : t("post")}
         </button>
       </div>
+    </div>
+  );
+}
+
+// A local preview of a staged file from the original File's blob URL (kept in the
+// composer). Falls back to a neutral type label if the preview is unavailable.
+function StagedThumb({ item, preview }: { item: PostMedia; preview?: string }) {
+  const tSocial = useTranslations("social");
+  if (preview) {
+    return item.type === "video" ? (
+      // eslint-disable-next-line jsx-a11y/media-has-caption
+      <video src={preview} muted className="h-full w-full object-cover" />
+    ) : (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={preview} alt="" className="h-full w-full object-cover" />
+    );
+  }
+  return (
+    <div className="flex h-full w-full items-center justify-center text-[11px] font-medium text-ink-soft">
+      {item.type === "video" ? tSocial("videoLabel") : tSocial("imageLabel")}
     </div>
   );
 }

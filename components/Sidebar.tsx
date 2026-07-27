@@ -23,6 +23,7 @@ const GROUPS: { groupKey: string; items: Item[] }[] = [
     { href: "/members", icon: "members", labelKey: "directory" },
     { href: "/channels", icon: "channels", labelKey: "channels" },
     { href: "/events", icon: "events", labelKey: "events" },
+    { href: "/bookmarks", icon: "bookmarks", labelKey: "bookmarks" },
   ]},
   { groupKey: "groupTools", items: [
     { href: "/trip-planner", icon: "trip", labelKey: "tripPlanner" },

@@ -1,7 +1,7 @@
 "use client";
 import {
   Home, Contact, Hash, CalendarDays, Map, Building2, MessageSquare,
-  ClipboardCheck, Settings, ShieldCheck, Star, type LucideIcon,
+  ClipboardCheck, Settings, ShieldCheck, Star, Bookmark, type LucideIcon,
 } from "lucide-react";
 
 /** Nav glyphs. lucide renders rounded caps/joins already; use strokeWidth ~1.9. */
@@ -13,6 +13,7 @@ export const NAV_ICON = {
   trip: Map,
   register: Building2,
   messages: MessageSquare,
+  bookmarks: Bookmark,
   admin: ClipboardCheck, // review queue — NOT the alert-shield
   settings: Settings,    // mechanic gear
 } satisfies Record<string, LucideIcon>;
