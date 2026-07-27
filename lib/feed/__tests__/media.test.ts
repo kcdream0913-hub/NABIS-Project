@@ -6,11 +6,45 @@ import {
   mediaKind,
   mediaPath,
   extForMime,
+  parseMp4DurationMs,
   IMAGE_MAX_BYTES,
   VIDEO_MAX_BYTES,
   type MediaCandidate,
   type VideoMeta,
 } from "../media";
+
+// ── minimal ISO-BMFF builders for the parser tests ──
+function box(type: string, content: Uint8Array): Uint8Array {
+  const out = new Uint8Array(8 + content.length);
+  new DataView(out.buffer).setUint32(0, out.length);
+  for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(content, 8);
+  return out;
+}
+function concat(...arrs: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(arrs.reduce((n, a) => n + a.length, 0));
+  let off = 0;
+  for (const a of arrs) { out.set(a, off); off += a.length; }
+  return out;
+}
+function mvhdV0(timescale: number, duration: number): Uint8Array {
+  const c = new Uint8Array(20);
+  const dv = new DataView(c.buffer);
+  dv.setUint8(0, 0); // version 0
+  dv.setUint32(12, timescale);
+  dv.setUint32(16, duration);
+  return c;
+}
+function mvhdV1(timescale: number, durationLo: number): Uint8Array {
+  const c = new Uint8Array(32);
+  const dv = new DataView(c.buffer);
+  dv.setUint8(0, 1); // version 1 (64-bit times)
+  dv.setUint32(20, timescale);
+  dv.setUint32(24, 0); // duration hi
+  dv.setUint32(28, durationLo);
+  return c;
+}
+const mp4 = (mvhd: Uint8Array) => concat(box("ftyp", new Uint8Array(8)), box("moov", box("mvhd", mvhd))).buffer;
 
 const img = (bytes: number, mime = "image/jpeg"): MediaCandidate => ({ mime, bytes });
 const vid = (bytes: number, durationMs: number, mime = "video/mp4"): MediaCandidate => ({
@@ -154,6 +188,39 @@ describe("generatePoster", () => {
     });
     expect(out).toBeNull();
     expect(capture).not.toHaveBeenCalled();
+  });
+});
+
+// §fix — deterministic MP4/MOV duration from the moov/mvhd box (the reliable path
+// that replaces the flaky <video>.duration read).
+describe("parseMp4DurationMs", () => {
+  it("reads a version-0 mvhd (timescale 1000, duration 3000 → 3000ms)", () => {
+    expect(parseMp4DurationMs(mp4(mvhdV0(1000, 3000)))).toBe(3000);
+  });
+
+  it("respects the timescale (600/1800 → 3000ms)", () => {
+    expect(parseMp4DurationMs(mp4(mvhdV0(600, 1800)))).toBe(3000);
+  });
+
+  it("reads a version-1 (64-bit) mvhd", () => {
+    expect(parseMp4DurationMs(mp4(mvhdV1(1000, 5000)))).toBe(5000);
+  });
+
+  it("finds moov even when ftyp precedes it (faststart layout)", () => {
+    // mp4() already prepends ftyp; a 3s clip must parse regardless of leading boxes
+    expect(parseMp4DurationMs(mp4(mvhdV0(30000, 90000)))).toBe(3000);
+  });
+
+  it("returns null when there is no moov box", () => {
+    expect(parseMp4DurationMs(concat(box("ftyp", new Uint8Array(8))).buffer)).toBeNull();
+  });
+
+  it("returns null for an 'unknown' (0xffffffff) duration → caller falls back", () => {
+    expect(parseMp4DurationMs(mp4(mvhdV0(1000, 0xffffffff)))).toBeNull();
+  });
+
+  it("returns null on a truncated buffer", () => {
+    expect(parseMp4DurationMs(new Uint8Array(4).buffer)).toBeNull();
   });
 });
 
