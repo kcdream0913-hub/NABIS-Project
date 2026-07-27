@@ -123,6 +123,30 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-26 (later) — Messenger Phase 1.5 E2EE FOUNDATION (DB on prod + verified crypto core; client UI integration deliberately NOT shipped — browser-verification gate):**
+  - Migration `20260726160000_messaging_e2ee` (applied to prod; verified first on a
+    disposable branch — advisors clean, **8/8 RLS proofs**, ciphertext-opacity demo,
+    all FKs indexed): `user_keys` (ECDH P-256 public keys, world-readable so peers
+    can wrap a thread key FOR you), `user_key_recovery` (owner-only, PBKDF2-wrapped
+    private key backup), `thread_keys` (per-participant AES-GCM key wrapped via
+    HKDF(ECDH); you can only SELECT your OWN row — a wrong participant cannot even
+    read another's wrapped key), `messages.body_iv` (per-message IV; `body` = base64
+    ciphertext when `schema_version=1`). Reactions / read cursors / typing /
+    timestamps stay plaintext metadata (documented tradeoff).
+  - `lib/e2ee/crypto.ts` — **Web Crypto ONLY**, standard constructions (ECDH P-256 +
+    HKDF-SHA256 KEK, AES-GCM-256 messages with a fresh 12-byte IV, PBKDF2 250k for
+    recovery). **+10 unit tests against real Node WebCrypto**: message round-trip,
+    fresh-IV (no nonce reuse), wrong-key + wrong-phrase rejection,
+    **wrong-participant-cannot-unwrap-a-thread-key**, and
+    **recovered-key-decrypts-a-thread-key-wrapped-for-it** (end-to-end recovery).
+  - **NOT SHIPPED (deliberate, gated):** the client integration — IndexedDB key
+    store, BIP39 recovery-phrase UI (unskippable), thread-key establishment
+    handshake, send→encrypt / receive→decrypt wiring, encrypted attachments,
+    client-side previews, report-decrypted-copy. The spec REQUIRES two-browser live
+    decrypt + fresh-profile recovery verification, which this (browser-less)
+    environment cannot run; per the stated commitment, safety-critical E2EE
+    integration is not blind-pushed. Gates on what IS shipped: tsc 0 · vitest
+    195/195 · build 64/64 both locales.
 - **2026-07-26 — Messenger Phase 1 (WhatsApp-style features; DB applied to prod, frontend build-green, pushed):**
   - Migration `20260726130000_messaging_phase1` (applied to prod; verified first
     on a disposable branch — advisors clean, 12/12 negative RLS + edit/delete
