@@ -71,7 +71,7 @@ export default function BioReview({
         <button
           type="button"
           onClick={onRegenerate}
-          className="flex items-center gap-1.5 rounded-lg border border-border-input px-4 py-2.5 text-sm font-medium text-ink-soft hover:bg-surface-2"
+          className="flex min-h-[56px] items-center gap-1.5 rounded-lg border border-border-input px-4 py-2.5 text-sm font-medium text-ink-soft hover:bg-surface-2"
         >
           <RefreshCw size={15} /> {t("regenerate")}
         </button>
@@ -79,7 +79,7 @@ export default function BioReview({
           type="button"
           disabled={saving || !en.trim() || !ne.trim()}
           onClick={() => onConfirm({ bioEn: en.trim(), bioNe: ne.trim(), editedEn, editedNe })}
-          className="min-h-[52px] flex-1 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:bg-primary-pressed disabled:opacity-50 sm:flex-none sm:px-8"
+          className="min-h-[56px] flex-1 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:bg-primary-pressed disabled:opacity-50 sm:flex-none sm:px-8"
         >
           {saving ? t("saving") : t("looksRight")}
         </button>

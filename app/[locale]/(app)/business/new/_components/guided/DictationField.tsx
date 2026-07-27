@@ -44,7 +44,7 @@ export default function DictationField({
     spellCheck,
     autoCorrect: autoCorrect ? "on" : "off",
     inputMode: "text" as const,
-    className: "mt-1 w-full rounded-lg border border-border-input px-3.5 py-3 text-base focus:border-primary",
+    className: "mt-1 min-h-[56px] w-full rounded-lg border border-border-input px-3.5 py-3 text-base focus:border-primary",
   };
   return (
     <div>

@@ -37,7 +37,7 @@ export default function CityCombobox({
         spellCheck={false}
         autoCorrect="off"
         inputMode="text"
-        className="mt-1 w-full rounded-lg border border-border-input px-3.5 py-3 text-base focus:border-primary"
+        className="mt-1 min-h-[56px] w-full rounded-lg border border-border-input px-3.5 py-3 text-base focus:border-primary"
       />
       <datalist id={listId}>
         {NEPAL_CITIES.map((c) => (

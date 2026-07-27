@@ -250,7 +250,7 @@ export default function GuidedBuilder({
         <div className="fixed inset-x-0 bottom-0 border-t border-border bg-surface/95 p-3 backdrop-blur">
           <div className="mx-auto flex max-w-xl items-center gap-2">
             {step > 0 && (
-              <button type="button" onClick={() => setStep((s) => s - 1)} className="rounded-lg border border-border-input px-4 py-3 text-sm font-medium text-ink-soft hover:bg-surface-2">
+              <button type="button" onClick={() => setStep((s) => s - 1)} className="min-h-[56px] rounded-lg border border-border-input px-4 py-3 text-sm font-medium text-ink-soft hover:bg-surface-2">
                 {t("back")}
               </button>
             )}
@@ -259,7 +259,7 @@ export default function GuidedBuilder({
                 type="button"
                 disabled={!canContinue}
                 onClick={() => setStep((s) => s + 1)}
-                className="min-h-[52px] flex-1 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:bg-primary-pressed disabled:opacity-50"
+                className="min-h-[56px] flex-1 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:bg-primary-pressed disabled:opacity-50"
               >
                 {requiredAt(step) ? t("continue") : t("skip")}
               </button>
