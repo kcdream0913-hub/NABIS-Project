@@ -123,6 +123,33 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-27 — D-033 gap-closure (audit of the pushed D-033 build; the completion doc was stale — libs + guided UI already shipped):**
+  - **Audit result — most items already SHIPPED:** (a) Step0 fork US→manual /
+    Nepal→guided, two equal buttons, Google import hidden — `d5698a6`. (b)
+    GuidedBuilder 8 questions + BioReview (EN+NE side-by-side, editable, Regenerate,
+    "This looks right") wired to the libs — `d5698a6`. (c) PathSwitchLink on both
+    paths, shared state carried — `d5698a6`. (d) `website.server.ts` importer with
+    the FULL guard set (https-only, SSRF incl. CGNAT re-checked every redirect,
+    robots, 5s, 1MB stream cap, 5/hr, mode live|fixture|off default off, no stored
+    HTML, logo candidate not hotlinked) — `2b08f06` (UI affordance intentionally
+    hidden per D-033). (e) A-1: neither form writes `is_paid_provider`; manual review
+    copy = price recorded only. (f) `business/[id]/edit` covers profile_answers +
+    Regenerate, secondary ≤4, social_links, website_url, phone, address_line, city.
+    (i) events detail/ICS/month-view shipped (`e3cb090`); **Feed/Messages split was
+    subsumed by messenger Phase 1** (the two-pane inbox replaced it).
+  - **Gap CLOSED — (h) a11y tap targets (`711e2a5`):** guided nav/CTA + free-text
+    inputs were 40–52px; bumped to ≥56px (chips/tiles already 56/76).
+  - **(g) i18n naming reality:** the checklist named `business.new.*/catalog.*/
+    bio.template.*`, but the shipped design puts UI chrome under `guided.*`(38) +
+    `businessNew.*`/`businessEdit.*` (en+ne, parity-tested) and the catalog/bio
+    strings as **bilingual data in the libs** (`serviceCatalog` `Chip{en,ne}`,
+    `SECTOR_BIO_LABEL{en,ne}`, deterministic `bioAssembler`) — correct for
+    no-translation-model assembly, not JSON keys. `emit-ne-review.ts` re-run →
+    `docs/i18n/ne-review-BL-BIZ-02.md` = **150 data rows**, unchanged/in-sync.
+  - **(j) D-034 is NOT defined anywhere in the repo** — flagged, not invented. D-033
+    stands as shipped + live. If a D-034 is intended (e.g. to formalize the M-FIX
+    server-side translation-cache decision), the hub should define it.
+  - gates: tsc 0 · vitest 195/195 · build 64/64. Pushed `711e2a5`.
 - **2026-07-27 — Batch M-FIX (P0 translation-cache vuln + E2EE-readiness RPC fixes; app fix committed locally, migrations prepared but NOT applied, NOT pushed — hub signs off):**
   - **P0 fixed (client-first).** `cache_post_translation` (SECURITY DEFINER, EXECUTE
     → `authenticated`) let ANY signed-in account write an arbitrary translation onto
