@@ -11,3 +11,89 @@ export function isUnread(
   if (lastMessage.sender_id === userId) return false;
   return !lastReadAt || lastMessage.created_at > lastReadAt;
 }
+
+// ── message shape (plaintext Phase 1; Phase 1.5 adds schema_version/ciphertext) ──
+export type Attachment = {
+  path: string; // storage object path: {thread_id}/{uploader_id}/{name}
+  type: string; // mime type ("image/jpeg", "application/pdf", …)
+  name: string;
+  size: number;
+  width?: number;
+  height?: number;
+};
+
+export type ChatMessage = {
+  id: string;
+  thread_id: string | null;
+  sender_id: string;
+  body: string | null;
+  created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+  reply_to_message_id: string | null;
+  attachments: Attachment[];
+};
+
+// Windows are mirrored in the SECURITY DEFINER RPCs (edit_message,
+// delete_message_for_everyone). These client copies gate the UI affordance only;
+// the DB is the real enforcer, so a clock-skewed client can never actually bypass
+// them — the RPC rejects a late edit/delete regardless of what the UI shows.
+export const EDIT_WINDOW_MS = 15 * 60 * 1000;
+export const DELETE_EVERYONE_WINDOW_MS = 60 * 60 * 1000;
+
+const within = (createdAt: string, windowMs: number, nowMs: number) =>
+  nowMs - Date.parse(createdAt) <= windowMs;
+
+/** Own, not-deleted, still-has-text message inside the 15-minute edit window. */
+export function canEditMessage(m: ChatMessage, myId: string, nowMs: number): boolean {
+  if (m.sender_id !== myId) return false;
+  if (m.deleted_at) return false;
+  if (!m.body) return false; // text only — a pure-attachment message has nothing to edit
+  return within(m.created_at, EDIT_WINDOW_MS, nowMs);
+}
+
+/** Own, not-already-deleted message inside the 1-hour delete-for-everyone window. */
+export function canDeleteForEveryone(m: ChatMessage, myId: string, nowMs: number): boolean {
+  if (m.sender_id !== myId) return false;
+  if (m.deleted_at) return false;
+  return within(m.created_at, DELETE_EVERYONE_WINDOW_MS, nowMs);
+}
+
+/** Delete-for-me hides any message you can see (own or not, any age), except a
+ *  tombstone (already gone for everyone). */
+export function canDeleteForMe(m: ChatMessage): boolean {
+  return !m.deleted_at;
+}
+
+/** A message I sent is "seen" once every OTHER participant has read up to it.
+ *  Ticks render on own messages only; group-ready (all others must be caught up). */
+export function isSeenByOthers(
+  m: ChatMessage,
+  myId: string,
+  otherLastReadAts: (string | null | undefined)[],
+): boolean {
+  if (m.sender_id !== myId) return false;
+  if (otherLastReadAts.length === 0) return false;
+  return otherLastReadAts.every((r) => !!r && r >= m.created_at);
+}
+
+/** Left-pane / notification preview. Tombstone > attachment glyph > text.
+ *  In Phase 1.5 this runs client-side after decrypt (server sees only ciphertext). */
+export function messagePreview(
+  m: Pick<ChatMessage, "body" | "deleted_at" | "attachments">,
+  labels: { deleted: string; photo: string; document: string },
+): string {
+  if (m.deleted_at) return labels.deleted;
+  if (m.attachments && m.attachments.length > 0) {
+    const first = m.attachments[0];
+    return first.type?.startsWith("image/") ? labels.photo : labels.document;
+  }
+  return m.body ?? "";
+}
+
+/** Quoted-reply preview truncation (~90 chars), used above the composer and in
+ *  the bubble's quoted block. */
+export function truncateQuote(s: string, max = 90): string {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
+}

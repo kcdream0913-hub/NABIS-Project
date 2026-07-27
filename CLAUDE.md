@@ -123,6 +123,40 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-26 — Messenger Phase 1 (WhatsApp-style features; DB applied to prod, frontend build-green, pushed):**
+  - Migration `20260726130000_messaging_phase1` (applied to prod; verified first
+    on a disposable branch — advisors clean, 12/12 negative RLS + edit/delete
+    window-rejection proofs): `messages` += `reply_to_message_id` / `edited_at` /
+    `deleted_at` / `attachments jsonb` / `schema_version` (body now NULLABLE so a
+    tombstone can null content server-side); new `message_reactions` (one per
+    message/user, RLS = thread participants via `private.can_access_message`) +
+    `message_hides` (delete-for-me, owner-only); SECURITY DEFINER RPCs
+    `edit_message` (15-min window) + `delete_message_for_everyone` (1-hr window,
+    tombstone nulls body + drops reactions) — messages has NO direct UPDATE/DELETE
+    policy so the RPC is the only mutation path (window can't be bypassed by raw
+    SQL); `enforce_reply_integrity` trigger (reply must be same-conversation;
+    revoked from the API, not an RPC); `message_reactions` +
+    `direct_thread_participants` added to the realtime publication; private
+    `message-attachments` bucket + storage RLS keyed on path
+    `{thread_id}/{uploader_id}/{file}`.
+  - **Read tracking REUSES `direct_thread_participants.last_read_at`** (D: seen =
+    every OTHER participant's cursor ≥ the message's created_at) — no per-message
+    reads table; group-ready, O(1) per thread.
+  - Frontend: `ThreadConversation` rewritten — sent/seen ticks, typing broadcast
+    (ephemeral, 3s), reply (quoted preview + scroll-to-original), edit (15-min,
+    "edited" label), delete (for-everyone tombstone / for-me hide), reactions
+    (hover/long-press quick bar 👍❤️😂😮🙏 + lazy-loaded `frimousse` full picker,
+    realtime grouped chips), attachments (client resize ≤2000px + type/size
+    validate, private bucket, server signed-URL route `/api/messages/attachment`,
+    inline images + lightbox / doc cards), load-earlier pagination, wrapped in an
+    ErrorBoundary. Inbox left-pane previews show 📷 Photo / 📄 Document /
+    tombstone via `messagePreview`. New `lib/messaging.ts` pure helpers
+    (window/seen/preview/quote) +21 unit tests; new `lib/attachments.ts`.
+  - **Runtime-unverified in this environment (no browser — Playwright binary
+    blocked):** the two-browser LIVE exchange (ticks/typing/reactions updating
+    live across contexts), long-press menu, lightbox, mark-read-on-focus, and the
+    emoji picker rendering. DB/RLS/window enforcement IS proven via SQL. Gates:
+    tsc 0 · vitest 185/185 · build 64/64 both locales. **E2EE is Phase 1.5 (next).**
 - **2026-07-24 (sprint 9) — Nepali bio system: auto-translated marker + structured sector labels (branch migration, NOT pushed):**
   - **Branch migration** `bio-ne-auto` (ref `ocxsljiqiepoehdaihlf`, ~$0.32/day
     until merged), `20260724205853_bio_ne_auto.sql` (+ rollback): additive

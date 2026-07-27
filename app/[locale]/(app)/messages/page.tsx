@@ -6,12 +6,12 @@ import { MessagesSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
 import ThreadConversation from "@/components/ThreadConversation";
-import { isUnread } from "@/lib/messaging";
+import { isUnread, messagePreview, type Attachment } from "@/lib/messaging";
 
 type Thread = {
   id: string;
   otherName: string;
-  lastBody: string | null;
+  lastPreview: string | null;
   lastAt: string | null;
   unread: boolean;
 };
@@ -58,19 +58,33 @@ export default function MessagesPage() {
         .neq("user_id", user.id),
       supabase
         .from("messages")
-        .select("thread_id, body, sender_id, created_at")
+        .select("thread_id, body, sender_id, created_at, deleted_at, attachments")
         .in("thread_id", threadIds)
         .order("created_at", { ascending: false }),
     ]);
-    const latest: Record<string, { body: string; sender_id: string; created_at: string }> = {};
-    for (const m of lastMsgs ?? []) if (!latest[m.thread_id]) latest[m.thread_id] = m;
+    type Last = {
+      thread_id: string;
+      body: string | null;
+      sender_id: string;
+      created_at: string;
+      deleted_at: string | null;
+      attachments: Attachment[] | null;
+    };
+    const latest: Record<string, Last> = {};
+    for (const m of (lastMsgs ?? []) as Last[]) if (!latest[m.thread_id]) latest[m.thread_id] = m;
+    const previewLabels = { deleted: t("deleted"), photo: t("photo"), document: t("document") };
     const list: Thread[] = (others ?? []).map((o) => {
       const p = Array.isArray(o.profiles) ? o.profiles[0] : o.profiles;
       const lm = latest[o.thread_id];
       return {
         id: o.thread_id,
         otherName: p?.name ?? t("member"),
-        lastBody: lm?.body ?? null,
+        lastPreview: lm
+          ? messagePreview(
+              { body: lm.body, deleted_at: lm.deleted_at, attachments: Array.isArray(lm.attachments) ? lm.attachments : [] },
+              previewLabels,
+            )
+          : null,
         lastAt: lm?.created_at ?? null,
         unread: isUnread(lm, readMap[o.thread_id], user.id),
       };
@@ -131,9 +145,9 @@ export default function MessagesPage() {
                       </time>
                     )}
                   </span>
-                  {th.lastBody && (
+                  {th.lastPreview && (
                     <span className={`mt-0.5 block truncate text-xs ${th.unread ? "text-ink" : "text-ink-soft"}`}>
-                      {th.lastBody}
+                      {th.lastPreview}
                     </span>
                   )}
                 </span>
