@@ -479,7 +479,12 @@
     "verifyNow": "Verify now",
     "placeholder": "Share an opportunity or update…",
     "posting": "Posting…",
-    "post": "Post"
+    "post": "Post",
+    "video": {
+      "tooLong": "Videos can be up to 90 seconds. This one is {seconds} seconds.",
+      "unreadable": "We couldn’t read this video. Try exporting it again, or pick a different file.",
+      "tooLarge": "This video is too large. The limit is 50 MB."
+    }
   },
   "directory": {
     "eyebrow": "Members & Business",
@@ -1222,10 +1227,7 @@
       "tooManyImages": "You can add up to 4 images.",
       "oneVideoOnly": "You can add only 1 video.",
       "noMixing": "Add up to 4 images or 1 video, not both.",
-      "imageTooLarge": "Images must be 10MB or smaller.",
-      "videoTooLarge": "Video must be 50MB or smaller.",
-      "videoUnreadable": "We couldn’t read this video’s length. Please try a different file.",
-      "videoTooLong": "Video must be 90 seconds or shorter."
+      "imageTooLarge": "Images must be 10MB or smaller."
     },
     "bookmarksEyebrow": "Saved",
     "bookmarksTitle": "Bookmarks",

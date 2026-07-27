@@ -1,7 +1,7 @@
 # NE review — BL-SOCIAL-02 (feed social actions + media)
 
-AI-drafted Nepali strings for the `social` namespace + `nav.bookmarks`. Per R9 these
-need a native-speaker (KC) review before Nepal-side launch. 89 rows.
+AI-drafted Nepali strings for the `social` + `composer.video` namespaces + `nav.bookmarks`.
+Per R9 these need a native-speaker (KC) review before Nepal-side launch. 89 rows.
 
 | Key | English | Nepali (draft) |
 |---|---|---|
@@ -84,9 +84,6 @@ need a native-speaker (KC) review before Nepal-side launch. 89 rows.
 | social.mediaError.oneVideoOnly | You can add only 1 video. | तपाईं १ वटा मात्र भिडियो थप्न सक्नुहुन्छ। |
 | social.mediaError.noMixing | Add up to 4 images or 1 video, not both. | ४ तस्बिर वा १ भिडियो थप्नुहोस्, दुवै होइन। |
 | social.mediaError.imageTooLarge | Images must be 10MB or smaller. | तस्बिर १०MB वा सोभन्दा सानो हुनुपर्छ। |
-| social.mediaError.videoTooLarge | Video must be 50MB or smaller. | भिडियो ५०MB वा सोभन्दा सानो हुनुपर्छ। |
-| social.mediaError.videoUnreadable | We couldn’t read this video’s length. Please try a different file. | यो भिडियोको लम्बाइ पढ्न सकिएन। कृपया अर्को फाइल प्रयास गर्नुहोस्। |
-| social.mediaError.videoTooLong | Video must be 90 seconds or shorter. | भिडियो ९० सेकेन्ड वा सोभन्दा छोटो हुनुपर्छ। |
 | social.bookmarksEyebrow | Saved | सुरक्षित |
 | social.bookmarksTitle | Bookmarks | बुकमार्कहरू |
 | social.bookmarksPrivateNote | Only you can see your bookmarks. | तपाईंका बुकमार्कहरू तपाईं मात्र देख्न सक्नुहुन्छ। |
@@ -94,3 +91,6 @@ need a native-speaker (KC) review before Nepal-side launch. 89 rows.
 | social.bookmarksEmptyBody | Tap the bookmark icon on any post to save it here — privately. | कुनै पनि पोस्टमा बुकमार्क आइकन थिचेर यहाँ निजी रूपमा सुरक्षित गर्नुहोस्। |
 | social.postNotFoundTitle | Post not found | पोस्ट फेला परेन |
 | social.postNotFoundBody | This post may have been removed, or you don’t have access to it. | यो पोस्ट हटाइएको हुनसक्छ, वा तपाईंसँग यसको पहुँच छैन। |
+| composer.video.tooLong | Videos can be up to 90 seconds. This one is {seconds} seconds. | भिडियो ९० सेकेन्डसम्मको हुनुपर्छ। यो {seconds} सेकेन्डको छ। |
+| composer.video.unreadable | We couldn’t read this video. Try exporting it again, or pick a different file. | यो भिडियो पढ्न सकिएन। फेरि एक्सपोर्ट गरेर हेर्नुहोस्, वा अर्को फाइल छान्नुहोस्। |
+| composer.video.tooLarge | This video is too large. The limit is 50 MB. | यो भिडियो निकै ठूलो छ। सीमा ५० MB हो। |

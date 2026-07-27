@@ -11,14 +11,12 @@ import {
   mediaErrorKey,
   mediaKind,
   MEDIA_ACCEPT,
+  VIDEO_MAX_BYTES,
   type PostMedia,
   type MediaCandidate,
 } from "@/lib/feed/media";
-import {
-  uploadPostMediaFile,
-  deletePostMediaObjects,
-  readMediaCandidate,
-} from "@/lib/feed/mediaUpload";
+import { uploadPostMediaFile, deletePostMediaObjects } from "@/lib/feed/mediaUpload";
+import { checkVideoForComposer } from "@/lib/media/readVideoDuration";
 
 export default function Composer({
   isVerified,
@@ -40,7 +38,7 @@ export default function Composer({
   const fileInput = useRef<HTMLInputElement>(null);
 
   const candidatesOf = (list: PostMedia[]): MediaCandidate[] =>
-    list.map((m) => (m.type === "video" ? { mime: m.mime, bytes: m.bytes, durationMs: m.duration_ms } : { mime: m.mime, bytes: m.bytes }));
+    list.map((m) => ({ mime: m.mime, bytes: m.bytes }));
 
   async function onPick(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -52,17 +50,34 @@ export default function Composer({
 
     setBusy(true);
     try {
-      // Read candidates (video durations) and validate the WHOLE selection up
-      // front (§4.3) so we never upload a set the trigger would reject.
       const newFiles = Array.from(files);
-      const newCandidates = await Promise.all(newFiles.map(readMediaCandidate));
+      // 1. Structural validation of the whole selection (≤4 images XOR 1 video).
+      const newCandidates = newFiles.map((f) => ({ mime: f.type, bytes: f.size }));
       const combined = [...candidatesOf(media), ...newCandidates];
       const check = validateMediaSelection(combined);
       if (!check.ok) {
         setError(tSocial(`mediaError.${mediaErrorKey(check.reason)}`));
         return;
       }
-      // Upload the new files one at a time, keeping a local preview per file.
+      // 2. Per-video gate: size first (free), then duration from the container
+      // bytes (D-042). unreadable and too_long are DISTINCT messages.
+      for (const file of newFiles) {
+        if (mediaKind(file.type) !== "video") continue;
+        if (file.size > VIDEO_MAX_BYTES) {
+          setError(t("video.tooLarge"));
+          return;
+        }
+        const vc = await checkVideoForComposer(file);
+        if (vc.status === "too_long") {
+          setError(t("video.tooLong", { seconds: Math.round(vc.seconds) }));
+          return;
+        }
+        if (vc.status === "unreadable") {
+          setError(t("video.unreadable"));
+          return;
+        }
+      }
+      // 3. Upload the new files one at a time, keeping a local preview per file.
       const added: PostMedia[] = [];
       const newPreviews: Record<string, string> = {};
       for (const file of newFiles) {

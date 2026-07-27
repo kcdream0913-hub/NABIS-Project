@@ -1,60 +1,23 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   validateMediaSelection,
-  generatePoster,
-  guardMeta,
   mediaKind,
   mediaPath,
   extForMime,
-  parseMp4DurationMs,
   IMAGE_MAX_BYTES,
-  VIDEO_MAX_BYTES,
   type MediaCandidate,
-  type VideoMeta,
 } from "../media";
 
-// ── minimal ISO-BMFF builders for the parser tests ──
-function box(type: string, content: Uint8Array): Uint8Array {
-  const out = new Uint8Array(8 + content.length);
-  new DataView(out.buffer).setUint32(0, out.length);
-  for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
-  out.set(content, 8);
-  return out;
-}
-function concat(...arrs: Uint8Array[]): Uint8Array {
-  const out = new Uint8Array(arrs.reduce((n, a) => n + a.length, 0));
-  let off = 0;
-  for (const a of arrs) { out.set(a, off); off += a.length; }
-  return out;
-}
-function mvhdV0(timescale: number, duration: number): Uint8Array {
-  const c = new Uint8Array(20);
-  const dv = new DataView(c.buffer);
-  dv.setUint8(0, 0); // version 0
-  dv.setUint32(12, timescale);
-  dv.setUint32(16, duration);
-  return c;
-}
-function mvhdV1(timescale: number, durationLo: number): Uint8Array {
-  const c = new Uint8Array(32);
-  const dv = new DataView(c.buffer);
-  dv.setUint8(0, 1); // version 1 (64-bit times)
-  dv.setUint32(20, timescale);
-  dv.setUint32(24, 0); // duration hi
-  dv.setUint32(28, durationLo);
-  return c;
-}
-const mp4 = (mvhd: Uint8Array) => concat(box("ftyp", new Uint8Array(8)), box("moov", box("mvhd", mvhd))).buffer;
-
 const img = (bytes: number, mime = "image/jpeg"): MediaCandidate => ({ mime, bytes });
-const vid = (bytes: number, durationMs: number, mime = "video/mp4"): MediaCandidate => ({
-  mime,
-  bytes,
-  durationMs,
-});
+const vid = (bytes = 1000, mime = "video/mp4"): MediaCandidate => ({ mime, bytes });
 
-// §5.3 — the picker validator matrix.
+// §5.3 — the picker's STRUCTURAL validator (video duration is validated separately
+// by checkVideoForComposer / lib/media; video size by the composer's size gate).
 describe("validateMediaSelection", () => {
+  it("rejects an empty selection", () => {
+    expect(validateMediaSelection([])).toEqual({ ok: false, reason: "empty" });
+  });
+
   it("rejects 5 images (too many)", () => {
     expect(validateMediaSelection(Array.from({ length: 5 }, () => img(1000)))).toEqual({
       ok: false,
@@ -63,37 +26,16 @@ describe("validateMediaSelection", () => {
   });
 
   it("rejects 1 image + 1 video (no mixing)", () => {
-    expect(validateMediaSelection([img(1000), vid(1000, 5000)])).toEqual({
+    expect(validateMediaSelection([img(1000), vid()])).toEqual({
       ok: false,
       reason: "no-mixing",
     });
   });
 
   it("rejects 2 videos (one video only)", () => {
-    expect(validateMediaSelection([vid(1000, 5000), vid(1000, 5000)])).toEqual({
+    expect(validateMediaSelection([vid(), vid()])).toEqual({
       ok: false,
       reason: "one-video-only",
-    });
-  });
-
-  it("rejects a 91s video (too long)", () => {
-    expect(validateMediaSelection([vid(1000, 91_000)])).toEqual({
-      ok: false,
-      reason: "video-too-long",
-    });
-  });
-
-  it("rejects a 10.1MB image (too large)", () => {
-    expect(validateMediaSelection([img(IMAGE_MAX_BYTES + 1)])).toEqual({
-      ok: false,
-      reason: "image-too-large",
-    });
-  });
-
-  it("rejects a 51MB video (too large)", () => {
-    expect(validateMediaSelection([vid(VIDEO_MAX_BYTES + 1, 5000)])).toEqual({
-      ok: false,
-      reason: "video-too-large",
     });
   });
 
@@ -104,49 +46,19 @@ describe("validateMediaSelection", () => {
     });
   });
 
+  it("rejects a 10.1MB image (too large)", () => {
+    expect(validateMediaSelection([img(IMAGE_MAX_BYTES + 1)])).toEqual({
+      ok: false,
+      reason: "image-too-large",
+    });
+  });
+
   it("accepts 4 images", () => {
-    expect(validateMediaSelection(Array.from({ length: 4 }, () => img(1000)))).toEqual({
-      ok: true,
-    });
+    expect(validateMediaSelection(Array.from({ length: 4 }, () => img(1000)))).toEqual({ ok: true });
   });
 
-  it("accepts exactly 1 valid video", () => {
-    expect(validateMediaSelection([vid(1000, 30_000)])).toEqual({ ok: true });
-  });
-
-  it("accepts a valid short (3s) video — regression for the Infinity-duration bug", () => {
-    expect(validateMediaSelection([vid(1000, 3_000)])).toEqual({ ok: true });
-  });
-
-  // A non-finite / missing / zero duration is "unreadable", NOT "too long" — the
-  // exact misclassification that blocked valid short videos when v.duration came
-  // back as Infinity.
-  it("reports Infinity duration as unreadable, not too-long", () => {
-    expect(validateMediaSelection([vid(1000, Infinity)])).toEqual({
-      ok: false,
-      reason: "video-unreadable",
-    });
-  });
-
-  it("reports NaN duration as unreadable", () => {
-    expect(validateMediaSelection([vid(1000, Number.NaN)])).toEqual({
-      ok: false,
-      reason: "video-unreadable",
-    });
-  });
-
-  it("reports a missing duration as unreadable", () => {
-    expect(validateMediaSelection([{ mime: "video/mp4", bytes: 1000 }])).toEqual({
-      ok: false,
-      reason: "video-unreadable",
-    });
-  });
-
-  it("reports a zero duration as unreadable", () => {
-    expect(validateMediaSelection([vid(1000, 0)])).toEqual({
-      ok: false,
-      reason: "video-unreadable",
-    });
+  it("accepts exactly 1 video (duration checked elsewhere)", () => {
+    expect(validateMediaSelection([vid()])).toEqual({ ok: true });
   });
 });
 
@@ -162,79 +74,5 @@ describe("mediaKind / path / ext", () => {
   it("maps mime to extension", () => {
     expect(extForMime("video/quicktime")).toBe("mov");
     expect(extForMime("image/webp")).toBe("webp");
-  });
-});
-
-// §5.4 — poster returns a blob for a valid video and fails closed (no upload) when
-// metadata never loads.
-describe("generatePoster", () => {
-  it("returns a blob when metadata loads", async () => {
-    const meta: VideoMeta = { durationMs: 30_000, width: 1280, height: 720 };
-    const blob = new Blob(["x"], { type: "image/webp" });
-    const capture = vi.fn(async () => blob);
-    const out = await generatePoster(new Blob(["v"]), {
-      loadMeta: async () => meta,
-      capture,
-    });
-    expect(out).toBe(blob);
-    expect(capture).toHaveBeenCalledOnce();
-  });
-
-  it("fails closed (null, no capture) when metadata never loads", async () => {
-    const capture = vi.fn(async () => new Blob(["x"]));
-    const out = await generatePoster(new Blob(["v"]), {
-      loadMeta: async () => null, // never loaded
-      capture,
-    });
-    expect(out).toBeNull();
-    expect(capture).not.toHaveBeenCalled();
-  });
-});
-
-// §fix — deterministic MP4/MOV duration from the moov/mvhd box (the reliable path
-// that replaces the flaky <video>.duration read).
-describe("parseMp4DurationMs", () => {
-  it("reads a version-0 mvhd (timescale 1000, duration 3000 → 3000ms)", () => {
-    expect(parseMp4DurationMs(mp4(mvhdV0(1000, 3000)))).toBe(3000);
-  });
-
-  it("respects the timescale (600/1800 → 3000ms)", () => {
-    expect(parseMp4DurationMs(mp4(mvhdV0(600, 1800)))).toBe(3000);
-  });
-
-  it("reads a version-1 (64-bit) mvhd", () => {
-    expect(parseMp4DurationMs(mp4(mvhdV1(1000, 5000)))).toBe(5000);
-  });
-
-  it("finds moov even when ftyp precedes it (faststart layout)", () => {
-    // mp4() already prepends ftyp; a 3s clip must parse regardless of leading boxes
-    expect(parseMp4DurationMs(mp4(mvhdV0(30000, 90000)))).toBe(3000);
-  });
-
-  it("returns null when there is no moov box", () => {
-    expect(parseMp4DurationMs(concat(box("ftyp", new Uint8Array(8))).buffer)).toBeNull();
-  });
-
-  it("returns null for an 'unknown' (0xffffffff) duration → caller falls back", () => {
-    expect(parseMp4DurationMs(mp4(mvhdV0(1000, 0xffffffff)))).toBeNull();
-  });
-
-  it("returns null on a truncated buffer", () => {
-    expect(parseMp4DurationMs(new Uint8Array(4).buffer)).toBeNull();
-  });
-});
-
-// guardMeta is what makes "never loads" resolve to null instead of hanging.
-describe("guardMeta", () => {
-  it("resolves the value when the promise settles", async () => {
-    const now: Array<() => void> = [];
-    const out = await guardMeta(Promise.resolve(42), 1000, (fn) => now.push(fn));
-    expect(out).toBe(42);
-  });
-
-  it("resolves null when the timeout fires first (never loads)", async () => {
-    // never-settling promise; fire the scheduled timeout immediately
-    const out = await guardMeta<number>(new Promise<number>(() => {}), 10, (fn) => fn());
-    expect(out).toBeNull();
   });
 });

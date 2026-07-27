@@ -1,22 +1,16 @@
 "use client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  mediaKind,
-  mediaPath,
-  extForMime,
-  guardMeta,
-  parseMp4DurationMs,
-  type PostMedia,
-  type VideoMeta,
-} from "./media";
+import { mediaKind, mediaPath, extForMime, type PostMedia } from "./media";
+import { readVideoDuration } from "@/lib/media/readVideoDuration";
+import { extractPosterFrame } from "@/lib/media/extractPosterFrame";
 
 // BL-SOCIAL-02 §4.3 — client-side media prep + upload to the private post-media
 // bucket. The path's first segment is the uploader id (storage RLS keys on it).
-// Metadata/poster generation fails CLOSED — a video whose metadata never loads is
-// rejected, never uploaded posterless.
+// Video duration comes from the container bytes (D-042, lib/media/readVideoDuration);
+// the poster is the video's own frame (lib/media/extractPosterFrame). A video whose
+// duration is unreadable is rejected here (fail closed), never uploaded.
 export const POST_MEDIA_BUCKET = "post-media";
 const MAX_IMAGE_DIM = 2000;
-const META_TIMEOUT_MS = 10_000;
 
 export type MediaStage = "queued" | "processing" | "uploading" | "done" | "error";
 
@@ -56,148 +50,6 @@ async function prepImage(file: File): Promise<{ blob: Blob; w: number; h: number
   return { blob, w, h };
 }
 
-// Append a muted, off-screen <video> to the DOM. DETACHED media elements can fail
-// to fire seek/timeupdate events reliably — the root cause of the duration read
-// never resolving in live QA — so we attach it and remove it on cleanup.
-function makeHiddenVideo(url: string): HTMLVideoElement {
-  const v = document.createElement("video");
-  v.preload = "metadata";
-  v.muted = true;
-  v.playsInline = true;
-  v.setAttribute("aria-hidden", "true");
-  v.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
-  document.body.appendChild(v);
-  v.src = url;
-  return v;
-}
-
-// <video>-based duration read — the FALLBACK (webm / MP4 parse miss). DOM-attached
-// and listens for every event that can carry a resolved duration; if duration is
-// non-finite at loadedmetadata (the Infinity quirk), seek past the end to force the
-// browser to compute it. durationMs 0 means "couldn't read".
-async function loadVideoMeta(file: Blob): Promise<VideoMeta | null> {
-  const read = new Promise<VideoMeta>((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const v = makeHiddenVideo(url);
-    let settled = false;
-    const finish = (durationSec: number) => {
-      if (settled) return;
-      settled = true;
-      const width = v.videoWidth;
-      const height = v.videoHeight;
-      URL.revokeObjectURL(url);
-      v.removeAttribute("src");
-      v.load();
-      v.remove();
-      const durationMs = Number.isFinite(durationSec) && durationSec > 0 ? Math.round(durationSec * 1000) : 0;
-      resolve({ durationMs, width, height });
-    };
-    const tryResolve = () => {
-      if (Number.isFinite(v.duration) && v.duration > 0) finish(v.duration);
-    };
-    v.onloadedmetadata = () => {
-      if (Number.isFinite(v.duration) && v.duration > 0) {
-        finish(v.duration);
-        return;
-      }
-      v.addEventListener("durationchange", tryResolve);
-      v.addEventListener("timeupdate", tryResolve);
-      v.addEventListener("seeked", tryResolve);
-      try {
-        v.currentTime = 1e101;
-      } catch {
-        finish(Number.NaN);
-      }
-    };
-    v.onerror = () => {
-      if (settled) return;
-      settled = true;
-      URL.revokeObjectURL(url);
-      v.remove();
-      reject(new Error("video metadata error"));
-    };
-  });
-  return guardMeta(read, META_TIMEOUT_MS);
-}
-
-// Duration in ms — PRIMARY path is the deterministic MP4/MOV container parse (no
-// DOM/blob/CSP/event dependency), falling back to the <video> element for webm or
-// a parse miss. Returns null when we truly can't read it.
-export async function readVideoDurationMs(file: File): Promise<number | null> {
-  if (file.type === "video/mp4" || file.type === "video/quicktime") {
-    try {
-      const parsed = parseMp4DurationMs(await file.arrayBuffer());
-      if (parsed && parsed > 0) return parsed;
-    } catch {
-      /* fall through to the element */
-    }
-  }
-  const meta = await loadVideoMeta(file);
-  const ms = meta && meta.durationMs > 0 ? meta.durationMs : null;
-  if (ms == null && typeof console !== "undefined") {
-    // Breadcrumb (survives minification) so a still-failing read is diagnosable
-    // from the browser console instead of another blind round-trip.
-    console.warn(`[bl-social] could not read video duration for ${file.type} (${file.size}B)`);
-  }
-  return ms;
-}
-
-// Capture a poster frame + the video's pixel dimensions. Seeks to ~1s — a NORMAL
-// in-range seek, unaffected by the Infinity-duration quirk — and draws to a canvas.
-async function capturePoster(
-  file: Blob,
-  hintDurationMs: number,
-): Promise<{ blob: Blob; width: number; height: number } | null> {
-  const work = new Promise<{ blob: Blob; width: number; height: number } | null>((resolve) => {
-    const url = URL.createObjectURL(file);
-    const v = makeHiddenVideo(url);
-    v.preload = "auto";
-    let settled = false;
-    const done = (r: { blob: Blob; width: number; height: number } | null) => {
-      if (settled) return;
-      settled = true;
-      URL.revokeObjectURL(url);
-      v.removeAttribute("src");
-      v.load();
-      v.remove();
-      resolve(r);
-    };
-    v.onloadeddata = () => {
-      const at = Math.min(1, hintDurationMs / 2000 || 0);
-      try {
-        v.currentTime = at;
-      } catch {
-        done(null);
-      }
-    };
-    v.onseeked = () => {
-      const width = v.videoWidth;
-      const height = v.videoHeight;
-      const canvas = document.createElement("canvas");
-      canvas.width = width || 1280;
-      canvas.height = height || 720;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return done(null);
-      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((b) => done(b ? { blob: b, width, height } : null), "image/webp", 0.8);
-    };
-    v.onerror = () => done(null);
-  });
-  return guardMeta(work, META_TIMEOUT_MS);
-}
-
-// Read a pre-upload candidate for validateMediaSelection: mime + bytes, plus the
-// video duration so an over-length (or unreadable) clip is rejected BEFORE upload.
-export async function readMediaCandidate(
-  file: File,
-): Promise<{ mime: string; bytes: number; durationMs?: number }> {
-  if (mediaKind(file.type) === "video") {
-    const durationMs = await readVideoDurationMs(file);
-    return { mime: file.type, bytes: file.size, durationMs: durationMs ?? undefined };
-  }
-  return { mime: file.type, bytes: file.size };
-}
-
 async function uploadBlob(
   supabase: SupabaseClient,
   path: string,
@@ -232,16 +84,20 @@ export async function uploadPostMediaFile(
     return { type: "image", path, mime: file.type, bytes: blob.size, w, h };
   }
 
-  // video
+  // video — duration from the container bytes (D-042), poster from a real frame.
   onStage?.("processing");
-  const durationMs = await readVideoDurationMs(file);
-  if (!durationMs || durationMs <= 0) throw new Error("video-meta-failed"); // fail closed
-  const poster = await capturePoster(file, durationMs);
-  if (!poster) throw new Error("poster-failed"); // a video without a poster is rejected
+  const dur = await readVideoDuration(file);
+  if (!dur.ok) throw new Error("video-meta-failed"); // duration unreadable → fail closed
+  const durationMs = Math.round(dur.seconds * 1000);
+  // validate_post_media() requires a poster_path for a video, so a null poster
+  // blocks THIS video (surfaced as an error). Scaled poster dims preserve the
+  // video's aspect ratio, which is all PostMedia rendering needs.
+  const poster = await extractPosterFrame(file);
+  if (!poster) throw new Error("poster-failed");
   const path = mediaPath(uid, uuid, extForMime(file.type));
-  const posterPath = mediaPath(uid, `${uuid}-poster`, "webp");
+  const posterPath = mediaPath(uid, `${uuid}-poster`, "jpg");
   onStage?.("uploading");
-  await uploadBlob(supabase, posterPath, poster.blob, "image/webp");
+  await uploadBlob(supabase, posterPath, poster.blob, "image/jpeg");
   await uploadBlob(supabase, path, file, file.type);
   onStage?.("done");
   return {
