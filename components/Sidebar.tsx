@@ -34,10 +34,10 @@ const GROUPS: { groupKey: string; items: Item[] }[] = [
 ];
 
 /**
- * Flyout rail: collapsed to icons (68px) on desktop, hover-expands to labels
- * (248px) on fine pointers, and click-to-PIN open (touch/keyboard). On the mobile
- * drawer `expanded` forces the labels visible (AppShell passes it for the drawer
- * instance only).
+ * Flyout rail: collapsed to icons (68px). It opens to labels (248px) ONLY on a
+ * click/tap of the pin toggle — there is NO hover-to-open path (BL-DESIGN-03 §2),
+ * so it behaves identically on touch and pointer. On the mobile drawer `expanded`
+ * forces the labels visible (AppShell passes it for the drawer instance only).
  */
 export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const t = useTranslations("nav");
@@ -67,13 +67,12 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const toggleRef = useRef<HTMLButtonElement>(null);
   const isOpen = expanded || pinned;
 
-  // Label reveals when the rail is open (expanded drawer OR pinned). Otherwise it
-  // stays hidden until a fine-pointer hover previews it — never on touch, where
-  // :hover sticks; the toggle button is the touch/keyboard way in.
-  const LABEL = isOpen
-    ? "whitespace-nowrap"
-    : "whitespace-nowrap opacity-0 transition-opacity duration-150 pointer-fine:group-hover/nav:opacity-100";
-  const rootWidth = isOpen ? "w-[248px]" : "w-[68px] pointer-fine:hover:w-[248px]";
+  // Labels show only when the rail is open (expanded drawer OR pinned). Opening is
+  // click/tap-only via the pin toggle — no hover-to-open path (BL-DESIGN-03 §2).
+  // The width and label opacity fade between the two states (CSS transition only,
+  // no timers).
+  const LABEL = `whitespace-nowrap transition-opacity duration-150 ${isOpen ? "opacity-100" : "opacity-0"}`;
+  const rootWidth = isOpen ? "w-[248px]" : "w-[68px]";
 
   useEffect(() => {
     async function load() {
