@@ -26,11 +26,16 @@ set
 where id = 'message-attachments';
 
 -- ── BL-NOTIF-01 deferred hygiene (notif-trigger-fn-revoke-pending.md) ──────────────
--- The four SECURITY DEFINER trigger functions still hold the default EXECUTE grant
--- for anon + authenticated. The hub verified this is INERT (a direct call raises
--- "trigger functions can only be called as triggers"), so it is lint hygiene, not a
--- vulnerability — bundled here per the note ("do not cut a migration just for this").
-revoke execute on function public.notify_post_reaction()          from anon, authenticated;
-revoke execute on function public.notify_post_comment()           from anon, authenticated;
-revoke execute on function public.notify_post_repost()            from anon, authenticated;
-revoke execute on function public.protect_notification_columns()  from anon, authenticated;
+-- The four SECURITY DEFINER trigger functions still hold the default EXECUTE grant.
+-- The hub verified this is INERT (a direct call raises "trigger functions can only be
+-- called as triggers"), so it is lint hygiene, not a vulnerability — bundled here per
+-- the note ("do not cut a migration just for this").
+--
+-- PUBLIC must be named explicitly — the default EXECUTE grant is to PUBLIC, and
+-- revoking only anon/authenticated leaves it in place (verified on prod), so
+-- has_function_privilege stays TRUE for both roles. Naming public flips both to false
+-- while the DEFINER triggers still fire.
+revoke execute on function public.notify_post_reaction()          from public, anon, authenticated;
+revoke execute on function public.notify_post_comment()           from public, anon, authenticated;
+revoke execute on function public.notify_post_repost()            from public, anon, authenticated;
+revoke execute on function public.protect_notification_columns()  from public, anon, authenticated;
