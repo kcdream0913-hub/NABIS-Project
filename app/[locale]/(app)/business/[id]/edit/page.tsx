@@ -31,6 +31,9 @@ const LABEL = "eyebrow text-ink-soft";
 export default function EditBusinessPage() {
   const t = useTranslations("businessNew");
   const te = useTranslations("businessEdit");
+  // Guided-answer question labels live under the `guided` namespace (GuidedBuilder
+  // uses it too) — NOT businessNew, where these four keys don't exist (bl-i18n-01).
+  const tg = useTranslations("guided");
   const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
@@ -269,7 +272,7 @@ export default function EditBusinessPage() {
             <p className="text-sm font-semibold">{te("answersHeading")}</p>
             <p className="mt-0.5 text-xs text-ink-soft">{te("answersHint")}</p>
 
-            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qServices")}</p>
+            <p className="mt-3 text-xs font-medium text-ink-soft">{tg("qServices")}</p>
             <div className="mt-1.5">
               <ChipMultiSelect
                 chips={primarySector ? SERVICE_CATALOG[primarySector as SectorSlug] : []}
@@ -278,7 +281,7 @@ export default function EditBusinessPage() {
               />
             </div>
 
-            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qCustomers")}</p>
+            <p className="mt-3 text-xs font-medium text-ink-soft">{tg("qCustomers")}</p>
             <div className="mt-1.5">
               <ChipMultiSelect
                 chips={CUSTOMER_CHIPS}
@@ -287,12 +290,12 @@ export default function EditBusinessPage() {
               />
             </div>
 
-            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qYears")}</p>
+            <p className="mt-3 text-xs font-medium text-ink-soft">{tg("qYears")}</p>
             <div className="mt-1.5">
               <ChipSingleSelect chips={YEARS_CHIPS} value={answers.years} onSelect={(id) => setAnswers((a) => ({ ...a, years: id }))} />
             </div>
 
-            <p className="mt-3 text-xs font-medium text-ink-soft">{t("qCrossborder")}</p>
+            <p className="mt-3 text-xs font-medium text-ink-soft">{tg("qCrossborder")}</p>
             <div className="mt-1.5">
               <ChipSingleSelect chips={CROSSBORDER_CHIPS} value={answers.crossborder} onSelect={(id) => setAnswers((a) => ({ ...a, crossborder: id as Answers["crossborder"] }))} />
             </div>
