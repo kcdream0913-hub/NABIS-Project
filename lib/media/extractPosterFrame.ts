@@ -1,23 +1,25 @@
 /**
- * Poster frame extraction — hardened against the same failure class as D-042.
+ * Poster frame extraction — hardened against the HTMLVideoElement failure class.
  *
- * This shares the `HTMLVideoElement` mechanism that broke duration reading,
- * so if metadata never arrives the poster never renders either. Two rules:
+ *   1. Load real FRAME data (preload="auto") and wait for `loadeddata`, so there
+ *      is always a decodable frame — `preload="metadata"` gives none, which is
+ *      why the seek stalled and returned null for a valid clip (D-042 round 4).
+ *   2. Seek off zero for a nicer poster (frame 0 of a phone clip is often black),
+ *      but FALL BACK to frame 0 if the seek never completes (single-keyframe GOP,
+ *      a target on a frame boundary in a very short clip, or an engine that just
+ *      doesn't fire `seeked`). A decodable video is therefore never blocked by
+ *      poster generation — only a genuinely undecodable one returns null.
  *
- *   1. Never block posting on a poster frame. A missing poster is a cosmetic
- *      degradation; a video that cannot be posted is a broken feature. This
- *      function returns null and the caller carries on.
- *   2. Seek off zero. The first frame of a phone recording is very often
- *      black or a shutter artifact, which reads as a broken thumbnail.
+ * DEVIATIONS FROM SPEC, flagged for the hub:
+ *  - preload="auto" + `loadeddata` + a seek-with-frame-0-fallback (round 4) — the
+ *    spec's preload="metadata" + seek-on-loadedmetadata is exactly what failed.
+ *  - the element is DOM-ATTACHED (hidden), not detached (round 2, a8aecee) —
+ *    detached seeks didn't fire in this preview. Removed on cleanup.
  *
- * DEVIATION FROM SPEC (D-042 round 2 finding, a8aecee): the element is ATTACHED
- * to the DOM (hidden) rather than detached, because a detached element's seek
- * did not fire in the bl-social-02 preview. Removed on cleanup. Flagged for the
- * hub. NOTE: our `validate_post_media()` DB trigger requires poster_path for a
- * video, so in this app a null poster does block THAT video's upload (surfaced
- * as an error) — the "never block" rule is honoured for the composer flow, but
- * the DB constraint (which §10 forbids changing) makes the poster effectively
- * required. Flagged in the report.
+ * NOTE: `validate_post_media()` requires poster_path for a video, so a null
+ * poster still blocks THAT upload. With the frame-0 fallback that now happens
+ * only for a video the browser cannot decode (which also could not play in the
+ * feed) — so blocking it is the honest outcome, not a false rejection.
  */
 
 export interface PosterFrameOptions {
@@ -57,7 +59,12 @@ export async function extractPosterFrame(
   const opts = { ...DEFAULTS, ...options };
   const url = URL.createObjectURL(file);
   const el = document.createElement('video');
-  el.preload = 'metadata';
+  // `preload="auto"` (not "metadata") so real FRAME data loads and `loadeddata`
+  // gives us a drawable frame. From a blob URL the whole file is already in
+  // memory, so this is not a network cost; it is what makes a frame available to
+  // draw. (The feed PREVIEW <video> keeps preload="metadata" per D-038 — this is
+  // the one-shot local extractor, a different element.)
+  el.preload = 'auto';
   el.muted = true;
   el.playsInline = true;
   el.autoplay = false;
@@ -71,10 +78,12 @@ export async function extractPosterFrame(
   return new Promise<PosterFrame | null>((resolve) => {
     let settled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let seekTimer: ReturnType<typeof setTimeout> | undefined;
 
     const cleanup = () => {
       if (timer !== undefined) clearTimeout(timer);
-      el.removeEventListener('loadedmetadata', onMetadata);
+      if (seekTimer !== undefined) clearTimeout(seekTimer);
+      el.removeEventListener('loadeddata', onLoadedData);
       el.removeEventListener('seeked', onSeeked);
       el.removeEventListener('error', onError);
       el.removeAttribute('src');
@@ -90,24 +99,18 @@ export async function extractPosterFrame(
       resolve(value);
     };
 
-    const onError = () => settle(null);
-
-    const onMetadata = () => {
-      // Do NOT read videoWidth/videoHeight here — they are frequently 0 at
-      // loadedmetadata and only populate by loadeddata/seeked (bailing on them was
-      // a non-deterministic "poster-failed"). The seek target needs only duration;
-      // dimensions are read in onSeeked, where they are reliably set.
-      const limit = Number.isFinite(el.duration) && el.duration > 0 ? el.duration : opts.atSeconds;
-      const target = Math.min(Math.max(opts.atSeconds, 0), Math.max(limit - 0.05, 0));
+    // Draw whatever frame is currently decoded. Guarded on readyState so we never
+    // draw a blank frame. Used both after a successful seek AND as the fallback
+    // when the seek never completes (frame 0 is a valid poster — this is what
+    // stops a decodable video being blocked by poster generation, D-042 round 4).
+    const draw = () => {
+      if (settled) return;
       try {
-        el.currentTime = target;
-      } catch {
-        settle(null);
-      }
-    };
-
-    const onSeeked = () => {
-      try {
+        // HAVE_CURRENT_DATA — a frame at the current position is decodable.
+        if (el.readyState < 2) {
+          settle(null);
+          return;
+        }
         const vw = el.videoWidth;
         const vh = el.videoHeight;
         if (!vw || !vh) {
@@ -140,7 +143,33 @@ export async function extractPosterFrame(
       }
     };
 
-    el.addEventListener('loadedmetadata', onMetadata);
+    const onError = () => settle(null);
+
+    const onLoadedData = () => {
+      // A frame is now decodable. Try to seek to a nicer ~1s frame (frame 0 of a
+      // phone clip is often black); if the seek does not complete — single-keyframe
+      // GOP, a target on a frame boundary in a very short clip, or an engine that
+      // just doesn't fire `seeked` here — fall back to the frame we already have.
+      const limit = Number.isFinite(el.duration) && el.duration > 0 ? el.duration : opts.atSeconds;
+      const target = Math.min(Math.max(opts.atSeconds, 0), Math.max(limit - 0.05, 0));
+      if (target <= 0.01) {
+        draw(); // clip too short to seek meaningfully — use the first frame
+        return;
+      }
+      seekTimer = setTimeout(draw, 1200); // seek didn't fire in time → frame 0
+      try {
+        el.currentTime = target;
+      } catch {
+        draw();
+      }
+    };
+
+    const onSeeked = () => {
+      if (seekTimer !== undefined) clearTimeout(seekTimer);
+      draw();
+    };
+
+    el.addEventListener('loadeddata', onLoadedData);
     el.addEventListener('seeked', onSeeked);
     el.addEventListener('error', onError);
     timer = setTimeout(() => settle(null), opts.timeoutMs);
