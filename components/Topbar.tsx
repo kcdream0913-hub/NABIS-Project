@@ -1,10 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Bell, Menu, Sparkles } from "lucide-react";
+import { Menu, Sparkles } from "lucide-react";
 import ViewToggle from "./ViewToggle";
 import GlobalSearch from "./GlobalSearch";
 import LocaleSwitch from "./LocaleSwitch";
+import NotificationBell from "./NotificationBell";
 import { VIEW_META } from "@/lib/data";
 import { useApp } from "@/lib/store";
 
@@ -35,11 +36,12 @@ export default function Topbar() {
           {/* Language switch — back in the topbar so the locale is reachable on
               mobile (Settings is behind the hamburger). Path-based /ne + cookie. */}
           <LocaleSwitch />
-          {/* No fake unread dot: the indicator returns when notifications are
-              real. A permanent red dot spends trust on nothing. */}
-          <button className="relative rounded-md p-2 text-ink-soft hover:bg-bg" aria-label={t("notifications")}>
-            <Bell size={17} />
-          </button>
+          {/* Activity bell — the real BL-NOTIF-01 panel. Shown only below md: on
+              desktop the sidebar rail carries the bell, so this avoids two bells.
+              On mobile the rail is hidden, so this is the one-tap access point. */}
+          <div className="md:hidden">
+            <NotificationBell variant="topbar" />
+          </div>
 
           <button
             disabled

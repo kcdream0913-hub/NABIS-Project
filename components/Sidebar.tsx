@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 import { isUnread } from "@/lib/messaging";
@@ -29,7 +29,7 @@ const GROUPS: { groupKey: string; items: Item[] }[] = [
   ]},
   { groupKey: "groupTools", items: [
     { href: "/trip-planner", icon: "trip", labelKey: "tripPlanner" },
-    { href: "/business/new", icon: "register", labelKey: "registerBusiness" },
+    { href: "/register", icon: "register", labelKey: "register" },
   ]},
 ];
 
@@ -69,9 +69,11 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
 
   // Labels show only when the rail is open (expanded drawer OR pinned). Opening is
   // click/tap-only via the pin toggle — no hover-to-open path (BL-DESIGN-03 §2).
-  // The width and label opacity fade between the two states (CSS transition only,
-  // no timers).
-  const LABEL = `whitespace-nowrap transition-opacity duration-150 ${isOpen ? "opacity-100" : "opacity-0"}`;
+  // When collapsed the labels are `hidden` (display:none), NOT just opacity-0 — an
+  // opacity-0 span still occupies layout width, which pushed nav.scrollWidth past
+  // the 68px rail and produced a permanent horizontal scrollbar (D-051). Taking
+  // them out of flow keeps the collapsed rail exactly 68px wide.
+  const LABEL = isOpen ? "whitespace-nowrap opacity-100 transition-opacity duration-150" : "hidden";
   const rootWidth = isOpen ? "w-[248px]" : "w-[68px]";
 
   useEffect(() => {
@@ -205,10 +207,26 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
 
   return (
     <div ref={rootRef} className={`group/nav flex h-full flex-col border-r border-border bg-surface transition-[width] duration-200 ease-out ${rootWidth}`}>
-      <Link href="/" aria-label={t("brandHome")} className="flex items-center gap-2.5 rounded-lg px-3.5 py-4">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
-        <span className={`text-[17px] font-semibold tracking-tight text-ink ${LABEL}`}>BridgeLink</span>
-      </Link>
+      <div className="flex items-center justify-between pr-1.5">
+        {/* Logo → the marketing homepage (/home). A signed-in member gets back into
+            the app via the "Enter BridgeLink" link in the /home header. */}
+        <Link href="/home" aria-label={t("brandHome")} className="flex items-center gap-2.5 rounded-lg px-3.5 py-4">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+          <span className={`text-[17px] font-semibold tracking-tight text-ink ${LABEL}`}>BridgeLink</span>
+        </Link>
+        {/* Mobile drawer close (D-052): the drawer is always `expanded` and never
+            renders the pin toggle, so without this it had no collapse control. */}
+        {expanded && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            aria-label={t("closeMenu")}
+            className="shrink-0 rounded-md p-2 text-ink-soft hover:bg-surface-2 hover:text-ink"
+          >
+            <X size={20} />
+          </button>
+        )}
+      </div>
 
       {/* Click-to-pin toggle — the touch + keyboard way to expand the rail (hover
           alone is unreachable on touch). Rail only; the drawer is always expanded. */}
@@ -234,7 +252,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
         <NotificationBell labelClass={LABEL} />
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-2.5 pb-4">
+      <nav className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-2.5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {GROUPS.map((g) => (
           <div key={g.groupKey} className="space-y-0.5">
             <p className={`px-2.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-soft/70 ${LABEL}`}>{t(g.groupKey)}</p>

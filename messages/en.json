@@ -6,7 +6,6 @@
     "directory": "Members & Business",
     "channels": "Channels",
     "events": "Events",
-    "registerBusiness": "Register business",
     "adminQueue": "Admin queue",
     "groupCommunity": "Community",
     "groupTools": "Tools",
@@ -22,7 +21,9 @@
     "bookmarks": "Bookmarks",
     "brandHome": "BridgeLink home",
     "expandMenu": "Expand menu",
-    "collapseMenu": "Collapse menu"
+    "collapseMenu": "Collapse menu",
+    "register": "Register",
+    "closeMenu": "Close menu"
   },
   "messages": {
     "eyebrow": "Direct messages",
@@ -273,7 +274,8 @@
       "theCorridor": "The corridor",
       "membership": "Membership",
       "logIn": "Log in",
-      "getStarted": "Get started"
+      "getStarted": "Get started",
+      "enterApp": "Enter BridgeLink"
     },
     "hero": {
       "eyebrow": "US ↔ Nepal · Invite only",
@@ -1257,5 +1259,45 @@
       "comment_reply": "replied to your comment",
       "post_repost": "reposted your post"
     }
+  },
+  "register": {
+    "eyebrow": "Registration",
+    "question": "What are you registering?",
+    "subtitle": "Choose the path that fits you.",
+    "businessTitle": "Business",
+    "businessBody": "Register a company or organization you own or represent.",
+    "professionalTitle": "Professional",
+    "professionalBody": "Register yourself as a verified individual professional."
+  },
+  "professional": {
+    "eyebrow": "Professional registration",
+    "forkQuestion": "Where are you based?",
+    "forkSubtitle": "This sets which verification track reviews your profile.",
+    "forkUS": "United States",
+    "forkNepal": "Nepal",
+    "forkElsewhere": "Based elsewhere? Pick the track that best fits your work in the corridor — you can add the other later.",
+    "title": "Your professional profile",
+    "trackChosen": "Verification track: {country}",
+    "back": "Back",
+    "nameLabel": "Full name",
+    "namePlaceholder": "e.g. Kris Dahal",
+    "headlineLabel": "Professional headline",
+    "headlinePlaceholder": "What you do, in a sentence or two.",
+    "cityLabel": "City",
+    "cityPlaceholder": "e.g. New York",
+    "sectorsLabel": "Sectors",
+    "evidenceTitle": "Verification evidence",
+    "evidenceHint": "Self-attested for now — a reviewer confirms it before you're marked verified. Nothing here is shown publicly.",
+    "professionLabel": "Profession or title",
+    "professionPlaceholder": "e.g. Immigration attorney",
+    "attestationLabel": "How can we verify you?",
+    "attestationPlaceholder": "A firm, license number, public profile, or a reference in the community.",
+    "submit": "Submit for review",
+    "submitting": "Submitting…",
+    "footnote": "A reviewer confirms your details before your profile is marked verified.",
+    "saveError": "Couldn't save. Please try again.",
+    "submittedTitle": "Submitted for review",
+    "submittedBody": "Your profile is saved and your verification is pending review. We'll update your status when it's decided.",
+    "goToProfile": "Go to my profile"
   }
 }

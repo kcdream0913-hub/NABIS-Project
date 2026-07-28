@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { createClient } from "@/lib/supabase/server";
 import ThemeToggle from "../_components/ThemeToggle";
 import MarketingLocaleSwitch from "../_components/MarketingLocaleSwitch";
 import RequestInviteForm from "../_components/RequestInviteForm";
@@ -51,6 +52,14 @@ export default async function MarketingHome() {
   const t = await getTranslations("marketing");
   const locale = await getLocale();
   const isNe = locale === "ne";
+  // Auth-aware: a signed-in member reaching /home (e.g. via the app logo) needs a
+  // way back into the app — /home's other CTAs are all signup/login. "/" resolves
+  // to the Feed for a logged-in user (middleware only rewrites "/"→/home when
+  // logged OUT).
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <div style={{ fontFamily: `${GEIST}`, color: "var(--ink)", overflowX: "clip" }}>
@@ -71,6 +80,9 @@ export default async function MarketingHome() {
           <a href="#login" style={{ flex: "0 0 auto", whiteSpace: "nowrap", font: `400 14px/1 ${GEIST}`, color: "var(--ink-mid)" }}>{t("nav.membership")}</a>
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {user && (
+            <Link href="/" style={{ font: `500 14px/1 ${GEIST}`, color: "#FBF8F1", background: "var(--btn)", borderRadius: 10, padding: "10px 16px", textDecoration: "none", whiteSpace: "nowrap" }}>{t("nav.enterApp")}</Link>
+          )}
           <MarketingLocaleSwitch />
           <ThemeToggle />
         </span>
@@ -253,8 +265,13 @@ export default async function MarketingHome() {
         <div style={{ maxWidth: 1180, margin: "0 auto", boxSizing: "border-box", padding: "clamp(48px,6vw,72px) clamp(20px,4vw,24px) 0", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "clamp(32px,4vw,56px)" }}>
           <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <span style={{ font: `500 11px/1.4 ${MONO}`, letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: 4 }}>{t("footer.insideNetwork")}</span>
-            {[t("footer.directory"), t("footer.events"), t("footer.tripPlanner"), t("footer.feed")].map((x) => (
-              <a key={x} href="#membership" style={{ font: `400 14px/1.5 ${GEIST}`, color: "var(--ink-mid)" }}>{x}</a>
+            {([
+              [t("footer.directory"), "/members"],
+              [t("footer.events"), "/events"],
+              [t("footer.tripPlanner"), "/trip-planner"],
+              [t("footer.feed"), "/"],
+            ] as const).map(([label, href]) => (
+              <Link key={label} href={href} style={{ font: `400 14px/1.5 ${GEIST}`, color: "var(--ink-mid)" }}>{label}</Link>
             ))}
           </nav>
           <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>

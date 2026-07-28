@@ -21,7 +21,13 @@ type Row = NotificationRow & { actor: Actor | null };
 // BL-NOTIF-01 §B2 — the ACTIVITY bell (reactions/comments/replies/reposts). This
 // is the ONLY consumer of the notifications table; the MESSAGES badge is separate
 // (Sidebar, from last_read_at). Two sources, never unified (design decision).
-export default function NotificationBell({ labelClass = "" }: { labelClass?: string }) {
+export default function NotificationBell({
+  labelClass = "",
+  variant = "rail",
+}: {
+  labelClass?: string;
+  variant?: "rail" | "topbar";
+}) {
   const t = useTranslations("notifications");
   const locale = useLocale();
   const supabase = createClient();
@@ -39,6 +45,17 @@ export default function NotificationBell({ labelClass = "" }: { labelClass?: str
 
   const count = unreadCount(rows);
   const badge = badgeLabel(count);
+
+  // "rail" = the sidebar (full-width row + label, panel flies out to the right).
+  // "topbar" = the mobile top bar (compact icon button, panel drops down-right).
+  const triggerCls =
+    variant === "topbar"
+      ? "relative rounded-md p-2 text-ink-soft hover:bg-bg hover:text-ink"
+      : "flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink";
+  const panelCls =
+    variant === "topbar"
+      ? "absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl border border-border bg-surface shadow-raised"
+      : "absolute left-full top-0 z-50 ml-2 max-h-[70vh] w-80 overflow-y-auto rounded-xl border border-border bg-surface shadow-raised";
 
   async function load() {
     const {
@@ -134,24 +151,24 @@ export default function NotificationBell({ labelClass = "" }: { labelClass?: str
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={badge ? t("bellAriaCount", { count }) : t("bellAria")}
-        className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+        className={triggerCls}
       >
         <span className="relative shrink-0">
-          <Bell size={21} strokeWidth={1.9} />
+          <Bell size={variant === "topbar" ? 17 : 21} strokeWidth={1.9} />
           {badge && (
             <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-on-accent ring-2 ring-surface">
               {badge}
             </span>
           )}
         </span>
-        <span className={labelClass}>{t("bell")}</span>
+        {variant === "rail" && <span className={labelClass}>{t("bell")}</span>}
       </button>
 
       {open && (
         <div
           role="menu"
           aria-label={t("panelTitle")}
-          className="absolute left-full top-0 z-50 ml-2 max-h-[70vh] w-80 overflow-y-auto rounded-xl border border-border bg-surface shadow-raised"
+          className={panelCls}
         >
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <span className="text-sm font-semibold text-ink">{t("panelTitle")}</span>
