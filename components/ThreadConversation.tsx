@@ -26,6 +26,7 @@ import {
   canEditMessage,
   isSeenByOthers,
   messagePreview,
+  shouldAdvanceRead,
   truncateQuote,
 } from "@/lib/messaging";
 import { ACCEPT, ATTACHMENT_BUCKET, uploadAttachment, validateFile } from "@/lib/attachments";
@@ -107,10 +108,12 @@ function ThreadConversationInner({
   const scrollRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const msgRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const reactBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const lastTypingSent = useRef(0);
-  const markedRef = useRef<string>("");
+  const lastWrittenRef = useRef<string>(""); // last last_read_at I wrote (monotonic guard)
+  const messagesRef = useRef<ChatMessage[]>([]); // freshest list for the debounced writer
+  const readTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const longPress = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const visible = useMemo(() => messages.filter((m) => !hides.has(m.id)), [messages, hides]);
   const byId = useMemo(() => {
@@ -187,32 +190,70 @@ function ThreadConversationInner({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [visible.length]);
 
-  // ── mark read when visible + focused ──
-  const markRead = useCallback(async () => {
+  // keep the freshest message list available to the debounced writer's closure
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // ── continuous read receipts ──
+  // Advance MY last_read_at to now() whenever I'm actually looking at the newest
+  // message. Root cause of the "stuck on one tick" bug: the old writer also gated
+  // on document.hasFocus(), which is false whenever this window isn't the OS-active
+  // one — guaranteed in a two-window chat (the sender's window is active). So the
+  // receiver wrote once at mount (when it had focus) and never again. This fixes
+  // the WRITE side: gate on visibility + scrolled-near-bottom (not focus), and
+  // re-fire on every inbound message, focus, and scroll-to-bottom (debounced),
+  // through the pure shouldAdvanceRead gate.
+  const nearBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return true; // container not mounted yet (fresh open) → treat as bottom
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= 120;
+  }, []);
+
+  const advanceRead = useCallback(async () => {
     if (!userId) return;
-    if (typeof document !== "undefined" && (document.visibilityState !== "visible" || !document.hasFocus())) return;
-    const last = messages[messages.length - 1];
-    if (!last || last.sender_id === userId) return;
-    if (markedRef.current >= last.created_at) return;
-    markedRef.current = last.created_at;
+    const nowIso = new Date().toISOString();
+    const list = messagesRef.current;
+    const ok = shouldAdvanceRead({
+      documentVisible: typeof document === "undefined" || document.visibilityState === "visible",
+      nearBottom: nearBottom(),
+      lastMessage: list[list.length - 1],
+      userId,
+      lastWrittenIso: lastWrittenRef.current || null,
+      nowIso,
+    });
+    if (!ok) return;
+    lastWrittenRef.current = nowIso;
     await supabase
       .from("direct_thread_participants")
-      .update({ last_read_at: new Date().toISOString() })
+      .update({ last_read_at: nowIso })
       .eq("thread_id", threadId)
       .eq("user_id", userId);
-  }, [userId, messages, supabase, threadId]);
+  }, [userId, supabase, threadId, nearBottom]);
 
+  // ~500ms debounce: a burst of triggers (scroll frames, a run of inbound
+  // messages, focus+visibility firing together) collapses into a single write.
+  const scheduleAdvance = useCallback(() => {
+    if (readTimer.current) clearTimeout(readTimer.current);
+    readTimer.current = setTimeout(() => {
+      void advanceRead();
+    }, 500);
+  }, [advanceRead]);
+
+  // triggers: mount, window focus, tab-visibility change. (Inbound messages and
+  // scroll-to-bottom are wired below, on messages.length and the scroll handler.)
   useEffect(() => {
-    markRead();
-    const onFocus = () => markRead();
-    const onVis = () => markRead();
+    scheduleAdvance();
+    const onFocus = () => scheduleAdvance();
+    const onVis = () => scheduleAdvance();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVis);
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVis);
+      if (readTimer.current) clearTimeout(readTimer.current);
     };
-  }, [markRead]);
+  }, [scheduleAdvance]);
 
   // ── realtime ──
   useEffect(() => {
@@ -268,11 +309,39 @@ function ThreadConversationInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId, userId]);
 
-  // mark read whenever a new foreign message lands while we're looking
+  // each inbound (or sent) message grows the list → try to advance the cursor
   useEffect(() => {
-    markRead();
+    scheduleAdvance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length]);
+
+  // Close the reaction toolbar / full picker / message menu on outside-click or
+  // Escape. Escape returns focus to the affordance that opened it (keyboard a11y),
+  // mirroring the sidebar-rail fix — click/tap opens, no hover-only path.
+  useEffect(() => {
+    if (!activeMsg && !menuFor && !reactPickerFor) return;
+    const closeAll = () => {
+      setActiveMsg(null);
+      setMenuFor(null);
+      setReactPickerFor(null);
+    };
+    const onDown = (e: PointerEvent) => {
+      if ((e.target as HTMLElement).closest("[data-msg-ui]")) return;
+      closeAll();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const focusId = activeMsg;
+      closeAll();
+      if (focusId) reactBtnRefs.current[focusId]?.focus();
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [activeMsg, menuFor, reactPickerFor]);
 
   async function loadEarlier() {
     const oldest = messages[0];
@@ -421,7 +490,7 @@ function ThreadConversationInner({
       {loading ? (
         <p className="p-4 text-sm text-ink-soft">{t("loading")}</p>
       ) : (
-        <div ref={scrollRef} className="flex-1 space-y-1 overflow-y-auto p-4">
+        <div ref={scrollRef} onScroll={scheduleAdvance} className="flex-1 space-y-1 overflow-y-auto p-4">
           {hasMore && (
             <div className="flex justify-center pb-2">
               <button onClick={loadEarlier} className="rounded-full border border-border px-3 py-1 text-xs text-ink-soft hover:bg-bg">
@@ -448,19 +517,10 @@ function ThreadConversationInner({
                   msgRefs.current[m.id] = el;
                 }}
                 className={`group flex flex-col ${mine ? "items-end" : "items-start"}`}
-                onMouseEnter={() => !tomb && setActiveMsg(m.id)}
-                onMouseLeave={() => {
-                  setActiveMsg((cur) => (cur === m.id ? null : cur));
-                }}
-                onTouchStart={() => {
-                  if (tomb) return;
-                  longPress.current = setTimeout(() => setActiveMsg(m.id), 450);
-                }}
-                onTouchEnd={() => longPress.current && clearTimeout(longPress.current)}
               >
-                {/* hover/long-press toolbar */}
+                {/* click/tap-opened reaction toolbar (opened by the affordance beside the bubble) */}
                 {activeMsg === m.id && !tomb && !editing && (
-                  <div className={`relative z-10 mb-0.5 flex items-center gap-0.5 rounded-full border border-border bg-surface px-1 py-0.5 shadow-sm ${mine ? "self-end" : "self-start"}`}>
+                  <div data-msg-ui className={`relative z-10 mb-0.5 flex items-center gap-0.5 rounded-full border border-border bg-surface px-1 py-0.5 shadow-sm ${mine ? "self-end" : "self-start"}`}>
                     {QUICK_REACTIONS.map((e) => (
                       <button key={e} onClick={() => toggleReaction(m.id, e)} className="rounded-full px-1 text-base hover:bg-surface-2" aria-label={e}>
                         {e}
@@ -481,14 +541,14 @@ function ThreadConversationInner({
                 )}
 
                 {reactPickerFor === m.id && (
-                  <div className="relative z-20 mb-1">
+                  <div data-msg-ui className="relative z-20 mb-1">
                     <EmojiPicker onSelect={(e) => toggleReaction(m.id, e)} labels={{ search: t("searchEmoji"), loading: t("emojiLoading"), empty: t("emojiEmpty") }} />
                   </div>
                 )}
 
                 {/* per-message action menu */}
                 {menuFor === m.id && mine && !tomb && (
-                  <div className="z-20 mb-1 w-44 self-end rounded-lg border border-border bg-surface py-1 text-sm shadow-lg">
+                  <div data-msg-ui className="z-20 mb-1 w-44 self-end rounded-lg border border-border bg-surface py-1 text-sm shadow-lg">
                     {canEditMessage(m, userId ?? "", Date.now()) && (
                       <button onClick={() => { setEditing({ id: m.id, text: m.body ?? "" }); setMenuFor(null); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-surface-2">
                         <Pencil size={14} /> {t("edit")}
@@ -507,7 +567,27 @@ function ThreadConversationInner({
                   </div>
                 )}
 
-                {/* bubble */}
+                {/* bubble + click/tap reaction affordance (a real button, not hover-only) */}
+                <div className={`flex max-w-full items-center gap-1 ${mine ? "flex-row-reverse" : "flex-row"}`}>
+                  {!tomb && !editing && (
+                    <button
+                      ref={(el) => {
+                        reactBtnRefs.current[m.id] = el;
+                      }}
+                      data-msg-ui
+                      onClick={() => {
+                        setActiveMsg((cur) => (cur === m.id ? null : m.id));
+                        setReactPickerFor(null);
+                        setMenuFor(null);
+                      }}
+                      aria-expanded={activeMsg === m.id}
+                      aria-haspopup="menu"
+                      aria-label={t("react")}
+                      className="msg-react-affordance grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-surface-2 focus-visible:bg-surface-2"
+                    >
+                      <Smile size={15} />
+                    </button>
+                  )}
                 <div className={`max-w-[78%] rounded-lg px-3 py-2 text-sm leading-relaxed ${tomb ? "border border-dashed border-border bg-transparent italic text-ink-soft" : mine ? "bg-primary text-on-primary" : "bg-bg"}`}>
                   {tomb ? (
                     t("deletedTombstone")
@@ -549,6 +629,7 @@ function ThreadConversationInner({
                       {m.body}
                     </>
                   )}
+                </div>
                 </div>
 
                 {/* reaction chips */}

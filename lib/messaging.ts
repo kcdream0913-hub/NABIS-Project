@@ -12,6 +12,37 @@ export function isUnread(
   return !lastReadAt || lastMessage.created_at > lastReadAt;
 }
 
+// Read-receipt writer gate. My open thread advances MY last_read_at to now()
+// ONLY when every condition holds — this is the pure decision behind the
+// debounced writer in ThreadConversation. Keeping it here makes the guards
+// (which are the whole point) unit-testable without a DOM.
+//   - documentVisible: never mark messages read while the tab is hidden — the
+//     user isn't looking, so those messages are genuinely unseen.
+//   - nearBottom: only mark read when scrolled to the newest message; reading
+//     history up-thread must not claim you've seen what's below.
+//   - a last message exists and is NOT my own: I don't "read" my own send, and
+//     a thread with no foreign message has nothing to advance for.
+//   - now() advances what I last wrote: monotonic, never backwards (the
+//     client-side "greatest(existing, now())" — we always write now(), which
+//     only moves forward, and skip a write that wouldn't advance it).
+export function shouldAdvanceRead(args: {
+  documentVisible: boolean;
+  nearBottom: boolean;
+  lastMessage: { sender_id: string; created_at: string } | null | undefined;
+  userId: string | null;
+  lastWrittenIso: string | null;
+  nowIso: string;
+}): boolean {
+  const { documentVisible, nearBottom, lastMessage, userId, lastWrittenIso, nowIso } = args;
+  if (!userId) return false;
+  if (!documentVisible) return false;
+  if (!nearBottom) return false;
+  if (!lastMessage) return false;
+  if (lastMessage.sender_id === userId) return false;
+  if (lastWrittenIso && nowIso <= lastWrittenIso) return false;
+  return true;
+}
+
 // ── message shape (plaintext Phase 1; Phase 1.5 adds schema_version/ciphertext) ──
 export type Attachment = {
   path: string; // storage object path: {thread_id}/{uploader_id}/{name}
