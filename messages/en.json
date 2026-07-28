@@ -19,7 +19,10 @@
     "signOut": "Sign out",
     "online": "Online",
     "settings": "Settings",
-    "bookmarks": "Bookmarks"
+    "bookmarks": "Bookmarks",
+    "brandHome": "BridgeLink home",
+    "expandMenu": "Expand menu",
+    "collapseMenu": "Collapse menu"
   },
   "messages": {
     "eyebrow": "Direct messages",
@@ -1235,7 +1238,10 @@
     "bookmarksEmptyTitle": "No bookmarks yet",
     "bookmarksEmptyBody": "Tap the bookmark icon on any post to save it here — privately.",
     "postNotFoundTitle": "Post not found",
-    "postNotFoundBody": "This post may have been removed, or you don’t have access to it."
+    "postNotFoundBody": "This post may have been removed, or you don’t have access to it.",
+    "comment": "Comment",
+    "commentsSummary": "{count, plural, one {# comment} other {# comments}}",
+    "repostsSummary": "{count, plural, one {# repost} other {# reposts}}"
   },
   "notifications": {
     "bell": "Activity",

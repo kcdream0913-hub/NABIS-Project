@@ -1,16 +1,14 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { MessageCircle, Repeat2, Share2, Bookmark, Smile } from "lucide-react";
+import { ThumbsUp, MessageCircle, Repeat2, Share2, Bookmark } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { detectBodyLang } from "@/lib/detectLang";
 import {
   nextReaction,
-  reactionCountDelta,
   summaryEmojis,
   totalReactions,
-  reactionMeta,
   type ReactionKind,
 } from "@/lib/feed/reactions";
 import { visibleRepostTargets, type PostView } from "@/lib/feed/reposts";
@@ -28,6 +26,10 @@ export type ActionInitial = {
 
 const HOVER_OPEN_MS = 400;
 
+// LinkedIn-style split: a muted SUMMARY row (counts, not buttons) over an
+// equal-width ACTION row (icon + label, no counts). The bar is presentation
+// only — every handler + optimistic-update path below is unchanged from the
+// single-row version (BL-VSCODE-2026-07-28 A1).
 export default function PostActionBar({
   postId,
   postView,
@@ -176,150 +178,185 @@ export default function PostActionBar({
   }
 
   const reactActive = mine !== null;
-  const reactLabel = mine ? reactionMeta(mine).emoji : null;
+  const commentCount = initial.commentCount;
+  // Summary row only exists when there is something to summarize — never an empty
+  // divider (A1). commentCount comes straight from the prop so it stays live as
+  // CommentThread pushes new counts up through PostCard.
+  const showSummary = total > 0 || commentCount > 0 || repostCount > 0;
+
+  // Shared class for the four primary actions: equal width (flex-1), 44px tall,
+  // label hidden below 400px (icons only — never wraps to two lines, never
+  // shrinks the target). aria-label survives the icons-only breakpoint.
+  const ACTION =
+    "inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg px-1.5 py-1.5 text-[13px] font-medium transition hover:bg-surface-2";
+  const LABEL = "hidden whitespace-nowrap min-[400px]:inline";
 
   return (
     <footer className="border-t border-border">
-      <div className="flex items-center gap-0.5 px-2 py-1">
-        {/* React */}
-        <div className="relative">
-          {pickerOpen && (
-            <div
-              className="absolute bottom-full left-0 z-20 mb-1"
-              onMouseEnter={cancelPickerHover}
-              onMouseLeave={() => setPickerOpen(false)}
-            >
-              <ReactionPicker current={mine} onPick={applyReaction} onClose={() => setPickerOpen(false)} />
-            </div>
+      {/* ── Row 1: summary (muted, NOT a button row) ── */}
+      {showSummary && (
+        <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-[13px] text-ink-soft">
+          {/* left: overlapping reaction emojis + total. No detail view exists yet,
+              so this is intentionally non-interactive (A1: do not invent one). */}
+          {total > 0 ? (
+            <span className="inline-flex items-center gap-1" aria-label={t("reactionCountLive", { count: total })}>
+              <span aria-hidden className="text-[13px] leading-none">{emojis.join("")}</span>
+              <span className="tabular-nums">{total}</span>
+            </span>
+          ) : (
+            <span aria-hidden />
           )}
-          <button
-            type="button"
-            aria-pressed={reactActive}
-            aria-label={t("reactAria", { count: total })}
-            onClick={() => applyReaction("like")}
-            onPointerEnter={(e) => e.pointerType !== "touch" && openPickerSoon()}
-            onPointerLeave={cancelPickerHover}
-            onTouchStart={openPickerSoon}
-            onTouchEnd={cancelPickerHover}
-            onContextMenu={(e) => e.preventDefault()}
-            className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition hover:bg-surface-2 ${
-              reactActive ? "text-primary" : "text-ink-soft"
-            }`}
-          >
-            {reactLabel ? (
-              <span className="text-base" aria-hidden>{reactLabel}</span>
-            ) : (
-              <Smile size={18} strokeWidth={2} />
-            )}
-            <span>{mine ? t(`reactions.${mine}`) : t("react")}</span>
-            {emojis.length > 0 && (
-              <span className="ml-0.5 inline-flex items-center gap-0.5">
-                <span aria-hidden className="text-[13px] leading-none">{emojis.join("")}</span>
-                <span className="tabular-nums">{total}</span>
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Comment */}
-        <button
-          type="button"
-          aria-pressed={commentsOpen}
-          aria-label={t("commentAria", { count: initial.commentCount })}
-          onClick={onToggleComments}
-          className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition hover:bg-surface-2 ${
-            commentsOpen ? "text-primary" : "text-ink-soft"
-          }`}
-        >
-          <MessageCircle size={18} />
-          {initial.commentCount > 0 ? <span className="tabular-nums">{initial.commentCount}</span> : null}
-        </button>
-
-        {/* Repost */}
-        <div className="relative">
-          <button
-            type="button"
-            aria-pressed={myRepost !== null}
-            aria-haspopup="menu"
-            aria-expanded={repostMenu}
-            disabled={myRepost === null && repostTargets.length === 0}
-            aria-label={t("repostAria", { count: repostCount })}
-            onClick={() => setRepostMenu((o) => !o)}
-            className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent ${
-              myRepost ? "text-primary" : "text-ink-soft"
-            }`}
-          >
-            <Repeat2 size={18} />
-            {repostCount > 0 ? <span className="tabular-nums">{repostCount}</span> : null}
-          </button>
-          {repostMenu && (
-            <div role="menu" className="absolute bottom-full left-0 z-20 mb-1 w-52 rounded-lg border border-border bg-surface p-1 shadow-raised">
-              {myRepost ? (
-                <button type="button" role="menuitem" onClick={undoRepost} className="w-full rounded-md px-3 py-2.5 text-left text-sm text-accent hover:bg-surface-2">
-                  {t("undoRepost")}
+          {/* right: "N comments · N reposts" — comments opens the thread. */}
+          {(commentCount > 0 || repostCount > 0) && (
+            <span className="inline-flex items-center gap-1.5">
+              {commentCount > 0 && (
+                <button
+                  type="button"
+                  onClick={onToggleComments}
+                  className="tabular-nums transition hover:text-ink hover:underline"
+                >
+                  {t("commentsSummary", { count: commentCount })}
                 </button>
-              ) : (
-                <>
-                  {repostTargets.map((target) => (
+              )}
+              {commentCount > 0 && repostCount > 0 && <span aria-hidden>·</span>}
+              {repostCount > 0 && (
+                <span className="tabular-nums">{t("repostsSummary", { count: repostCount })}</span>
+              )}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── Row 2: actions (equal-width, icon + label, no counts) ── */}
+      <div className={`flex items-center gap-1 px-2 py-1 ${showSummary ? "border-t border-border" : ""}`}>
+        <div className="flex flex-1 items-center gap-0.5">
+          {/* Like — click toggles like; hover/long-press opens the 5-reaction picker */}
+          <div className="relative flex-1">
+            {pickerOpen && (
+              <div
+                className="absolute bottom-full left-0 z-20 mb-1"
+                onMouseEnter={cancelPickerHover}
+                onMouseLeave={() => setPickerOpen(false)}
+              >
+                <ReactionPicker current={mine} onPick={applyReaction} onClose={() => setPickerOpen(false)} />
+              </div>
+            )}
+            <button
+              type="button"
+              aria-pressed={reactActive}
+              aria-label={t("reactions.like")}
+              onClick={() => applyReaction("like")}
+              onPointerEnter={(e) => e.pointerType !== "touch" && openPickerSoon()}
+              onPointerLeave={cancelPickerHover}
+              onTouchStart={openPickerSoon}
+              onTouchEnd={cancelPickerHover}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`${ACTION} ${reactActive ? "text-primary" : "text-ink-soft"}`}
+            >
+              <ThumbsUp size={18} fill={reactActive ? "currentColor" : "none"} />
+              <span className={LABEL}>{t("reactions.like")}</span>
+            </button>
+          </div>
+
+          {/* Comment */}
+          <div className="flex-1">
+            <button
+              type="button"
+              aria-pressed={commentsOpen}
+              aria-label={t("comment")}
+              onClick={onToggleComments}
+              className={`${ACTION} ${commentsOpen ? "text-primary" : "text-ink-soft"}`}
+            >
+              <MessageCircle size={18} />
+              <span className={LABEL}>{t("comment")}</span>
+            </button>
+          </div>
+
+          {/* Repost */}
+          <div className="relative flex-1">
+            <button
+              type="button"
+              aria-pressed={myRepost !== null}
+              aria-haspopup="menu"
+              aria-expanded={repostMenu}
+              disabled={myRepost === null && repostTargets.length === 0}
+              aria-label={t("repost")}
+              onClick={() => setRepostMenu((o) => !o)}
+              className={`${ACTION} disabled:opacity-40 disabled:hover:bg-transparent ${myRepost ? "text-primary" : "text-ink-soft"}`}
+            >
+              <Repeat2 size={18} />
+              <span className={LABEL}>{t("repost")}</span>
+            </button>
+            {repostMenu && (
+              // right-0: Repost is a middle action now, so a left-anchored w-52 menu
+              // would spill past the overflow-hidden card edge at 360px and clip.
+              <div role="menu" className="absolute bottom-full right-0 z-20 mb-1 w-52 rounded-lg border border-border bg-surface p-1 shadow-raised">
+                {myRepost ? (
+                  <button type="button" role="menuitem" onClick={undoRepost} className="w-full rounded-md px-3 py-2.5 text-left text-sm text-accent hover:bg-surface-2">
+                    {t("undoRepost")}
+                  </button>
+                ) : (
+                  <>
+                    {repostTargets.map((target) => (
+                      <button
+                        key={target}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => doRepost(target)}
+                        className="w-full rounded-md px-3 py-2.5 text-left text-sm text-ink hover:bg-surface-2"
+                      >
+                        {repostTargets.length === 1 ? t("repost") : t(`repostTo.${target}`)}
+                      </button>
+                    ))}
                     <button
-                      key={target}
                       type="button"
                       role="menuitem"
-                      onClick={() => doRepost(target)}
+                      onClick={() => { setRepostMenu(false); setQuoteOpen(true); }}
                       className="w-full rounded-md px-3 py-2.5 text-left text-sm text-ink hover:bg-surface-2"
                     >
-                      {repostTargets.length === 1 ? t("repost") : t(`repostTo.${target}`)}
+                      {t("quote")}
                     </button>
-                  ))}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => { setRepostMenu(false); setQuoteOpen(true); }}
-                    className="w-full rounded-md px-3 py-2.5 text-left text-sm text-ink hover:bg-surface-2"
-                  >
-                    {t("quote")}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Share */}
+          <div className="relative flex-1">
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={shareOpen}
+              aria-label={t("share")}
+              onClick={() => setShareOpen((o) => !o)}
+              className={`${ACTION} text-ink-soft`}
+            >
+              <Share2 size={18} />
+              <span className={LABEL}>{t("share")}</span>
+            </button>
+            {shareOpen && userId && (
+              <div className="absolute bottom-full right-0 z-20 mb-1">
+                <ShareMenu
+                  postId={postId}
+                  userId={userId}
+                  permalink={permalink}
+                  quoteText={quoteText}
+                  onToast={showToast}
+                  onClose={() => setShareOpen(false)}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        <span className="flex-1" />
-
-        {/* Share */}
-        <div className="relative">
-          <button
-            type="button"
-            aria-haspopup="menu"
-            aria-expanded={shareOpen}
-            aria-label={t("share")}
-            onClick={() => setShareOpen((o) => !o)}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-ink-soft transition hover:bg-surface-2"
-          >
-            <Share2 size={18} />
-          </button>
-          {shareOpen && userId && (
-            <div className="absolute bottom-full right-0 z-20 mb-1">
-              <ShareMenu
-                postId={postId}
-                userId={userId}
-                permalink={permalink}
-                quoteText={quoteText}
-                onToast={showToast}
-                onClose={() => setShareOpen(false)}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Bookmark (private, no count — R4) */}
+        {/* Bookmark (private, no count — R4). Right-aligned, OUTSIDE the equal-width group. */}
         <button
           type="button"
           aria-pressed={bookmarked}
           aria-label={bookmarked ? t("bookmarkRemoveAria") : t("bookmarkAria")}
           onClick={toggleBookmark}
-          className={`inline-flex min-h-[44px] items-center justify-center rounded-lg px-2.5 py-1.5 transition hover:bg-surface-2 ${
+          className={`inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-lg px-2.5 py-1.5 transition hover:bg-surface-2 ${
             bookmarked ? "text-primary" : "text-ink-soft"
           }`}
         >

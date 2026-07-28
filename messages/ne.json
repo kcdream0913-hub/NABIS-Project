@@ -19,7 +19,10 @@
     "signOut": "साइन आउट",
     "online": "अनलाइन",
     "settings": "सेटिङ",
-    "bookmarks": "बुकमार्कहरू"
+    "bookmarks": "बुकमार्कहरू",
+    "brandHome": "BridgeLink गृहपृष्ठ",
+    "expandMenu": "मेनु विस्तार गर्नुहोस्",
+    "collapseMenu": "मेनु संक्षिप्त गर्नुहोस्"
   },
   "messages": {
     "eyebrow": "प्रत्यक्ष सन्देश",
@@ -1235,7 +1238,10 @@
     "bookmarksEmptyTitle": "अहिलेसम्म कुनै बुकमार्क छैन",
     "bookmarksEmptyBody": "कुनै पनि पोस्टमा बुकमार्क आइकन थिचेर यहाँ निजी रूपमा सुरक्षित गर्नुहोस्।",
     "postNotFoundTitle": "पोस्ट फेला परेन",
-    "postNotFoundBody": "यो पोस्ट हटाइएको हुनसक्छ, वा तपाईंसँग यसको पहुँच छैन।"
+    "postNotFoundBody": "यो पोस्ट हटाइएको हुनसक्छ, वा तपाईंसँग यसको पहुँच छैन।",
+    "comment": "टिप्पणी",
+    "commentsSummary": "{count, plural, one {# टिप्पणी} other {# टिप्पणीहरू}}",
+    "repostsSummary": "{count, plural, one {# रिपोस्ट} other {# रिपोस्टहरू}}"
   },
   "notifications": {
     "bell": "गतिविधि",
