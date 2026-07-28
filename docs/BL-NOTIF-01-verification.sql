@@ -1,3 +1,11 @@
+-- ⚠ psql-ONLY. This uses \set meta-commands and RAISE NOTICE, neither of which
+-- works through Supabase's execute_sql / the MCP. To run it there, rewrite:
+-- inline the UUIDs as literals, funnel each SELECT into a temp table, wrap the
+-- expected-error cases (e.g. the protect-trigger rejection) in DO-block exception
+-- handlers, and capture NOTICE output into a temp table (execute_sql returns no
+-- notice output). The hub ran exactly such a rewrite for the a0abf04 pass. As
+-- written, run this only via `psql`.
+--
 -- BL-NOTIF-01 — RLS + trigger + protect proofs for the notifications migration.
 --
 -- WHY THIS FILE EXISTS: the trigger DECISION logic is unit-tested in
