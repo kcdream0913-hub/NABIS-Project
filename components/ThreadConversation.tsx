@@ -8,7 +8,7 @@ import {
   Check,
   CheckCheck,
   CornerUpLeft,
-  Paperclip,
+  Loader2,
   Pencil,
   Send,
   Smile,
@@ -29,12 +29,36 @@ import {
   shouldAdvanceRead,
   truncateQuote,
 } from "@/lib/messaging";
-import { ACCEPT, ATTACHMENT_BUCKET, uploadAttachment, validateFile } from "@/lib/attachments";
+import {
+  ATTACHMENT_BUCKET,
+  type AttachmentKind,
+  kindOfFile,
+  scanUploaded,
+  uploadAttachment,
+  validateFile,
+} from "@/lib/attachments";
+import { sanitizeFilename } from "@/lib/attachmentName";
+import { checkVideoForComposer } from "@/lib/media/readVideoDuration";
+import AttachmentSheet, { type AttachmentSource } from "@/components/AttachmentSheet";
 
 const EmojiPicker = dynamic(() => import("@/components/EmojiPicker"), { ssr: false });
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "🙏"];
 const PAGE = 30;
+const MAX_IMAGES = 4;
+
+// A composer attachment moving through upload → magic-byte scan → ready. Only
+// `ready` items are sent; `error` items stay visible with a readable reason.
+type Staged = {
+  id: string;
+  name: string; // already sanitized for display
+  kind: AttachmentKind;
+  status: "working" | "ready" | "error";
+  progress: number; // 0..1 — coarse (supabase-js .upload() exposes no byte progress)
+  error?: string;
+  attachment?: Attachment;
+  path?: string;
+};
 
 type Row = {
   id: string;
@@ -92,8 +116,7 @@ function ThreadConversationInner({
   // composer
   const [draft, setDraft] = useState(initialDraft);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
-  const [staged, setStaged] = useState<Attachment[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [staged, setStaged] = useState<Staged[]>([]);
   const [composerError, setComposerError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -113,7 +136,8 @@ function ThreadConversationInner({
   const lastWrittenRef = useRef<string>(""); // last last_read_at I wrote (monotonic guard)
   const messagesRef = useRef<ChatMessage[]>([]); // freshest list for the debounced writer
   const readTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const stagedRef = useRef<Staged[]>([]); // live counts for the selection-limit check
+  const canceledRef = useRef<Set<string>>(new Set()); // ids canceled mid-upload
 
   const visible = useMemo(() => messages.filter((m) => !hides.has(m.id)), [messages, hides]);
   const byId = useMemo(() => {
@@ -194,6 +218,11 @@ function ThreadConversationInner({
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  // mirror staged attachments into a ref so the selection-limit check reads live counts
+  useEffect(() => {
+    stagedRef.current = staged;
+  }, [staged]);
 
   // ── continuous read receipts ──
   // Advance MY last_read_at to now() whenever I'm actually looking at the newest
@@ -373,46 +402,99 @@ function ThreadConversationInner({
     channelRef.current?.send({ type: "broadcast", event: "typing", payload: { userId } });
   }
 
-  async function onPickFiles(files: FileList | null) {
-    if (!files || !userId) return;
+  const patchStaged = useCallback((id: string, patch: Partial<Staged>) => {
+    setStaged((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  }, []);
+
+  // Selection rules (D-038 parity): ≤4 images XOR 1 video (no image/video mixing);
+  // documents ride alongside freely. Failures surface as a visible error chip — a
+  // silent drop here is worse than a refusal.
+  function onPickFrom(files: FileList, _source: AttachmentSource) {
+    if (!userId) return;
     setComposerError(null);
+    const live = stagedRef.current.filter((s) => s.status !== "error");
+    let imgCount = live.filter((s) => s.kind === "image").length;
+    let vidCount = live.filter((s) => s.kind === "video").length;
+
     for (const file of Array.from(files)) {
+      const id = crypto.randomUUID();
+      const name = sanitizeFilename(file.name);
+      const reject = (error: string, kind: AttachmentKind = kindOfFile(file) ?? "document") =>
+        setStaged((prev) => [...prev, { id, name, kind, status: "error", progress: 0, error }]);
+
       const check = validateFile(file);
       if (!check.ok) {
-        setComposerError(check.reason === "type" ? t("unsupportedType") : t("tooLarge"));
+        reject(check.reason === "size" ? t("tooLarge") : t("unsupportedType"));
         continue;
       }
-      setUploading(true);
-      try {
-        const att = await uploadAttachment(supabase, threadId, userId, file);
-        setStaged((prev) => [...prev, att]);
-      } catch {
-        setComposerError(t("uploadFailed"));
-      } finally {
-        setUploading(false);
+      const kind = check.kind;
+      if (kind === "image") {
+        if (vidCount > 0) { reject(t("noMixing"), kind); continue; }
+        if (imgCount >= MAX_IMAGES) { reject(t("tooManyImages"), kind); continue; }
+        imgCount++;
+      } else if (kind === "video") {
+        if (vidCount >= 1) { reject(t("oneVideoOnly"), kind); continue; }
+        if (imgCount > 0) { reject(t("noMixing"), kind); continue; }
+        vidCount++;
       }
+      setStaged((prev) => [...prev, { id, name, kind, status: "working", progress: 0 }]);
+      void processFile(id, file, kind);
     }
-    if (fileInput.current) fileInput.current.value = "";
   }
 
-  async function removeStaged(att: Attachment) {
-    setStaged((prev) => prev.filter((a) => a.path !== att.path));
-    await supabase.storage.from(ATTACHMENT_BUCKET).remove([att.path]);
+  async function processFile(id: string, file: File, kind: AttachmentKind) {
+    try {
+      if (kind === "video") {
+        const vc = await checkVideoForComposer(file);
+        if (vc.status === "too_long") return patchStaged(id, { status: "error", error: t("videoTooLong") });
+        if (vc.status === "unreadable") return patchStaged(id, { status: "error", error: t("videoUnreadable") });
+      }
+      const att = await uploadAttachment(supabase, threadId, userId!, file, (f) =>
+        patchStaged(id, { progress: Math.min(0.9, f) }),
+      );
+      if (canceledRef.current.has(id)) {
+        await supabase.storage.from(ATTACHMENT_BUCKET).remove([att.path]);
+        return;
+      }
+      patchStaged(id, { path: att.path, progress: 0.95 });
+      // Server-side magic-byte gate (D-052): a .exe renamed .pdf comes back blocked.
+      const scan = await scanUploaded(att.path);
+      if (!scan.ok) {
+        await supabase.storage.from(ATTACHMENT_BUCKET).remove([att.path]);
+        return patchStaged(id, { status: "error", progress: 0, error: scan.reason === "blocked" ? t("unsupportedType") : t("network") });
+      }
+      if (canceledRef.current.has(id)) {
+        await supabase.storage.from(ATTACHMENT_BUCKET).remove([att.path]);
+        return;
+      }
+      patchStaged(id, { status: "ready", progress: 1, attachment: att });
+    } catch {
+      patchStaged(id, { status: "error", error: t("uploadFailed") });
+    }
+  }
+
+  function cancelStaged(item: Staged) {
+    canceledRef.current.add(item.id);
+    setStaged((prev) => prev.filter((s) => s.id !== item.id));
+    if (item.path) void supabase.storage.from(ATTACHMENT_BUCKET).remove([item.path]);
   }
 
   async function send() {
     const text = draft.trim();
-    if ((!text && staged.length === 0) || !userId) return;
+    const ready = staged.filter((s) => s.status === "ready" && s.attachment).map((s) => s.attachment!);
+    if ((!text && ready.length === 0) || !userId) return;
+    if (staged.some((s) => s.status === "working")) return; // wait for uploads to finish
     setDraft("");
     const payload = {
       thread_id: threadId,
       sender_id: userId,
       body: text || null,
-      attachments: staged,
+      attachments: ready,
       reply_to_message_id: replyTo?.id ?? null,
     };
     setReplyTo(null);
     setStaged([]);
+    canceledRef.current.clear();
     const { data, error } = await supabase.from("messages").insert(payload).select(SELECT).single();
     if (!error && data) {
       const m = toMessage(data as Row);
@@ -674,27 +756,35 @@ function ThreadConversationInner({
         </div>
       )}
 
-      {/* staged attachments */}
-      {(staged.length > 0 || uploading) && (
+      {/* staged attachments: per-item progress, ready check, or a readable error */}
+      {staged.length > 0 && (
         <div className="flex flex-wrap gap-2 border-t border-border bg-bg px-3 py-2">
-          {staged.map((a) => (
-            <span key={a.path} className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-xs">
-              <span className="max-w-[140px] truncate">{a.name}</span>
-              <button onClick={() => removeStaged(a)} aria-label={t("cancel")} className="text-ink-soft hover:text-accent">
+          {staged.map((s) => (
+            <span
+              key={s.id}
+              className={`relative flex max-w-[220px] items-center gap-1.5 overflow-hidden rounded-md border px-2 py-1 text-xs ${s.status === "error" ? "border-accent/40 bg-accent-soft text-accent" : "border-border bg-surface"}`}
+            >
+              {s.status === "working" && <Loader2 size={12} className="shrink-0 animate-spin text-ink-soft" />}
+              {s.status === "ready" && <Check size={12} className="shrink-0 text-online" />}
+              <span className="min-w-0 truncate">{s.status === "error" && s.error ? s.error : s.name}</span>
+              <button onClick={() => cancelStaged(s)} aria-label={t("cancel")} className="shrink-0 text-ink-soft hover:text-accent">
                 <X size={12} />
               </button>
+              {s.status === "working" && (
+                <span className="absolute bottom-0 left-0 h-0.5 bg-primary transition-all" style={{ width: `${Math.round(s.progress * 100)}%` }} />
+              )}
             </span>
           ))}
-          {uploading && <span className="text-xs text-ink-soft">…</span>}
         </div>
       )}
       {composerError && <p className="border-t border-border bg-bg px-3 py-1 text-xs text-accent" role="alert">{composerError}</p>}
 
       <footer className="relative flex items-center gap-2 border-t border-border p-3">
-        <input ref={fileInput} type="file" accept={ACCEPT.join(",")} multiple hidden onChange={(e) => onPickFiles(e.target.files)} />
-        <button onClick={() => fileInput.current?.click()} aria-label={t("attachFile")} className="shrink-0 rounded-md p-2 text-ink-soft hover:bg-bg hover:text-ink">
-          <Paperclip size={18} />
-        </button>
+        <AttachmentSheet
+          onPick={onPickFrom}
+          disabled={!userId}
+          labels={{ add: t("attachFile"), document: t("attachDocument"), media: t("attachMedia"), camera: t("attachCamera"), close: t("cancel") }}
+        />
         <button onClick={() => setPickerOpen((v) => !v)} aria-label={t("emoji")} className="shrink-0 rounded-md p-2 text-ink-soft hover:bg-bg hover:text-ink">
           <Smile size={18} />
         </button>
@@ -710,7 +800,12 @@ function ThreadConversationInner({
           placeholder={t("messagePrefix", { name: (otherName || t("member")).split(" ")[0] })}
           className="flex-1 rounded-md border border-border-input bg-bg px-3 py-2 text-sm placeholder:text-ink-soft focus:border-primary focus:bg-surface"
         />
-        <button onClick={send} aria-label={t("sendMessage")} className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary text-on-primary hover:bg-primary-pressed">
+        <button
+          onClick={send}
+          disabled={staged.some((s) => s.status === "working")}
+          aria-label={t("sendMessage")}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary text-on-primary hover:bg-primary-pressed disabled:opacity-40"
+        >
           <Send size={15} />
         </button>
       </footer>
