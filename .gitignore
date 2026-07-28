@@ -9,6 +9,11 @@ next-env.d.ts
 
 # Playwright run output
 test-results/
+playwright-report/
+playwright/.cache/
+# Generated E2E fixtures (built by scripts/gen-e2e-fixtures.mjs at globalSetup):
+# the >50MB oversize file + bidi/Devanagari filenames must never enter git.
+e2e/fixtures/generated/
 
 # Patch files are hand-off artifacts between sessions, never source of record.
 *.patch

@@ -9,11 +9,13 @@ const HOST = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  // Generate the (gitignored) attachment fixtures before any test runs.
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   retries: 0,
   webServer: {
-    // Run the smoke suite against a PRODUCTION build — the same artifact Vercel
-    // serves — not `next dev`. This is what catches build-only / hydration
+    // Run the smoke suite against a PRODUCTION build - the same artifact Vercel
+    // serves - not `next dev`. This is what catches build-only / hydration
     // failures (the class of bug that has bitten this repo). Self-contained so it
     // works identically in CI and locally: build, then start.
     command: `npm run build && npx next start --port ${PORT}`,
@@ -29,5 +31,11 @@ export default defineConfig({
   use: {
     baseURL: HOST,
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Every spec runs at BOTH a desktop width and 360x640 (BL-MSG-05 requires the
+  // attachment sheet to work as a bottom sheet <768px and a popover >=768px, and the
+  // action bar to stay usable at the narrow width).
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium-360", use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 640 } } },
+  ],
 });
