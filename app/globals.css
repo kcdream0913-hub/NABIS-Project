@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
 /*
+  Rail hover-preview gate: a fine pointer that can truly hover (a desktop mouse),
+  never touch — where :hover sticks and would strand the flyover open. Pairs with
+  the JS click-to-pin in Sidebar so hover is never the ONLY way to expand the rail
+  (BL-VSCODE-2026-07-28 A2). Tailwind's bare `hover:` is already @media(hover:hover);
+  this narrows it further with (pointer: fine) per the handoff.
+*/
+@custom-variant pointer-fine (@media (hover: hover) and (pointer: fine));
+
+/*
   BridgeLink design tokens — the rebranded palette (foundation v1, 2026-07-24).
   Brand is blue (primary); accent red is importance/destructive only; Bridge is
   gold; green is a STATUS colour (active + online presence) only. The three

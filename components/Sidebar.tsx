@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 import { isUnread } from "@/lib/messaging";
@@ -35,8 +35,9 @@ const GROUPS: { groupKey: string; items: Item[] }[] = [
 
 /**
  * Flyout rail: collapsed to icons (68px) on desktop, hover-expands to labels
- * (248px). On the mobile drawer there is no hover, so `expanded` forces the
- * labels visible (AppShell passes it for the drawer instance only).
+ * (248px) on fine pointers, and click-to-PIN open (touch/keyboard). On the mobile
+ * drawer `expanded` forces the labels visible (AppShell passes it for the drawer
+ * instance only).
  */
 export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const t = useTranslations("nav");
@@ -58,13 +59,21 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   // is deliberately not wired: channels are directory-only today, so there is no
   // channel-content surface to be unread against (the column exists for later).
   const [dmCount, setDmCount] = useState(0);
+  // Click-to-pin flyover (A2). Component-local state — each Sidebar instance owns
+  // its own pin, so the hidden desktop rail and the mobile drawer never fight over
+  // it (the drawer is always `expanded` and never renders the toggle).
+  const [pinned, setPinned] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const isOpen = expanded || pinned;
 
-  // Label reveals only when the rail is expanded. Mobile drawer forces it via
-  // `expanded`; desktop reveals on hover of the group/nav container.
-  const LABEL = expanded
+  // Label reveals when the rail is open (expanded drawer OR pinned). Otherwise it
+  // stays hidden until a fine-pointer hover previews it — never on touch, where
+  // :hover sticks; the toggle button is the touch/keyboard way in.
+  const LABEL = isOpen
     ? "whitespace-nowrap"
-    : "whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/nav:opacity-100";
-  const rootWidth = expanded ? "w-[248px]" : "w-[68px] hover:w-[248px]";
+    : "whitespace-nowrap opacity-0 transition-opacity duration-150 pointer-fine:group-hover/nav:opacity-100";
+  const rootWidth = isOpen ? "w-[248px]" : "w-[68px] pointer-fine:hover:w-[248px]";
 
   useEffect(() => {
     async function load() {
@@ -138,6 +147,27 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Pinned open: close on Escape (returning focus to the toggle) or a pointer
+  // press outside the rail. Listeners attach only while pinned.
+  useEffect(() => {
+    if (!pinned) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setPinned(false);
+        toggleRef.current?.focus();
+      }
+    }
+    function onPointerDown(e: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setPinned(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [pinned]);
+
   async function signOut() {
     await supabase.auth.signOut();
     router.push("/login");
@@ -175,11 +205,29 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const SettingsIcon = NAV_ICON.settings;
 
   return (
-    <div className={`group/nav flex h-full flex-col border-r border-border bg-surface transition-[width] duration-200 ease-out ${rootWidth}`}>
-      <Link href="/" className="flex items-center gap-2.5 px-3.5 py-4">
+    <div ref={rootRef} className={`group/nav flex h-full flex-col border-r border-border bg-surface transition-[width] duration-200 ease-out ${rootWidth}`}>
+      <Link href="/" aria-label={t("brandHome")} className="flex items-center gap-2.5 rounded-lg px-3.5 py-4">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
         <span className={`text-[17px] font-semibold tracking-tight text-ink ${LABEL}`}>BridgeLink</span>
       </Link>
+
+      {/* Click-to-pin toggle — the touch + keyboard way to expand the rail (hover
+          alone is unreachable on touch). Rail only; the drawer is always expanded. */}
+      {!expanded && (
+        <button
+          ref={toggleRef}
+          type="button"
+          onClick={() => setPinned((p) => !p)}
+          aria-expanded={pinned}
+          aria-label={pinned ? t("collapseMenu") : t("expandMenu")}
+          className="mx-2.5 mb-1 flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          <span className="shrink-0">
+            {pinned ? <PanelLeftClose size={21} strokeWidth={1.9} /> : <PanelLeftOpen size={21} strokeWidth={1.9} />}
+          </span>
+          <span className={LABEL}>{pinned ? t("collapseMenu") : t("expandMenu")}</span>
+        </button>
+      )}
 
       {/* Activity bell — mounted OUTSIDE the overflow-y-auto nav below, because its
           panel flies out to the right and nav's overflow would clip it. */}
