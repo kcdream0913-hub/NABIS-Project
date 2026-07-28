@@ -1234,6 +1234,12 @@ file → commit (`feat:`/`fix:`/`chore:`) → propose next, wait for confirmatio
 "Breakthrough <instructions>" = sanctioned pivot: update plan + this file, confirm,
 proceed.
 
+**Every end-of-task report carries, next to the gate counts, a line
+"findings turned into permanent checks: <list>" (D-059).** Each finding this task
+surfaced either becomes a standing gate (test / `*.verify.sql` / lint) or is recorded
+as accepted-and-unguarded with the reason. A fix without a check is how the same class
+of bug ships twice.
+
 ## Phase discipline (safety rails)
 
 - Do NOT build marketplace, checkout, payments, or vendor inventory in Phase 1.
@@ -1278,3 +1284,4 @@ proceed.
 | D-056 | 2026-07-28 | **The hub CAN clone this repo.** `git clone --depth 1 --filter=blob:none` over https works from the hub sandbox, so directory listing, `git log`/`git diff`, test-merges, and byte-exact reads at any SHA are all available for verification. Retires the earlier "GitHub REST 403 / codeload 403 / cannot list a directory" limitation — hub verification is no longer limited to what a session pastes. | The prior assumption (hub is blind to the tree) shaped how much got pasted back each round; it was wrong, so stop over-pasting and let the hub read the SHA directly. |
 | D-057 | 2026-07-28 | **Revoking EXECUTE on a Postgres function requires naming `public`.** The default grant Postgres puts on every function is to PUBLIC; `revoke execute ... from anon, authenticated` alone is silently ineffective — `has_function_privilege` stays TRUE for both because the PUBLIC grant survives (verified on prod in a begin/rollback). Always `revoke ... from public, anon, authenticated`. A rollback that re-grants must likewise name `public` to be a true inverse. Applies to every future revoke, not just the four BL-NOTIF-01 trigger fns that surfaced it. | A revoke that looks applied but isn't is worse than none — it reads as "locked down" in review while the grant stands. This bit the D-053 notif revokes; pin the rule so it never recurs. |
 | D-058 | 2026-07-28 | **A negative-control DB assertion that matches ZERO rows is indistinguishable from a pass — always assert `row_count`.** A verification query written to prove "no bad rows exist" returns an empty set both when the guard works AND when the query targets the wrong table/column/predicate and simply matched nothing. Bind the proof to an expected count (assert the query touched the rows it claims to, then assert the property), or use a positive control that MUST match. | Cost the hub a round on the protect-guard test; a silent zero-row match reads as green while proving nothing. |
+| D-059 | 2026-07-28 | **Every finding becomes a permanent check, or is recorded as accepted-and-unguarded — and the end-of-task report says which.** Next to the gate counts, the report carries a line `findings turned into permanent checks: <list>`. A one-off fix leaves the door open for the same class of bug to ship again (bl-i18n-01's wrong-namespace `t()` key was fixed, then a SECOND identical one — `tripPlanner.daysCount` — was found the moment the `usage.test.ts` gate existed). Checks take the form of a test, a `*.verify.sql`, or a lint; "accepted-and-unguarded" must state why guarding is impractical. | A fix without a check is invisible to the next session and to CI; the value of a finding is the gate it leaves behind, not the single line it changed. |

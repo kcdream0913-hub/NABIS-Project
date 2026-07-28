@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { sanitizeFilename } from "../attachmentName";
+import { BIDI_SPOOF_FILENAME, BIDI_CONTROLS, DEVANAGARI } from "./fixtures/unicode";
 
 // Build the dangerous characters numerically so this source file stays pure ASCII.
 const cc = (n: number) => String.fromCharCode(n);
@@ -48,5 +49,24 @@ describe("sanitizeFilename — length cap keeps the extension", () => {
     expect(sanitizeFilename("   ")).toBe("file");
     expect(sanitizeFilename(null)).toBe("file");
     expect(sanitizeFilename(undefined)).toBe("file");
+  });
+});
+
+// Retro-applied shared fixture (BL-E2E-01): the same corpus every text-handling
+// module is tested against, so a regression in one is caught by the convention.
+describe("sanitizeFilename — shared Unicode fixture", () => {
+  it("neutralizes the canonical bidi-spoof filename", () => {
+    const out = sanitizeFilename(BIDI_SPOOF_FILENAME);
+    expect(out).toBe("invoicegpj.exe"); // real ".exe" visible again
+    expect(BIDI_CONTROLS.every((c) => !out.includes(c))).toBe(true);
+  });
+  it("strips every bidi/format control in the set", () => {
+    for (const c of BIDI_CONTROLS) expect(sanitizeFilename("a" + c + "b")).toBe("ab");
+  });
+  it("does NOT over-strip real non-ASCII text (Devanagari survives)", () => {
+    const out = sanitizeFilename(DEVANAGARI + ".pdf");
+    expect(out.endsWith(".pdf")).toBe(true);
+    expect(out).not.toBe("file");
+    expect(BIDI_CONTROLS.every((c) => !out.includes(c))).toBe(true);
   });
 });

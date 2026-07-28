@@ -662,7 +662,7 @@ export default function TripPlannerPage() {
                   const isAdded = staged.some((s) => s.key === `off-${o.id}`);
                   const rows: [string, string][] = [
                     [t("cmpPrice"), formatMoney(o.price_from, o.price_currency) ? `${formatMoney(o.price_from, o.price_currency)} ${tOff(`units.${o.price_unit}`)}` : "—"],
-                    [t("cmpDuration"), o.duration_days != null ? t("daysCount", { count: o.duration_days }) : "—"],
+                    [t("cmpDuration"), o.duration_days != null ? tOff("daysCount", { count: o.duration_days }) : "—"],
                     [t("cmpGroup"), o.group_min != null || o.group_max != null ? `${o.group_min ?? 1}–${o.group_max ?? "∞"}` : "—"],
                     [t("cmpSeasons"), o.seasons.map((s) => tOff(`seasons.${s}`)).join(", ") || "—"],
                     [t("cmpFestivals"), o.festival_slugs.map((f) => festivalNames[f] ?? f).join(", ") || "—"],

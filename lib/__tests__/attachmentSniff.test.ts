@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { sniffMagic, ALLOWED_MIME } from "../attachmentSniff";
+import { VALID_TEXT_SAMPLES, toUtf8 } from "./fixtures/unicode";
 
 // Build a byte array from a prefix (numbers) padded with zeros to a length, so the
 // signature sits where the sniffer looks. For text tests we pass ASCII directly.
@@ -212,6 +213,16 @@ describe("sniffMagic — invariant", () => {
       const r = sniffMagic(s);
       expect(r.ok).toBe(true);
       if (r.ok) expect(ALLOWED_MIME as readonly string[]).toContain(r.mime);
+    }
+  });
+});
+
+// Retro-applied shared fixture (BL-E2E-01): the same corpus every text-handling
+// module is tested against. This is the exact corpus the P0 sniffer bug failed on.
+describe("sniffMagic — shared Unicode text fixture", () => {
+  it("every valid non-ASCII text sample sniffs as text/plain", () => {
+    for (const sample of VALID_TEXT_SAMPLES) {
+      expect(sniffMagic(toUtf8(sample))).toEqual({ ok: true, mime: "text/plain", kind: "text" });
     }
   });
 });
