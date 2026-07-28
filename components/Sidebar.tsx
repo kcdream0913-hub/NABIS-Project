@@ -7,7 +7,9 @@ import { LogOut } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 import { isUnread } from "@/lib/messaging";
+import { badgeLabel } from "@/lib/notifications";
 import Avatar from "./Avatar";
+import NotificationBell from "./NotificationBell";
 import { OnlineDot } from "./OnlineDot";
 import { NAV_ICON, type NavIconName } from "./icons";
 
@@ -51,7 +53,11 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
   const [name, setName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [hasUnread, setHasUnread] = useState(false);
+  // Count of DM threads with something unread (the MESSAGES badge — separate from
+  // the ACTIVITY bell, which is backed by the notifications table). Channel unread
+  // is deliberately not wired: channels are directory-only today, so there is no
+  // channel-content surface to be unread against (the column exists for later).
+  const [dmCount, setDmCount] = useState(0);
 
   // Label reveals only when the rail is expanded. Mobile drawer forces it via
   // `expanded`; desktop reveals on hover of the group/nav container.
@@ -88,13 +94,13 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return setHasUnread(false);
+    if (!user) return setDmCount(0);
     const { data: mine } = await supabase
       .from("direct_thread_participants")
       .select("thread_id, last_read_at")
       .eq("user_id", user.id);
     const threadIds = (mine ?? []).map((r) => r.thread_id);
-    if (threadIds.length === 0) return setHasUnread(false);
+    if (threadIds.length === 0) return setDmCount(0);
     const readMap: Record<string, string | null> = Object.fromEntries(
       (mine ?? []).map((r) => [r.thread_id, r.last_read_at])
     );
@@ -105,7 +111,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
       .order("created_at", { ascending: false });
     const latest: Record<string, { sender_id: string; created_at: string }> = {};
     for (const m of msgs ?? []) if (!latest[m.thread_id]) latest[m.thread_id] = m;
-    setHasUnread(threadIds.some((id) => isUnread(latest[id], readMap[id], user.id)));
+    setDmCount(threadIds.filter((id) => isUnread(latest[id], readMap[id], user.id)).length);
   }
 
   useEffect(() => {
@@ -123,7 +129,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
           data: { user },
         } = await supabase.auth.getUser();
         const row = payload.new as { sender_id: string };
-        if (user && row.sender_id !== user.id) setHasUnread(true);
+        if (user && row.sender_id !== user.id) computeUnread();
       })
       .subscribe();
     return () => {
@@ -138,7 +144,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
     router.refresh();
   }
 
-  const Row = ({ href, icon, label, dot }: { href: string; icon: NavIconName; label: string; dot?: boolean }) => {
+  const Row = ({ href, icon, label, badge }: { href: string; icon: NavIconName; label: string; badge?: string | null }) => {
     const active = pathname === href;
     const Icon = NAV_ICON[icon];
     return (
@@ -151,11 +157,13 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
       >
         <span className="relative shrink-0">
           <Icon size={21} strokeWidth={1.9} />
-          {dot && (
+          {badge && (
             <span
-              className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface"
+              className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-on-accent ring-2 ring-surface"
               aria-label={t("unreadMessages")}
-            />
+            >
+              {badge}
+            </span>
           )}
         </span>
         <span className={LABEL}>{label}</span>
@@ -173,11 +181,17 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
         <span className={`text-[17px] font-semibold tracking-tight text-ink ${LABEL}`}>BridgeLink</span>
       </Link>
 
+      {/* Activity bell — mounted OUTSIDE the overflow-y-auto nav below, because its
+          panel flies out to the right and nav's overflow would clip it. */}
+      <div className="px-2.5 pb-1">
+        <NotificationBell labelClass={LABEL} />
+      </div>
+
       <nav className="flex-1 space-y-4 overflow-y-auto px-2.5 pb-4">
         {GROUPS.map((g) => (
           <div key={g.groupKey} className="space-y-0.5">
             <p className={`px-2.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-soft/70 ${LABEL}`}>{t(g.groupKey)}</p>
-            {g.items.map((it) => <Row key={it.href} href={it.href} icon={it.icon} label={t(it.labelKey)} dot={it.href === "/messages" && hasUnread} />)}
+            {g.items.map((it) => <Row key={it.href} href={it.href} icon={it.icon} label={t(it.labelKey)} badge={it.href === "/messages" ? badgeLabel(dmCount) : undefined} />)}
           </div>
         ))}
         {isAdmin && (

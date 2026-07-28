@@ -1236,5 +1236,20 @@
     "bookmarksEmptyBody": "Tap the bookmark icon on any post to save it here — privately.",
     "postNotFoundTitle": "Post not found",
     "postNotFoundBody": "This post may have been removed, or you don’t have access to it."
+  },
+  "notifications": {
+    "bell": "Activity",
+    "bellAria": "Activity",
+    "bellAriaCount": "Activity — {count} unread",
+    "panelTitle": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications yet.",
+    "someone": "Someone",
+    "label": {
+      "post_reaction": "reacted to your post",
+      "post_comment": "commented on your post",
+      "comment_reply": "replied to your comment",
+      "post_repost": "reposted your post"
+    }
   }
 }

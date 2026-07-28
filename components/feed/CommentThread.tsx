@@ -131,7 +131,9 @@ export default function CommentThread({
             const replies = repliesByParent.get(c.id) ?? [];
             const isOpen = expanded.has(c.id);
             return (
-              <li key={c.id}>
+              // id anchors the "reply/comment" notification deep-link
+              // (/posts/[id]#comment-<id>); scroll-mt clears the sticky top bar.
+              <li key={c.id} id={`comment-${c.id}`} className="scroll-mt-24">
                 <CommentRow
                   row={c}
                   author={author(c)}
@@ -157,7 +159,7 @@ export default function CommentThread({
                     ) : (
                       <ul className="space-y-3">
                         {replies.map((r) => (
-                          <li key={r.id}>
+                          <li key={r.id} id={`comment-${r.id}`} className="scroll-mt-24">
                             <CommentRow
                               row={r}
                               author={author(r)}
