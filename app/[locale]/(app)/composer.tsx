@@ -36,17 +36,27 @@ export default function Composer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  // Synchronous re-entrancy guard: the file input's onChange can fire twice
+  // (double-fire / re-render), and two concurrent onPick runs race — one uploads
+  // (storage 200) while the other's catch reports failure and clobbers it. A ref
+  // (not state) is checked/set synchronously so the second call bails immediately.
+  const picking = useRef(false);
 
   const candidatesOf = (list: PostMedia[]): MediaCandidate[] =>
     list.map((m) => ({ mime: m.mime, bytes: m.bytes }));
 
   async function onPick(files: FileList | null) {
     if (!files || files.length === 0) return;
+    if (picking.current) return; // already handling a selection
+    picking.current = true;
     setError(null);
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      picking.current = false;
+      return;
+    }
 
     setBusy(true);
     try {
@@ -60,7 +70,10 @@ export default function Composer({
         return;
       }
       // 2. Per-video gate: size first (free), then duration from the container
-      // bytes (D-042). unreadable and too_long are DISTINCT messages.
+      // bytes (D-042). unreadable and too_long are DISTINCT messages. Keep the
+      // measured duration so the upload does not re-read it (avoids a redundant,
+      // potentially slow second read).
+      const durations = new Map<File, number>();
       for (const file of newFiles) {
         if (mediaKind(file.type) !== "video") continue;
         if (file.size > VIDEO_MAX_BYTES) {
@@ -76,13 +89,14 @@ export default function Composer({
           setError(t("video.unreadable"));
           return;
         }
+        durations.set(file, vc.seconds);
       }
       // 3. Upload the new files one at a time, keeping a local preview per file.
       const added: PostMedia[] = [];
       const newPreviews: Record<string, string> = {};
       for (const file of newFiles) {
         if (!mediaKind(file.type)) continue;
-        const descriptor = await uploadPostMediaFile(supabase, user.id, file);
+        const descriptor = await uploadPostMediaFile(supabase, user.id, file, undefined, durations.get(file));
         added.push(descriptor);
         try {
           newPreviews[descriptor.path] = URL.createObjectURL(file);
@@ -92,10 +106,15 @@ export default function Composer({
       }
       setMedia((prev) => [...prev, ...added]);
       setPreviews((prev) => ({ ...prev, ...newPreviews }));
-    } catch {
+    } catch (err) {
+      // Surface the ACTUAL failure (poster-failed / video-meta-failed / a storage
+      // error) to the console — the UI string is generic, which is why the real
+      // cause was invisible in QA.
+      console.error("[composer] media pick failed:", err);
       setError(tSocial("mediaUploadFailed"));
     } finally {
       setBusy(false);
+      picking.current = false;
       if (fileInput.current) fileInput.current.value = "";
     }
   }

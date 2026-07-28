@@ -93,13 +93,10 @@ export async function extractPosterFrame(
     const onError = () => settle(null);
 
     const onMetadata = () => {
-      const width = el.videoWidth;
-      const height = el.videoHeight;
-      if (!width || !height) {
-        settle(null);
-        return;
-      }
-      // Duration may be Infinity here; clamp defensively rather than trusting it.
+      // Do NOT read videoWidth/videoHeight here — they are frequently 0 at
+      // loadedmetadata and only populate by loadeddata/seeked (bailing on them was
+      // a non-deterministic "poster-failed"). The seek target needs only duration;
+      // dimensions are read in onSeeked, where they are reliably set.
       const limit = Number.isFinite(el.duration) && el.duration > 0 ? el.duration : opts.atSeconds;
       const target = Math.min(Math.max(opts.atSeconds, 0), Math.max(limit - 0.05, 0));
       try {

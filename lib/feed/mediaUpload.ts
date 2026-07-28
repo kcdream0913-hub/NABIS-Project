@@ -69,6 +69,7 @@ export async function uploadPostMediaFile(
   uid: string,
   file: File,
   onStage?: (s: MediaStage) => void,
+  knownDurationSeconds?: number,
 ): Promise<PostMedia> {
   const kind = mediaKind(file.type);
   if (!kind) throw new Error("unsupported-type");
@@ -86,9 +87,13 @@ export async function uploadPostMediaFile(
 
   // video — duration from the container bytes (D-042), poster from a real frame.
   onStage?.("processing");
-  const dur = await readVideoDuration(file);
-  if (!dur.ok) throw new Error("video-meta-failed"); // duration unreadable → fail closed
-  const durationMs = Math.round(dur.seconds * 1000);
+  let seconds = knownDurationSeconds ?? 0; // reuse the composer's already-read value
+  if (!(seconds > 0)) {
+    const dur = await readVideoDuration(file);
+    if (!dur.ok) throw new Error("video-meta-failed"); // duration unreadable → fail closed
+    seconds = dur.seconds;
+  }
+  const durationMs = Math.round(seconds * 1000);
   // validate_post_media() requires a poster_path for a video, so a null poster
   // blocks THIS video (surfaced as an error). Scaled poster dims preserve the
   // video's aspect ratio, which is all PostMedia rendering needs.
