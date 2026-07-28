@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   isUnread,
+  shouldAdvanceRead,
   canEditMessage,
   canDeleteForEveryone,
   canDeleteForMe,
@@ -55,6 +56,40 @@ describe("isUnread", () => {
     expect(
       isUnread({ sender_id: "other", created_at: "2026-01-01T00:00:00Z" }, "2026-01-02T00:00:00Z", ME),
     ).toBe(false);
+  });
+});
+
+describe("shouldAdvanceRead (continuous read-receipt gate)", () => {
+  const OTHER = { sender_id: "other", created_at: "2026-07-26T12:00:00Z" };
+  const base = {
+    documentVisible: true,
+    nearBottom: true,
+    lastMessage: OTHER,
+    userId: ME,
+    lastWrittenIso: null as string | null,
+    nowIso: "2026-07-26T12:00:05Z",
+  };
+
+  it("advances when visible, at bottom, on a fresh foreign message", () => {
+    expect(shouldAdvanceRead(base)).toBe(true);
+  });
+  it("never advances while the tab is hidden (unseen must stay unseen)", () => {
+    expect(shouldAdvanceRead({ ...base, documentVisible: false })).toBe(false);
+  });
+  it("never advances when scrolled up-thread (not near bottom)", () => {
+    expect(shouldAdvanceRead({ ...base, nearBottom: false })).toBe(false);
+  });
+  it("does not advance for my own last message (no self-read)", () => {
+    expect(shouldAdvanceRead({ ...base, lastMessage: { sender_id: ME, created_at: OTHER.created_at } })).toBe(false);
+  });
+  it("does not advance with no message or no user", () => {
+    expect(shouldAdvanceRead({ ...base, lastMessage: null })).toBe(false);
+    expect(shouldAdvanceRead({ ...base, userId: null })).toBe(false);
+  });
+  it("never writes backwards — now() must exceed the last written value", () => {
+    expect(shouldAdvanceRead({ ...base, lastWrittenIso: "2026-07-26T12:00:05Z", nowIso: "2026-07-26T12:00:05Z" })).toBe(false);
+    expect(shouldAdvanceRead({ ...base, lastWrittenIso: "2026-07-26T12:00:10Z", nowIso: "2026-07-26T12:00:05Z" })).toBe(false);
+    expect(shouldAdvanceRead({ ...base, lastWrittenIso: "2026-07-26T12:00:00Z", nowIso: "2026-07-26T12:00:05Z" })).toBe(true);
   });
 });
 

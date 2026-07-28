@@ -122,6 +122,20 @@
 .card-hover { transition: box-shadow .2s var(--ease-standard), transform .2s var(--ease-standard); }
 .card-hover:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-3px); }
 
+/*
+  Message reaction affordance (ThreadConversation). Touch-first: always visible and
+  tappable so the picker is reachable by tap — Nepal is ~75% Android (D-032). ONLY
+  on a device with real hover + a fine pointer does it recede until you hover the
+  message, focus it via keyboard, or it is expanded; hover is never the sole path.
+*/
+.msg-react-affordance { opacity: 1; transition: opacity .15s var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) {
+  .msg-react-affordance { opacity: 0; }
+  .group:hover .msg-react-affordance,
+  .msg-react-affordance:focus-visible,
+  .msg-react-affordance[aria-expanded="true"] { opacity: 1; }
+}
+
 html {
   /* Inter (var, self-hosted via next/font/local — set on <html> in layout.tsx)
      carries Latin UI; Devanagari glyphs fall through to Noto Sans Devanagari. */
