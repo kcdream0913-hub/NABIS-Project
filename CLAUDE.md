@@ -124,7 +124,7 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
 - **2026-07-28 — BL-MSG-05 (WhatsApp DM attachment sheet + server-side magic-byte gate) MERGED to main; D-053 APPLIED to prod by the hub:**
-  - **main = `MERGE_SHA_TBD`** (merge of `bl-msg-05` into `3b41bb4`). No code conflicts —
+  - **main = `565740d`** (merge of `bl-msg-05` into `3b41bb4`). No code conflicts —
     only the CLAUDE.md decision log (straight union of the BL-MSG-05 rows
     D-051/052/053/056/057 with the BL-NAV-01 rows D-054/D-055), resolved to a contiguous
     **D-051…D-058** block.
