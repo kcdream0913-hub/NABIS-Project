@@ -51,6 +51,16 @@ create index notifications_actor_idx   on public.notifications (actor_id);
 create index notifications_post_idx    on public.notifications (post_id);
 create index notifications_comment_idx on public.notifications (comment_id);
 
+-- One notification per (recipient, actor, post) for the toggleable actions.
+-- post_reactions/post_reposts have DELETE policies (D-040), so unreact→re-react
+-- is DELETE+INSERT and would otherwise re-fire the AFTER INSERT trigger on every
+-- click (proved against prod: 3 like-clicks → 3 rows). Comments are deliberately
+-- EXCLUDED — each distinct comment must notify. Product note: if BridgeLink ever
+-- wants "B reacted to your post again", THIS index is the thing to revisit.
+create unique index notifications_dedupe_idx
+  on public.notifications (recipient_id, actor_id, type, post_id)
+  where type in ('post_reaction','post_repost');
+
 -- ── RLS: read own, mark own read. No INSERT policy (triggers only). ──────────
 alter table public.notifications enable row level security;
 
@@ -86,10 +96,10 @@ create trigger trg_protect_notification_columns
   for each row execute function public.protect_notification_columns();
 
 -- ── reaction → notify the post author ───────────────────────────────────────
--- AFTER INSERT only: the client changes a reaction via an upsert (ON CONFLICT DO
--- UPDATE), which fires UPDATE triggers, not this one — so a change-of-kind does
--- NOT re-notify (intended). First reaction on a post notifies once; self-reaction
--- is skipped.
+-- AFTER INSERT + `on conflict do nothing` (notifications_dedupe_idx): exactly one
+-- reaction notification per (recipient, actor, post). A change-of-kind is an
+-- upsert→UPDATE (never fires this); an unreact→re-react is DELETE+INSERT (would
+-- re-fire it) — the dedupe index absorbs both. Self-reaction is skipped.
 create or replace function public.notify_post_reaction()
 returns trigger language plpgsql security definer set search_path = '' as $$
 declare v_author uuid; v_view text;
@@ -99,7 +109,8 @@ begin
   if v_author is null or v_author = new.user_id then return new; end if;
   insert into public.notifications
     (recipient_id, actor_id, type, post_id, view)
-  values (v_author, new.user_id, 'post_reaction', new.post_id, v_view);
+  values (v_author, new.user_id, 'post_reaction', new.post_id, v_view)
+  on conflict do nothing;
   return new;
 end;
 $$;
@@ -145,15 +156,19 @@ create trigger trg_notify_post_comment
   for each row execute function public.notify_post_comment();
 
 -- ── repost → notify the post author ─────────────────────────────────────────
+-- Reads the POST's view (v_view), NOT post_reposts.view (the reposter's chosen
+-- target): enforce_repost_view lets a `us` post be reposted into `bridge`, so
+-- those diverge and the bell should describe the post. Deduped like reactions.
 create or replace function public.notify_post_repost()
 returns trigger language plpgsql security definer set search_path = '' as $$
-declare v_author uuid;
+declare v_author uuid; v_view text;
 begin
-  select p.author_id into v_author from public.posts p where p.id = new.post_id;
+  select p.author_id, p.view into v_author, v_view from public.posts p where p.id = new.post_id;
   if v_author is null or v_author = new.user_id then return new; end if;
   insert into public.notifications
     (recipient_id, actor_id, type, post_id, view)
-  values (v_author, new.user_id, 'post_repost', new.post_id, new.view);
+  values (v_author, new.user_id, 'post_repost', new.post_id, v_view)
+  on conflict do nothing;
   return new;
 end;
 $$;

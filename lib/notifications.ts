@@ -6,6 +6,14 @@
 // duplicated deliberately: the DB is the source of truth at runtime, and these
 // pure functions let us unit-test the exact same decisions without a database.
 // Any change to who-gets-notified MUST land in both files.
+//
+// DEDUPE IS A DB CONCERN, NOT DECISION LOGIC. reactions/reposts are toggleable
+// (unreact→re-react = DELETE+INSERT), so at-most-one notification per
+// (recipient, actor, post) is enforced by the partial unique index
+// `notifications_dedupe_idx` + `on conflict do nothing` in the triggers — NOT
+// here. Do not add a "have I already notified?" branch to these functions; they
+// answer "should this action notify, and whom", once per action. Comments are
+// intentionally NOT deduped — each distinct comment notifies.
 
 export type NotificationType =
   | "post_reaction"
