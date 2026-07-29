@@ -54,13 +54,22 @@ for (const route of MARKETING_ROUTES) {
     // (ThemeToggle/LocaleSwitch/RequestInviteForm/MarketingMotion) renders a first
     // client state that matches the server — so there is NO source-level content
     // divergence. React regenerates the tree client-side and the page is fully
-    // functional (checks 1–4 pass). It reproduces only under parallel load (~8% at
-    // 8× concurrency), never for a real one-page-at-a-time visitor. Tracked as a
+    // functional (checks 1–4 pass). It reproduces only under parallel-load hydration
+    // (~8% at 8× concurrency); the correlation with concurrency suggests — but does
+    // NOT prove — a real one-page-at-a-time visitor is unaffected. Tracked as a
     // framework-level follow-up; not markup-fixable. We tolerate ONLY recoverable
     // hydration-class errors, ONLY on these two routes — any other error here, and
     // ANY error on the other routes, still fails on the first miss.
+    //
+    // The regex matches the EXACT React minified codes only (no loose `hydrat`
+    // alternation, which would swallow ANY hydration-worded error). A hydration
+    // error surfacing with different wording, and any non-hydration error, still
+    // FAIL. A deterministic regression that reintroduces #418/#423/#425 here is
+    // still tolerated by the assertion — but it would fire the annotation +
+    // console.warn on EVERY run, a loud/visible signal (unlike the silent global
+    // retry this replaced), so it can't hide.
     const isHomepage = route.url === "/" || route.url === "/ne";
-    const RECOVERABLE_HYDRATION = /Minified React error #(418|423|425)\b|hydrat/i;
+    const RECOVERABLE_HYDRATION = /Minified React error #(418|423|425)\b/;
     if (isHomepage) {
       const hydration = errors.filter((e) => RECOVERABLE_HYDRATION.test(e));
       const other = errors.filter((e) => !RECOVERABLE_HYDRATION.test(e));

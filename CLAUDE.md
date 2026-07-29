@@ -144,9 +144,12 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
       `localStorage` at render; `<html>` mutation is `suppressHydrationWarning`).
       So there is **no source-level content divergence to fix** — React
       regenerates the tree client-side and the page is fully functional
-      (smoke checks 1–4 pass). It appears only under parallel-load hydration,
-      never for a real one-page-at-a-time visitor. `smoke.spec.ts` now tolerates
-      **only recoverable hydration-class errors, only on those two routes**, with
+      (smoke checks 1–4 pass). It appears only under parallel-load hydration
+      (~8% at 8× concurrency); the concurrency correlation *suggests but does not
+      prove* a real one-page-at-a-time visitor is unaffected. `smoke.spec.ts` now
+      tolerates **only the exact React minified codes #418/#423/#425, only on
+      those two routes** (no loose `hydrat` match — that would swallow a genuine
+      hydration bug), with
       a `known-bug` annotation + console.warn naming **BL-E2E-03**; any other
       error there, and ANY error on the other routes, still fails on the first
       miss. Tracked as a framework-level follow-up (React-19 concurrent
