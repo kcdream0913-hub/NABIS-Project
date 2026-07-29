@@ -15,6 +15,11 @@ import { randomUUID } from "node:crypto";
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 const FOREIGN = process.env.E2E_FOREIGN_ATTACHMENT_PATH; // "<thread_id>/<uploader_id>/<file>"
+// The hub-seeded A-B thread (account A is a participant). Used for the participant
+// flows so we never create a thread at runtime. NOTE: FOREIGN is a real B-C path
+// with a storage row but NO S3 bytes — it is for the 403 DENIAL assertion ONLY; a
+// positive read would 404, so never assert a successful read against it.
+const THREAD_AB = "9e53b15d-9266-424c-9803-9becbca829b1";
 
 // Fixture names built numerically so this source stays pure ASCII (the .csv name is
 // Devanagari; the .pdf name embeds U+202E). Must match scripts/gen-e2e-fixtures.mjs.
@@ -32,32 +37,52 @@ const FX = {
 const DOC_ROW = 0; // menuitem order in the sheet: Document, Photos & videos, Camera
 const MEDIA_ROW = 1;
 
-const trigger = (page: Page) => page.locator('button[aria-haspopup="menu"]');
+// The "+" attach trigger — scoped by aria-label because the notification bells (rail
+// + topbar) ALSO carry aria-haspopup="menu". The sheet menu + its rows are scoped the
+// same way (the bell panel is role="menu"/"menuitem" too).
+const trigger = (page: Page) => page.getByRole("button", { name: "Attach a file", exact: true });
+const sheet = (page: Page) => page.getByRole("menu", { name: "Attach a file" });
+const sheetItem = (page: Page, i: number) => sheet(page).getByRole("menuitem").nth(i);
 const sendBtn = (page: Page) => page.getByRole("button", { name: /send message/i });
 
 async function login(page: Page) {
   await page.goto("/login", { waitUntil: "domcontentloaded" });
-  await page.getByLabel(/email/i).fill(EMAIL!);
-  await page.getByLabel(/password/i).fill(PASSWORD!);
-  await page.getByRole("button", { name: /sign in|log in/i }).click();
-  await page.waitForURL((u) => !u.pathname.includes("/login"));
+  // The login form is a client component with React-controlled inputs. Wait for
+  // hydration before filling — filling on domcontentloaded can set the DOM value
+  // BEFORE onChange is attached, leaving React state empty (signInWithPassword then
+  // errors "missing email or phone"). toHaveValue confirms the field took the value.
+  await page.waitForLoadState("networkidle");
+  const email = page.getByLabel(/email/i);
+  const pw = page.getByLabel(/password/i);
+  await email.fill(EMAIL!);
+  await pw.fill(PASSWORD!);
+  await expect(email).toHaveValue(EMAIL!);
+  await expect(pw).toHaveValue(PASSWORD!);
+  await page.getByRole("button", { name: /log in|sign in/i }).click();
+  // Login succeeds -> navigates off /login (an error keeps us here and this throws).
+  await page.waitForURL((u) => !u.pathname.includes("/login"), { timeout: 20_000 });
 }
 
-// Open the first conversation so the composer (with the "+" sheet) is present.
-async function openFirstThread(page: Page) {
-  await page.goto("/messages", { waitUntil: "domcontentloaded" });
-  await page.locator('a[href*="/messages/"]').first().click();
-  await expect(trigger(page)).toBeVisible();
+// Open the real A-B thread directly; /messages/<id> renders ThreadConversation, whose
+// footer holds the "+" attachment trigger. Thread creation is NOT under test here.
+// PRECONDITION: account A must have preferences.onboarded = true, or OnboardingRedirect
+// bounces every app route to /welcome and the composer never renders. The hub-seeded
+// A/B/C are onboarded; keep that in the seed so CI is stable.
+async function openThread(page: Page) {
+  await page.goto(`/messages/${THREAD_AB}`, { waitUntil: "domcontentloaded" });
+  // The trigger is disabled until ThreadConversation resolves the current user; wait
+  // for enabled so the click in each test lands.
+  await expect(trigger(page)).toBeEnabled({ timeout: 15_000 });
 }
 
 // Open the sheet and hand a file to the input behind the given row via the native
 // filechooser (the rows trigger a hidden <input> .click()).
 async function pick(page: Page, rowIndex: number, file: string) {
   await trigger(page).click();
-  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(sheet(page)).toBeVisible();
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
-    page.getByRole("menuitem").nth(rowIndex).click(),
+    sheetItem(page, rowIndex).click(),
   ]);
   await chooser.setFiles(file);
 }
@@ -66,11 +91,11 @@ async function pick(page: Page, rowIndex: number, file: string) {
 // attachment route), then send.
 async function pickAndSend(page: Page, rowIndex: number, file: string) {
   await trigger(page).click();
-  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(sheet(page)).toBeVisible();
   const scan = page.waitForResponse((r) => r.url().includes("/api/messages/attachment"), { timeout: 30_000 });
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
-    page.getByRole("menuitem").nth(rowIndex).click(),
+    sheetItem(page, rowIndex).click(),
   ]);
   await chooser.setFiles(file);
   await scan;
@@ -83,22 +108,26 @@ test.describe("DM attachments (authenticated)", () => {
 
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await openFirstThread(page);
+    await openThread(page);
   });
 
   test("sheet opens on click, closes on Esc (focus returns) and on outside click", async ({ page }) => {
     const t = trigger(page);
     await t.click();
     await expect(t).toHaveAttribute("aria-expanded", "true");
-    await expect(page.getByRole("menu")).toBeVisible();
-    await expect(page.getByRole("menuitem")).toHaveCount(3); // Document / Photos & videos / Camera
+    await expect(sheet(page)).toBeVisible();
+    await expect(sheet(page).getByRole("menuitem")).toHaveCount(3); // Document / Photos & videos / Camera
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(sheet(page)).toHaveCount(0);
     await expect(t).toBeFocused();
     await t.click();
-    await expect(page.getByRole("menu")).toBeVisible();
-    await page.mouse.click(2, 2); // outside
-    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(sheet(page)).toBeVisible();
+    // Raw mouse click (no actionability check) at upper-center: outside the popover
+    // on desktop and onto the sheet backdrop on mobile — closes either layout without
+    // hitting a nav control. The mobile backdrop would intercept a locator.click().
+    const w = page.viewportSize()?.width ?? 800;
+    await page.mouse.click(Math.floor(w / 2), 150);
+    await expect(sheet(page)).toHaveCount(0);
   });
 
   test("a valid image uploads, sends, and renders", async ({ page }) => {

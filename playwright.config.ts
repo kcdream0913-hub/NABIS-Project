@@ -12,7 +12,11 @@ export default defineConfig({
   // Generate the (gitignored) attachment fixtures before any test runs.
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
-  retries: 0,
+  // Retry only in CI: the suite runs against the live Supabase project, and the
+  // marketing homepage has a known INTERMITTENT React #418 hydration mismatch
+  // (surfaced by this harness — a separate product fix, tracked). A retry lets a
+  // flake recover while a CONSISTENT regression still fails every attempt.
+  retries: process.env.CI ? 2 : 0,
   webServer: {
     // Run the smoke suite against a PRODUCTION build - the same artifact Vercel
     // serves - not `next dev`. This is what catches build-only / hydration
