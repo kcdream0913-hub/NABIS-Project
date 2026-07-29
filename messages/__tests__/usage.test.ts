@@ -19,6 +19,12 @@ import en from "../en.json";
 //   - t.rich("k") / t.markup("k") / t.has() — only the bare t("k") call form
 // Missed calls are false-NEGATIVES (a real miss slips by), never false-POSITIVES
 // (a resolvable key is never flagged). The skipped count is logged, not asserted.
+//
+// COROLLARY for dead-key REMOVAL (e.g. D-061): this gate only proves a deleted bundle
+// key was unreferenced for a namespace where NO dynamic key is built on that translator.
+// The moment someone writes t(`prefix.${x}`) on, say, the `tripPlanner` translator, this
+// gate stops covering that namespace and any "this key is unused" claim silently weakens —
+// re-verify by grep before removing keys from a namespace that has any dynamic t(`...`) call.
 
 function flattenKeys(obj: unknown, prefix = ""): string[] {
   if (typeof obj !== "object" || obj === null) return [prefix];
