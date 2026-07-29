@@ -142,10 +142,13 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     (`delete_own`) + tombstones A's live comments; A-scoped, so the marker's non-E2E
     seed reaction+comment are untouched. Verified post-run: A = 0 reactions/reposts/
     bookmarks/live-comments/posts; marker + seed intact.
-  - **Accepted residual (D-059, hub-swept):** comments have NO client hard-delete
-    (soft-delete only, keeps body), so each test-17 run leaves ~1 **tombstoned comment
-    row** — same class as message tombstones (3 accumulated from local iteration).
-    Folds into the future RPC-called-by-teardown sweep; hub hand-sweeps meanwhile.
+  - **Accepted residual (D-059, hub-swept):** comments have NO client hard-delete —
+    soft-delete only. The `protect_post_comment_columns` BEFORE-UPDATE trigger sets
+    `body := null` when `deleted_at` is set, so a comment tombstone is **CONTENTLESS**
+    (body null), IDENTICAL to a message tombstone — not "keeps body" (corrected: an
+    earlier note here had the wrong premise; hub verified all 3 tombstones were
+    body=null). Each test-17 run leaves ~1 contentless tombstone ROW; folds into the
+    future RPC-called-by-teardown sweep, hub hand-sweeps meanwhile.
   - gates: tsc 0 · control-bytes 0 · full e2e **39 passed / 5 skipped / 0 failed** vs
     prod (smoke 12 + attachments 14 + feed-media 8 + social 5; social ×360 skipped).
 - **2026-07-29 — BL-SOCIAL-03a: feed MEDIA path E2E (tests 21–24) against prod (NOT pushed yet — hub verifies):**
