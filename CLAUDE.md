@@ -123,6 +123,31 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-29 — BL-SOCIAL-03b: the 5 feed SOCIAL-ACTION E2E tests (stacked on 03a; NOT pushed to a shared branch yet — hub verifies):**
+  - `social.spec.ts` rewritten against the SHIPPED PostActionBar (Like/Comment/Repost/
+    Share/Bookmark — the old `/react/i` selectors never matched): **react**
+    (like → persist across reload → change kind via the hover picker → remove),
+    **comment** (add → edit → soft-delete tombstone; the permalink opens comments by
+    default, so the composer is used directly — clicking the toggle would CLOSE it),
+    **repost** (add → undo), **quote** (compose → non-interactive card in the feed),
+    **bookmark** (save → `/bookmarks` → unsave). Target = the marker post
+    `ba1001a6…`; **chromium-only + serial** (all five mutate the same marker as the
+    same account, and `post_reposts` PK `(post_id,user_id)` forbids concurrent
+    repost/quote; the 360 action-bar layout is covered by feed-media test 24).
+  - **Optimistic-write gotcha:** undo/unsave/remove flip the UI before the DB request
+    lands, so the repost undo now waits for the actual DELETE response (else the next
+    serial test sees A still-reposted → its menu shows "Undo repost", not "Quote").
+    Other self-undos rely on the teardown (self-healing).
+  - **Teardown extended (D-060):** hard-deletes A's reactions/reposts/bookmarks
+    (`delete_own`) + tombstones A's live comments; A-scoped, so the marker's non-E2E
+    seed reaction+comment are untouched. Verified post-run: A = 0 reactions/reposts/
+    bookmarks/live-comments/posts; marker + seed intact.
+  - **Accepted residual (D-059, hub-swept):** comments have NO client hard-delete
+    (soft-delete only, keeps body), so each test-17 run leaves ~1 **tombstoned comment
+    row** — same class as message tombstones (3 accumulated from local iteration).
+    Folds into the future RPC-called-by-teardown sweep; hub hand-sweeps meanwhile.
+  - gates: tsc 0 · control-bytes 0 · full e2e **39 passed / 5 skipped / 0 failed** vs
+    prod (smoke 12 + attachments 14 + feed-media 8 + social 5; social ×360 skipped).
 - **2026-07-29 — BL-SOCIAL-03a: feed MEDIA path E2E (tests 21–24) against prod (NOT pushed yet — hub verifies):**
   - **Why media first:** D-042 r1–r4 were all browser-only video failures (duration
     Infinity, detached-element seek, poster dims read too early, seek stall) that
