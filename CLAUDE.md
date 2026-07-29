@@ -123,6 +123,33 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-29 — Option C: E2E suites SELF-PROVISION their target post — no permanent fixture in real feeds (branch off bl-social-03b, NOT merged):**
+  - **Problem:** the permanent seeded `"E2E marker post - do not delete"` (view='us')
+    sat in EVERY real user's feed — KC found it and commented "Awesome" on it. **Fix
+    (hub-chosen Option C):** `e2e/_target.ts createTargetPost` — account A creates its
+    OWN target post at run time (`posts_insert_own`, view='us'); `social.spec` (all 5)
+    + `feed-media` test 24 drive its permalink; global-teardown hard-deletes it
+    (`posts_delete_own`). All four engagement FKs are **ON DELETE CASCADE**, so the
+    post's reactions/comments/reposts/bookmarks vanish with it — **this ELIMINATES the
+    comment-tombstone residual** (comments now live on A's own, hard-deleted post).
+    `MARKER_POST_ID` removed; the hub retires the seeded marker + KC's stray comment.
+  - **NO production code changed.** (Rejected Option B — an `is_test` filter on the feed
+    query — on the trade, NOT the design: a permanent test-only branch in the hottest
+    path in the product, where a regression silently changes what real users see, and
+    thrown away the moment the real fix lands. B is rejected now AND later.)
+  - **D-059 accepted-and-unguarded:** A's per-run target is briefly visible in the live
+    `us` feed for a run's duration — bounded, identical to what the compose/quote tests
+    already do, and pre-pilot the only real user is KC. Accepted.
+  - See the **PRE-PILOT HARD BLOCKER** in the Trust backlog: the real end to test data in
+    real feeds is a SEPARATE Supabase project; Option C + teardown are stopgaps.
+  - **Finding (fixed):** `createTargetPost` must `signOut({ scope: "local" })`, NOT the
+    default global — a global signOut revokes A's refresh tokens EVERYWHERE, silently
+    killing the concurrent tests' logged-in browser sessions (their next `getUser()`
+    returns null → compose/publish no-ops with no error). Any mid-suite auth helper
+    that signs in as a shared account must sign out LOCAL-only.
+  - gates: tsc 0 · control-bytes 0 · full e2e **39 passed / 5 skipped / 0 failed** vs
+    prod; teardown verified: A = 0 posts/reactions/reposts/bookmarks/comments/post-media
+    (all engagement CASCADES with A's own target — no residual at all).
 - **2026-07-29 — BL-SOCIAL-03b: the 5 feed SOCIAL-ACTION E2E tests (stacked on 03a; NOT pushed to a shared branch yet — hub verifies):**
   - `social.spec.ts` rewritten against the SHIPPED PostActionBar (Like/Comment/Repost/
     Share/Bookmark — the old `/react/i` selectors never matched): **react**
@@ -148,7 +175,9 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
     (body null), IDENTICAL to a message tombstone — not "keeps body" (corrected: an
     earlier note here had the wrong premise; hub verified all 3 tombstones were
     body=null). Each test-17 run leaves ~1 contentless tombstone ROW; folds into the
-    future RPC-called-by-teardown sweep, hub hand-sweeps meanwhile.
+    future RPC-called-by-teardown sweep, hub hand-sweeps meanwhile. **SUPERSEDED by
+    Option C (see the self-provision bullet above): with A commenting on its OWN target
+    post, the comment CASCADE-deletes with the post — no tombstone residue at all.**
   - gates: tsc 0 · control-bytes 0 · full e2e **39 passed / 5 skipped / 0 failed** vs
     prod (smoke 12 + attachments 14 + feed-media 8 + social 5; social ×360 skipped).
 - **2026-07-29 — BL-SOCIAL-03a: feed MEDIA path E2E (tests 21–24) against prod (NOT pushed yet — hub verifies):**
@@ -1344,6 +1373,14 @@ of bug ships twice.
 
 ## Trust backlog (server-side gaps — standing, not tied to any one branch)
 
+- **PRE-PILOT HARD BLOCKER — E2E must run against a SEPARATE Supabase project, NOT
+  production.** The suites write real posts / reactions / comments / reposts / bookmarks
+  / DMs + storage objects to the LIVE project. Per-run cleanup (global-teardown), the
+  self-provisioned target post (Option C), and the rejected feed filter (Option B) are
+  all STOPGAPS that only BOUND the exposure — during a run, real test content is briefly
+  in real users' feeds. The ONLY thing that ends test data touching production is a
+  dedicated E2E Supabase project (separate URL/keys, its own seed). **No pilot user is
+  onboarded until this is done.** Scope it once the CI harness is green — not before.
 - **The "verified to post" rule is CLIENT-SIDE ONLY.** Hub-verified 2026-07-29:
   `posts_insert_own` is `author_id = auth.uid()` with **no verification predicate**;
   same for `post_reactions`, `post_comments`, `post_reposts`, `post_bookmarks`. An

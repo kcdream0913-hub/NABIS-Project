@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { login } from "./_login";
-import { MARKER_POST_ID } from "./constants";
+import { createTargetPost } from "./_target";
 
 // BL-SOCIAL-03a — the FEED MEDIA path (BL-SOCIAL-02 tests 21–24), the class of bug
 // unit tests cannot see: D-042 r1–r4 were all browser-only video failures (duration
@@ -101,12 +101,13 @@ test.describe("feed media path (authenticated)", () => {
     await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(0);
   });
 
-  // 24 — the post action bar stays a single row (the 5 icons never wrap). Uses the
-  // hub-seeded marker post; it carries a summary row (it has a reaction + a comment),
-  // so measuring the whole footer is wrong — instead assert the LEFTMOST action (Like)
-  // and the RIGHTMOST (Bookmark) share a row: a wrapped bookmark would drop ~44px below.
+  // 24 — the post action bar stays a single row (the 5 icons never wrap). Uses a per-run
+  // self-provisioned target (Option C — no permanent fixture), hard-deleted by teardown.
+  // Assert the LEFTMOST action (Like) and the RIGHTMOST (Bookmark) share a row: a wrapped
+  // bookmark would drop ~44px below. (Independent of any summary row.)
   test("the post action bar stays a single row", async ({ page }) => {
-    await page.goto(`/posts/${MARKER_POST_ID}`, { waitUntil: "domcontentloaded" });
+    const targetId = await createTargetPost("layout target");
+    await page.goto(`/posts/${targetId}`, { waitUntil: "domcontentloaded" });
     const card = page.locator("article").first();
     await expect(card).toBeVisible({ timeout: 15_000 });
     const like = card.getByRole("button", { name: "Like" });
