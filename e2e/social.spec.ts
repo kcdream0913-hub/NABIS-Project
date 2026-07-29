@@ -18,12 +18,27 @@ const FIXTURES = path.join(__dirname, "fixtures");
 // This suite (BL-SOCIAL-02) needs its own media fixtures AND a seeded feed for
 // account A — neither is provided here (bl-e2e-01/02 cover DM attachments, whose
 // fixtures are generated). Skip cleanly when the media is absent so it never blocks
-// CI; getting it green is separate BL-SOCIAL-02 work.
-const HAS_MEDIA = ["img1.jpg", "img2.jpg", "short.mp4", "big.mp4"].every((f) => existsSync(path.join(FIXTURES, f)));
+// CI; getting it green is separate BL-SOCIAL-02 work (D-059 accepted-and-unguarded).
+const REQUIRED_MEDIA = ["img1.jpg", "img2.jpg", "short.mp4", "big.mp4"];
+const MISSING_MEDIA = REQUIRED_MEDIA.filter((f) => !existsSync(path.join(FIXTURES, f)));
+const HAS_MEDIA = MISSING_MEDIA.length === 0;
+const SOCIAL_CASE_COUNT = 9; // tests 16–24; ×2 viewport projects = 18 instances
+
+// LOUD skip: when the authed context IS available (creds set) but the media is
+// missing, shout which fixtures are absent and how many cases skip — so a DELETED
+// fixture can never decay into a quiet green. (When creds are absent the whole
+// authed suite skips for a different, expected reason; no media noise then.)
+if (EMAIL && PASSWORD && !HAS_MEDIA) {
+  console.warn(
+    `\n[social.spec] SKIPPING ${SOCIAL_CASE_COUNT} BL-SOCIAL-02 case(s) (×2 viewport projects): ` +
+      `missing e2e/fixtures/{${MISSING_MEDIA.join(", ")}} and a seeded feed for account A. ` +
+      `These tests are NOT verified — provide the fixtures + feed to run them.\n`
+  );
+}
 
 test.describe("feed social actions (authenticated)", () => {
   test.skip(!EMAIL || !PASSWORD, "set E2E_EMAIL / E2E_PASSWORD to run the social E2E suite");
-  test.skip(!HAS_MEDIA, "social E2E needs e2e/fixtures/{img1,img2}.jpg + {short,big}.mp4 and a seeded feed (BL-SOCIAL-02)");
+  test.skip(!HAS_MEDIA, `social E2E needs e2e/fixtures/{${MISSING_MEDIA.join(", ")}} + a seeded feed (BL-SOCIAL-02)`);
 
   async function login(page: Page) {
     await page.goto("/login", { waitUntil: "domcontentloaded" });

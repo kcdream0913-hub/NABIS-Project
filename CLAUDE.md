@@ -123,6 +123,45 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-29 — BL-E2E-02 MERGED to main (`41f67eb`); BL-E2E-03 opened (this session — NOT pushed yet, hub verifies):**
+  - **bl-e2e-02 merged** (fast-forward `79e8334..41f67eb`), pushed; stale
+    `bl-e2e-02` local+remote pruned. The authenticated DM-attachment E2E suite
+    (7 cases × 2 viewport projects = 14) runs green against the hub-seeded prod
+    accounts.
+  - **bl-e2e-03, three hub-directed fixes:**
+    - **(1) Removed the D-059-violating blanket retry.** `retries` was
+      `process.env.CI ? 2 : 0` — a silent-failure switch that gave every test
+      three chances and made the FIRST real defect the harness found (the
+      homepage #418) un-failable. Now **`retries: 0`**.
+    - **(2) #418 root-caused + named-quarantined (NOT globally retried).**
+      Reproduced with a provocation loop (48 loads, 8× concurrency): a
+      RECOVERABLE React #418 element-level hydration mismatch fires ~8% on the
+      two homepage routes (`/`, `/ne`). Root cause: `/[locale]/home` is **SSG**
+      (static HTML — verified byte-identical across 6 server renders) and every
+      marketing client island (ThemeToggle/MarketingLocaleSwitch/
+      RequestInviteForm/MarketingMotion) renders a first client state that
+      **matches** the server (no `Date`/`Math.random`/locale-format/`window`/
+      `localStorage` at render; `<html>` mutation is `suppressHydrationWarning`).
+      So there is **no source-level content divergence to fix** — React
+      regenerates the tree client-side and the page is fully functional
+      (smoke checks 1–4 pass). It appears only under parallel-load hydration,
+      never for a real one-page-at-a-time visitor. `smoke.spec.ts` now tolerates
+      **only recoverable hydration-class errors, only on those two routes**, with
+      a `known-bug` annotation + console.warn naming **BL-E2E-03**; any other
+      error there, and ANY error on the other routes, still fails on the first
+      miss. Tracked as a framework-level follow-up (React-19 concurrent
+      hydration), not a markup fix.
+    - **(3) E2E prod-residue teardown (D-060).** `e2e/global-teardown.ts` cleans
+      up what the run wrote against LIVE Supabase — see D-060. Also: `social.spec`
+      HAS_MEDIA skip is now **LOUD** (console.warn naming the missing fixtures +
+      case count when creds are present but media is absent, so a deleted fixture
+      can't decay into a quiet green).
+  - **Accepted-and-unguarded (D-059):** BL-SOCIAL-02's social E2E suite (9 cases;
+    18 instances × 2 viewport projects) stays **skipped** pending its own media
+    fixtures (`img1/img2.jpg`, `short/big.mp4`) + a seeded feed for account A —
+    that is separate BL-SOCIAL-02 work; the skip is now loud so it can't rot. (The
+    "32 previously skipped" = attachments 14 + social 18 before bl-e2e-02
+    activated attachments.)
 - **2026-07-28 — BL-MSG-05 (WhatsApp DM attachment sheet + server-side magic-byte gate) MERGED to main; D-053 APPLIED to prod by the hub:**
   - **main = `565740d`** (merge of `bl-msg-05` into `3b41bb4`). No code conflicts —
     only the CLAUDE.md decision log (straight union of the BL-MSG-05 rows
@@ -1285,3 +1324,4 @@ of bug ships twice.
 | D-057 | 2026-07-28 | **Revoking EXECUTE on a Postgres function requires naming `public`.** The default grant Postgres puts on every function is to PUBLIC; `revoke execute ... from anon, authenticated` alone is silently ineffective — `has_function_privilege` stays TRUE for both because the PUBLIC grant survives (verified on prod in a begin/rollback). Always `revoke ... from public, anon, authenticated`. A rollback that re-grants must likewise name `public` to be a true inverse. Applies to every future revoke, not just the four BL-NOTIF-01 trigger fns that surfaced it. | A revoke that looks applied but isn't is worse than none — it reads as "locked down" in review while the grant stands. This bit the D-053 notif revokes; pin the rule so it never recurs. |
 | D-058 | 2026-07-28 | **A negative-control DB assertion that matches ZERO rows is indistinguishable from a pass — always assert `row_count`.** A verification query written to prove "no bad rows exist" returns an empty set both when the guard works AND when the query targets the wrong table/column/predicate and simply matched nothing. Bind the proof to an expected count (assert the query touched the rows it claims to, then assert the property), or use a positive control that MUST match. | Cost the hub a round on the protect-guard test; a silent zero-row match reads as green while proving nothing. |
 | D-059 | 2026-07-28 | **Every finding becomes a permanent check, or is recorded as accepted-and-unguarded — and the end-of-task report says which.** Next to the gate counts, the report carries a line `findings turned into permanent checks: <list>`. A one-off fix leaves the door open for the same class of bug to ship again (bl-i18n-01's wrong-namespace `t()` key was fixed, then a SECOND identical one — `tripPlanner.daysCount` — was found the moment the `usage.test.ts` gate existed). Checks take the form of a test, a `*.verify.sql`, or a lint; "accepted-and-unguarded" must state why guarding is impractical. | A fix without a check is invisible to the next session and to CI; the value of a finding is the gate it leaves behind, not the single line it changed. |
+| D-060 | 2026-07-29 | **The E2E suite runs against the LIVE Supabase project, so every suite that WRITES must clean up after itself — residue in prod is a defect, not acceptable noise.** Measured: one attachment-suite run leaked ~15 storage objects + ~5 message rows into the seeded A↔B thread, growing without bound per push. `e2e/global-teardown.ts` (wired via `globalTeardown`) now runs after every suite, authenticated as account A: it **hard-deletes** A's whole uploader subtree under the A↔B thread (`{thread}/{A}/*` — storage DELETE policy is uploader-owns, so this is self-healing and clears prior residue too) and **tombstones** the messages A sent this run via `delete_message_for_everyone` (the ONLY client mutation path; `public.messages` has no DELETE/UPDATE policy by design — the RPC nulls body + `attachments` + drops reactions). It fails LOUDLY on any API error (never swallows) and logs the counts removed. **Residual, accepted-and-unguarded (D-059):** the tombstone ROW itself cannot be hard-deleted by the client (no DELETE policy) — true row removal needs a service-role sweep; the row is contentless (body+attachments nulled) so it is bounded, tiny residue, flagged for a hub-side sweep if row count ever matters. | A test harness that pollutes prod on every run is a defect; the strongest client-side cleanup (hard-delete bytes, tombstone rows) removes the unbounded-growth bulk, and the one thing it can't do (hard-delete rows) is bounded + documented, not hidden. |

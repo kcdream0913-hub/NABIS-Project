@@ -9,14 +9,21 @@ const HOST = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
-  // Generate the (gitignored) attachment fixtures before any test runs.
+  // Generate the (gitignored) attachment fixtures before any test runs, and load
+  // .env.local (non-overriding) so global-teardown can reach Supabase locally.
   globalSetup: "./e2e/global-setup.ts",
+  // Clean up prod residue this run wrote (the suite runs against the LIVE Supabase
+  // project — D-060). Deletes A's attachment objects + tombstones its messages in
+  // the E2E thread. Fails loudly if cleanup errors.
+  globalTeardown: "./e2e/global-teardown.ts",
   fullyParallel: true,
-  // Retry only in CI: the suite runs against the live Supabase project, and the
-  // marketing homepage has a known INTERMITTENT React #418 hydration mismatch
-  // (surfaced by this harness — a separate product fix, tracked). A retry lets a
-  // flake recover while a CONSISTENT regression still fails every attempt.
-  retries: process.env.CI ? 2 : 0,
+  // NO retries. A blanket retry (previously `CI ? 2 : 0`) let the FIRST real defect
+  // this harness found — an intermittent React #418 hydration mismatch on the
+  // marketing homepage — pass on a re-attempt, and gave every other test three
+  // chances too (a silent-failure switch on a gate — D-059). The #418 case is
+  // quarantined explicitly, by name, on its single assertion in smoke.spec.ts;
+  // everything else fails on the first miss.
+  retries: 0,
   webServer: {
     // Run the smoke suite against a PRODUCTION build - the same artifact Vercel
     // serves - not `next dev`. This is what catches build-only / hydration

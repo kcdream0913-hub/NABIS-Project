@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { THREAD_AB } from "./constants";
 
 // BL-MSG-05 DM-attachment E2E (BL-E2E-01), porting the manual checklist. These are
 // AUTHENTICATED and SKIP without E2E_EMAIL/E2E_PASSWORD (seeded pilot account A) - the
@@ -15,11 +16,11 @@ import { randomUUID } from "node:crypto";
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 const FOREIGN = process.env.E2E_FOREIGN_ATTACHMENT_PATH; // "<thread_id>/<uploader_id>/<file>"
-// The hub-seeded A-B thread (account A is a participant). Used for the participant
-// flows so we never create a thread at runtime. NOTE: FOREIGN is a real B-C path
-// with a storage row but NO S3 bytes — it is for the 403 DENIAL assertion ONLY; a
-// positive read would 404, so never assert a successful read against it.
-const THREAD_AB = "9e53b15d-9266-424c-9803-9becbca829b1";
+// THREAD_AB (the hub-seeded A<->B thread, account A a participant) is imported from
+// ./constants so the teardown scopes cleanup to the same thread. Used for the
+// participant flows so we never create a thread at runtime. NOTE: FOREIGN is a real
+// B-C path with a storage row but NO S3 bytes — it is for the 403 DENIAL assertion
+// ONLY; a positive read would 404, so never assert a successful read against it.
 
 // Fixture names built numerically so this source stays pure ASCII (the .csv name is
 // Devanagari; the .pdf name embeds U+202E). Must match scripts/gen-e2e-fixtures.mjs.
