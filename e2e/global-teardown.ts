@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { THREAD_AB, ATTACHMENT_BUCKET } from "./constants";
+import { THREAD_AB, ATTACHMENT_BUCKET, POST_MEDIA_BUCKET } from "./constants";
 
 // D-060 — the E2E suite writes to the LIVE Supabase project, so it MUST clean up
 // after itself; residue in prod is a defect, not acceptable noise. After the run,
@@ -12,7 +12,10 @@ import { THREAD_AB, ATTACHMENT_BUCKET } from "./constants";
 //      delete_message_for_everyone — the ONLY client mutation path (public.messages
 //      has NO DELETE/UPDATE policy by design; the RPC nulls body + attachments and
 //      drops reactions inside a 60-min window). The tombstone ROW remains — true row
-//      removal needs a service-role sweep, which the client deliberately cannot do.
+//      removal needs a service-role sweep, which the client deliberately cannot do; and
+//   3. (BL-SOCIAL-03a) hard-deletes A's composed feed posts (posts_delete_own) and
+//      their post-media objects (post_media_delete_own). A authors 0 posts outside the
+//      suite, so this is self-healing.
 // Fails loudly on any API error (Playwright marks the run failed). No-op when the
 // authenticated suite skipped (no E2E creds → nothing was created).
 //
@@ -83,9 +86,37 @@ export default async function globalTeardown() {
     tombstoned++;
   }
 
+  // 3) Feed (BL-SOCIAL-03a): hard-delete A's composed posts + their post-media
+  //    objects. A authors 0 posts outside the suite, so deleting ALL of A's posts is
+  //    safe + self-healing. Both are hard-deletable (posts_delete_own /
+  //    post_media_delete_own — unlike messages, posts CAN be removed by the author).
+  const { data: delPosts, error: postErr } = await supabase
+    .from("posts")
+    .delete()
+    .eq("author_id", aId)
+    .select("id");
+  if (postErr) throw new Error(`[e2e-teardown] post delete failed: ${postErr.message}`);
+  const postsDeleted = (delPosts ?? []).length;
+
+  const mediaPaths: string[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const { data, error } = await supabase.storage.from(POST_MEDIA_BUCKET).list(aId, { limit: 100, offset });
+    if (error) throw new Error(`[e2e-teardown] post-media list failed: ${error.message}`);
+    const page = data ?? [];
+    for (const o of page) if (o.id) mediaPaths.push(`${aId}/${o.name}`);
+    if (page.length < 100) break;
+  }
+  let mediaRemoved = 0;
+  if (mediaPaths.length) {
+    const { error } = await supabase.storage.from(POST_MEDIA_BUCKET).remove(mediaPaths);
+    if (error) throw new Error(`[e2e-teardown] post-media remove failed: ${error.message}`);
+    mediaRemoved = mediaPaths.length;
+  }
+
   await supabase.auth.signOut();
   console.log(
-    `[e2e-teardown] removed ${objectsRemoved} storage object(s); tombstoned ${tombstoned} message(s) in the A-B thread` +
-      (stale ? `; left ${stale} older message row(s) (outside the 60-min delete window — needs a service-role sweep).` : ".")
+    `[e2e-teardown] A-B thread: removed ${objectsRemoved} attachment object(s), tombstoned ${tombstoned} message(s)` +
+      (stale ? ` (left ${stale} older row(s) past the 60-min window — needs a service-role sweep)` : "") +
+      `; feed: deleted ${postsDeleted} post(s) + ${mediaRemoved} post-media object(s).`
   );
 }

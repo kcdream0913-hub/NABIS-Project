@@ -1,163 +1,76 @@
 import { test, expect, type Page } from "@playwright/test";
-import path from "node:path";
-import { existsSync } from "node:fs";
+import { login } from "./_login";
+import { MARKER_POST_ID } from "./constants";
 
-// BL-SOCIAL-02 §5 E2E (tests 16–24). AUTHORED BUT UNVERIFIED in the build
-// environment — there is no browser here (Playwright binaries are blocked) and no
-// seeded CI account, so these were written to spec, not executed. To run them:
-//   1. seed a pilot account:  node scripts/seed-test-accounts.mjs
-//   2. export E2E_EMAIL / E2E_PASSWORD for that (verified) account
-//   3. drop fixtures in e2e/fixtures/: img1.jpg, img2.jpg (<10MB each),
-//      short.mp4 (<90s, <50MB), big.mp4 (>90s OR >50MB)
-//   4. npx playwright install && npm run test:e2e
-// Without E2E_EMAIL the whole suite skips (keeps CI green).
-
+// BL-SOCIAL-03b (PENDING) — the 5 feed SOCIAL-ACTION tests (react / comment / repost /
+// quote / bookmark). The media path (compose images/video, oversized, action-bar
+// layout) shipped in BL-SOCIAL-03a as e2e/feed-media.spec.ts. These five still need
+// their bodies REWRITTEN against the shipped selectors: the spec-authored names below
+// (/react/i, /comments/i, …) do NOT match the real PostActionBar, whose accessible
+// names are "Like" / "Comment" / "Repost" / "Share" / "Bookmark" (+ ReactionPicker,
+// CommentThread, QuoteComposer). They target the hub-seeded marker post (MARKER_POST_ID).
+//
+// SKIPPED as a block until 03b rewrites them — see D-059 accepted-and-unguarded. The
+// skip is LOUD (below) so it can't quietly rot into a green.
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
-const FIXTURES = path.join(__dirname, "fixtures");
-// This suite (BL-SOCIAL-02) needs its own media fixtures AND a seeded feed for
-// account A — neither is provided here (bl-e2e-01/02 cover DM attachments, whose
-// fixtures are generated). Skip cleanly when the media is absent so it never blocks
-// CI; getting it green is separate BL-SOCIAL-02 work (D-059 accepted-and-unguarded).
-const REQUIRED_MEDIA = ["img1.jpg", "img2.jpg", "short.mp4", "big.mp4"];
-const MISSING_MEDIA = REQUIRED_MEDIA.filter((f) => !existsSync(path.join(FIXTURES, f)));
-const HAS_MEDIA = MISSING_MEDIA.length === 0;
-const SOCIAL_CASE_COUNT = 9; // tests 16–24; ×2 viewport projects = 18 instances
 
-// LOUD skip: when the authed context IS available (creds set) but the media is
-// missing, shout which fixtures are absent and how many cases skip — so a DELETED
-// fixture can never decay into a quiet green. (When creds are absent the whole
-// authed suite skips for a different, expected reason; no media noise then.)
-if (EMAIL && PASSWORD && !HAS_MEDIA) {
+if (EMAIL && PASSWORD) {
+  // eslint-disable-next-line no-console
   console.warn(
-    `\n[social.spec] SKIPPING ${SOCIAL_CASE_COUNT} BL-SOCIAL-02 case(s) (×2 viewport projects): ` +
-      `missing e2e/fixtures/{${MISSING_MEDIA.join(", ")}} and a seeded feed for account A. ` +
-      `These tests are NOT verified — provide the fixtures + feed to run them.\n`
+    "\n[social.spec] SKIPPING 5 BL-SOCIAL-03b social-action cases (react/comment/repost/quote/" +
+      "bookmark): bodies still use spec-authored selectors and must be rewritten against the " +
+      "shipped PostActionBar before they can run. NOT verified.\n",
   );
 }
 
 test.describe("feed social actions (authenticated)", () => {
-  test.skip(!EMAIL || !PASSWORD, "set E2E_EMAIL / E2E_PASSWORD to run the social E2E suite");
-  test.skip(!HAS_MEDIA, `social E2E needs e2e/fixtures/{${MISSING_MEDIA.join(", ")}} + a seeded feed (BL-SOCIAL-02)`);
+  // Whole block gated on 03b: the bodies below are placeholders pending a selector
+  // rewrite. Do not un-skip without rewriting them against the shipped components.
+  test.skip(true, "BL-SOCIAL-03b — social-action selectors pending rewrite against the shipped UI");
 
-  async function login(page: Page) {
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
-    await page.getByLabel(/email/i).fill(EMAIL!);
-    await page.getByLabel(/password/i).fill(PASSWORD!);
-    await page.getByRole("button", { name: /sign in|log in/i }).click();
-    await page.waitForURL((u) => !u.pathname.includes("/login"));
-  }
+  const marker = (page: Page) => page.locator("article", { hasText: /./ }).first();
 
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto(`/posts/${MARKER_POST_ID}`, { waitUntil: "domcontentloaded" });
   });
 
-  const firstCard = (page: Page) => page.locator("article").first();
-
-  // 16 — Like → increment → reload persists → change to namaste (count same) → unlike → decrement.
+  // 16 — react: like → change kind → unlike (post_reactions).
   test("react: like, change kind, unlike", async ({ page }) => {
-    const card = firstCard(page);
+    const card = marker(page);
     const react = card.getByRole("button", { name: /react/i });
     await react.click();
     await expect(react).toHaveAttribute("aria-pressed", "true");
-    await page.reload();
-    await expect(firstCard(page).getByRole("button", { name: /react/i })).toHaveAttribute("aria-pressed", "true");
-    // open the picker and switch to Namaste — total count unchanged, emoji changes
-    await firstCard(page).getByRole("button", { name: /react/i }).click({ delay: 500 });
-    await page.getByRole("menuitemradio", { name: /namaste/i }).click();
-    // unlike (tap the held kind removes it)
-    await firstCard(page).getByRole("button", { name: /react/i }).click();
-    await expect(firstCard(page).getByRole("button", { name: /react/i })).toHaveAttribute("aria-pressed", "false");
   });
 
-  // 17 — Comment → reply → edit within window → remove → tombstone; reply preserved.
+  // 17 — comment: add / reply / edit / remove tombstone (post_comments).
   test("comment: add, reply, edit, remove tombstone", async ({ page }) => {
-    const card = firstCard(page);
+    const card = marker(page);
     await card.getByRole("button", { name: /comments/i }).click();
     await card.getByPlaceholder(/write a comment/i).fill("first comment");
     await card.getByRole("button", { name: /^comment$/i }).click();
     await expect(card.getByText("first comment")).toBeVisible();
-    await card.getByRole("button", { name: /^reply$/i }).first().click();
-    await card.getByPlaceholder(/write a reply/i).fill("a reply");
-    await card.getByRole("button", { name: /^reply$/i }).last().click();
-    await card.getByRole("button", { name: /edit/i }).first().click();
-    await card.locator("textarea").first().fill("edited comment");
-    await card.getByRole("button", { name: /^save$/i }).click();
-    await expect(card.getByText("edited comment")).toBeVisible();
-    await card.getByRole("button", { name: /delete|remove/i }).first().click();
-    await expect(card.getByText(/was removed/i)).toBeVisible();
-    await expect(card.getByText("a reply")).toBeVisible();
   });
 
-  // 18 — Repost → "reposted" header appears in feed → un-repost → header gone.
+  // 18 — repost: add and undo (post_reposts).
   test("repost: add and undo", async ({ page }) => {
-    const card = firstCard(page);
+    const card = marker(page);
     await card.getByRole("button", { name: /repost/i }).click();
     await page.getByRole("menuitem", { name: /^repost/i }).first().click();
-    await expect(page.getByText(/reposted/i).first()).toBeVisible();
-    await firstCard(page).getByRole("button", { name: /repost/i }).click();
-    await page.getByRole("menuitem", { name: /undo repost/i }).click();
   });
 
-  // 19 — Quote repost → quote + embedded original; embedded original has NO action bar.
+  // 19 — quote repost renders an embedded, non-interactive original.
   test("quote repost renders an embedded, non-interactive original", async ({ page }) => {
-    const card = firstCard(page);
+    const card = marker(page);
     await card.getByRole("button", { name: /repost/i }).click();
     await page.getByRole("menuitem", { name: /quote/i }).click();
-    await page.getByPlaceholder(/add your thoughts/i).fill("worth reading");
-    await page.getByRole("button", { name: /^post$/i }).click();
-    const quoteCard = page.getByText(/quoted/i).first().locator("xpath=ancestor::article");
-    // the embedded original inside a quote card exposes no React/Bookmark controls
-    await expect(quoteCard.getByRole("button", { name: /react/i })).toHaveCount(0);
   });
 
-  // 20 — Bookmark → appears at /bookmarks → unbookmark → gone.
+  // 20 — bookmark: save → appears at /bookmarks → unsave (post_bookmarks).
   test("bookmark: save appears at /bookmarks then unsave removes it", async ({ page }) => {
-    await firstCard(page).getByRole("button", { name: /save to bookmarks/i }).click();
+    await marker(page).getByRole("button", { name: /save to bookmarks/i }).click();
     await page.goto("/bookmarks", { waitUntil: "domcontentloaded" });
     await expect(page.locator("article")).not.toHaveCount(0);
-    await firstCard(page).getByRole("button", { name: /remove from bookmarks/i }).click();
-  });
-
-  // 21 — Upload 2 images → post → both render.
-  test("compose with two images", async ({ page }) => {
-    await page.setInputFiles('input[type="file"]', [
-      path.join(FIXTURES, "img1.jpg"),
-      path.join(FIXTURES, "img2.jpg"),
-    ]);
-    await page.getByRole("textbox").first().fill("two photos");
-    await page.getByRole("button", { name: /^post$/i }).click();
-    await expect(page.locator("article img").first()).toBeVisible();
-  });
-
-  // 22 — Upload a video → poster shows, no autoplay, plays on tap.
-  test("compose with a video: poster shows, no autoplay", async ({ page }) => {
-    await page.setInputFiles('input[type="file"]', path.join(FIXTURES, "short.mp4"));
-    await page.getByRole("textbox").first().fill("a clip");
-    await page.getByRole("button", { name: /^post$/i }).click();
-    const play = page.getByRole("button", { name: /play video/i }).first();
-    await expect(play).toBeVisible();
-    // no <video> is autoplaying before the tap
-    expect(await page.locator("video").count()).toBe(0);
-    await play.click();
-    await expect(page.locator("video").first()).toBeVisible();
-  });
-
-  // 23 — Oversized video blocked in the picker with a readable message, nothing uploaded.
-  test("oversized video is rejected in the picker", async ({ page }) => {
-    await page.setInputFiles('input[type="file"]', path.join(FIXTURES, "big.mp4"));
-    await expect(page.getByRole("alert")).toBeVisible();
-  });
-
-  // 24 — 360×640: action bar single row, picker fully on-screen at both edges.
-  test("action bar stays a single row at 360×640", async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 640 });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    const footer = firstCard(page).locator("footer").first();
-    const box = await footer.boundingBox();
-    expect(box).not.toBeNull();
-    // a single row of ~44px controls should not exceed ~72px tall
-    expect(box!.height).toBeLessThan(72);
   });
 });

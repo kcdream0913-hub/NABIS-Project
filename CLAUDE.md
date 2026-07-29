@@ -123,6 +123,30 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   only). Auth, admin review queue, and reporting are live against Supabase —
   **not mocked** (this line was stale until 2026-07-20; correcting it here so
   the next session doesn't re-learn that the hard way).
+- **2026-07-29 — BL-SOCIAL-03a: feed MEDIA path E2E (tests 21–24) against prod (NOT pushed yet — hub verifies):**
+  - **Why media first:** D-042 r1–r4 were all browser-only video failures (duration
+    Infinity, detached-element seek, poster dims read too early, seek stall) that
+    unit tests can't see — every one shipped with CI green. `e2e/feed-media.spec.ts`
+    drives the real composer + PostMedia as verified account A: **compose 2 images →
+    both render**, **compose video → poster + play button, no autoplay, `<video>`
+    only after tap**, **>90s video rejected in the composer** (95s clip trips the 90s
+    gate via container-bytes duration, no upload), **action bar stays a single row**
+    (on the hub-seeded marker post `ba1001a6…`).
+  - **Codec risk resolved empirically:** `extractPosterFrame` needs the browser to
+    DECODE the video (else upload blocked); probed Playwright's bundled Chromium
+    (149.x) — it decodes H.264/AAC, so the hub-requested mp4 fixtures work (no webm
+    fallback).
+  - **Fixtures ffmpeg-generated** in `scripts/gen-e2e-fixtures.mjs` (img1/img2.jpg,
+    short.mp4 3s H.264/AAC faststart, big.mp4 95s) — never committed; the script
+    **fails loudly if ffmpeg is absent**; CI installs ffmpeg in the e2e job.
+  - **Teardown extended (D-060):** hard-deletes A's composed posts (`posts_delete_own`)
+    + post-media objects (`post_media_delete_own`), fail-loud, logged. Compose tests
+    use unique body tokens so parallel runs as the same account don't collide.
+  - **BL-SOCIAL-03b PENDING (D-059 accepted-and-unguarded):** the 5 social-action
+    tests (react/comment/repost/quote/bookmark) stay skipped in `social.spec.ts` — their
+    spec-authored selectors (`/react/i`, `/comments/i`) don't match the shipped
+    PostActionBar (Like/Comment/Repost/Share/Bookmark); the skip is loud. 03b rewrites
+    them against the marker post.
 - **2026-07-29 — BL-E2E-02 MERGED to main (`41f67eb`); BL-E2E-03 opened (this session — NOT pushed yet, hub verifies):**
   - **bl-e2e-02 merged** (fast-forward `79e8334..41f67eb`), pushed; stale
     `bl-e2e-02` local+remote pruned. The authenticated DM-attachment E2E suite
@@ -1289,6 +1313,24 @@ of bug ships twice.
   transaction layer. Never present the mock auth as real gating.
 - Locked pages stay honest: they say what phase unlocks them and route people to the
   community meanwhile.
+
+## Trust backlog (server-side gaps — standing, not tied to any one branch)
+
+- **The "verified to post" rule is CLIENT-SIDE ONLY.** Hub-verified 2026-07-29:
+  `posts_insert_own` is `author_id = auth.uid()` with **no verification predicate**;
+  same for `post_reactions`, `post_comments`, `post_reposts`, `post_bookmarks`. An
+  **unverified account can post, react, comment, repost and bookmark straight through
+  the API** — `composer.tsx:173` only hides the textarea in the UI. Not a data leak,
+  so not a blocker — but "all features integrate with KYC gating" is a project pillar,
+  and this gate **does not exist server-side**. Fix = add a verification predicate to
+  the insert policies (e.g. an `EXISTS` against a verified-status helper), when the
+  KYC/transaction layer lands. Surfaced by BL-SOCIAL-03; **not fixed in that branch.**
+- **DB doc note — verification is written to the PER-TRACK columns, never the
+  aggregate.** `profiles.verification_status` and `verified_at` are **GENERATED**
+  columns; a direct `update` raises **428C9** (cannot update a generated column). To
+  mark someone verified, set `us_verification` / `us_verified_at` (or the `np_`
+  equivalents); the aggregate + `bridge` recompute automatically (see the 2026-07-23
+  ground-truth note). This is exactly how the hub seeded A/B/C for the E2E suite.
 
 ## Decision log
 

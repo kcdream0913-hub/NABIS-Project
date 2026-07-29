@@ -11,3 +11,11 @@ export const THREAD_AB = "9e53b15d-9266-424c-9803-9becbca829b1";
 
 // Private DM-attachment bucket. Object path = {thread_id}/{uploader_id}/{name}.
 export const ATTACHMENT_BUCKET = "message-attachments";
+
+// Post-media bucket (feed images/video + posters). Object path = {uploader_id}/{name}.
+export const POST_MEDIA_BUCKET = "post-media";
+
+// Hub-seeded stable feed post: authored by account B, view='us', so it appears in
+// A's default (US) feed and is the deterministic target for the action-bar layout
+// test. B-authored (not A) so the teardown's "delete A's posts" never removes it.
+export const MARKER_POST_ID = "ba1001a6-97b7-40f5-a2da-eab49e1af4b9";
