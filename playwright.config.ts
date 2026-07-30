@@ -24,6 +24,13 @@ export default defineConfig({
   // quarantined explicitly, by name, on its single assertion in smoke.spec.ts;
   // everything else fails on the first miss.
   retries: 0,
+  // Emit the console `list` AND an HTML report into playwright-report/, so the ci.yml
+  // upload-artifact step (path: playwright-report/) actually has something to upload on
+  // failure. With NO reporter configured Playwright defaults to `list` only, so
+  // playwright-report/ was never created and the on-failure artifact was ALWAYS empty
+  // (which is why the failing run's report couldn't be downloaded). `open: "never"` so
+  // it never tries to spawn a browser in CI/headless. playwright-report/ is gitignored.
+  reporter: [["list"], ["html", { open: "never" }]],
   webServer: {
     // Run the smoke suite against a PRODUCTION build - the same artifact Vercel
     // serves - not `next dev`. This is what catches build-only / hydration
@@ -46,7 +53,16 @@ export default defineConfig({
   // attachment sheet to work as a bottom sheet <768px and a popover >=768px, and the
   // action bar to stay usable at the narrow width).
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "chromium-360", use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 640 } } },
+    // Authenticate account A ONCE (e2e/auth.setup.ts) and save its storageState; the
+    // authed specs depend on this and reuse the session instead of each calling login()
+    // — which turned on ~13 concurrent GoTrue sign-ins the first time this branch's
+    // ffmpeg fixtures activated those suites. A dependency runs ONCE total, shared
+    // across both viewport projects (storageState is cookies, not viewport-scoped).
+    // NOTE: storageState is NOT set at project level on purpose — that would force
+    // smoke.spec.ts + attachments.spec.ts into a pre-authenticated context and break
+    // their own login/logout assertions; it is scoped to the two files that need it.
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    { name: "chromium", use: { ...devices["Desktop Chrome"] }, dependencies: ["setup"] },
+    { name: "chromium-360", use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 640 } }, dependencies: ["setup"] },
   ],
 });

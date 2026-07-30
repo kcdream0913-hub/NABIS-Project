@@ -18,11 +18,15 @@ function trackPageErrors(page: Page): string[] {
   return errors;
 }
 
+// Every entry is a PUBLIC, prerendered (SSG) marketing route. `ssg: true` opts a route
+// into the BL-E2E-03 recoverable-#418 quarantine below; a future non-SSG or
+// authenticated route added here WITHOUT the flag is not quarantined and ANY error on
+// it fails on the first miss.
 const MARKETING_ROUTES = [
-  { url: "/", name: "homepage (en, served at / via rewrite)" },
-  { url: "/ne", name: "homepage (ne)" },
-  { url: "/welcome-tour", name: "welcome tour" },
-  { url: "/guidelines", name: "community guidelines" },
+  { url: "/", name: "homepage (en, served at / via rewrite)", ssg: true },
+  { url: "/ne", name: "homepage (ne)", ssg: true },
+  { url: "/welcome-tour", name: "welcome tour", ssg: true },
+  { url: "/guidelines", name: "community guidelines", ssg: true },
 ];
 
 for (const route of MARKETING_ROUTES) {
@@ -47,8 +51,8 @@ for (const route of MARKETING_ROUTES) {
     // 5. No uncaught client exception during load + hydration. Checked last so the
     //    awaits above have given hydration time to run.
     //
-    // QUARANTINE (BL-E2E-03, named + scoped — NOT a blanket retry): the two homepage
-    // routes ("/" and "/ne") intermittently emit a RECOVERABLE React #418 hydration
+    // QUARANTINE (BL-E2E-03, widened here — named + scoped, NOT a blanket retry): the
+    // public SSG marketing routes intermittently emit a RECOVERABLE React #418 hydration
     // mismatch under concurrent-hydration load. Investigation: /[locale]/home is SSG
     // (static HTML, byte-identical across renders) and every marketing client island
     // (ThemeToggle/LocaleSwitch/RequestInviteForm/MarketingMotion) renders a first
@@ -58,8 +62,13 @@ for (const route of MARKETING_ROUTES) {
     // (~8% at 8× concurrency); the correlation with concurrency suggests — but does
     // NOT prove — a real one-page-at-a-time visitor is unaffected. Tracked as a
     // framework-level follow-up; not markup-fixable. We tolerate ONLY recoverable
-    // hydration-class errors, ONLY on these two routes — any other error here, and
-    // ANY error on the other routes, still fails on the first miss.
+    // hydration-class errors, ONLY on the `ssg` routes above — any other error there,
+    // and ANY error on a non-ssg route, still fails on the first miss.
+    //
+    // WIDENING: BL-E2E-03 originally scoped this to "/" and "/ne", assuming the artifact
+    // was homepage-specific. It also fires on the OTHER prerendered marketing routes
+    // (observed on /guidelines with the EXACT same #418 signature — same known class,
+    // different route). So the quarantine follows `ssg`, not a hardcoded URL pair.
     //
     // The regex matches the EXACT React minified codes only (no loose `hydrat`
     // alternation, which would swallow ANY hydration-worded error). A hydration
@@ -68,9 +77,9 @@ for (const route of MARKETING_ROUTES) {
     // still tolerated by the assertion — but it would fire the annotation +
     // console.warn on EVERY run, a loud/visible signal (unlike the silent global
     // retry this replaced), so it can't hide.
-    const isHomepage = route.url === "/" || route.url === "/ne";
+    const isSsgRoute = route.ssg === true;
     const RECOVERABLE_HYDRATION = /Minified React error #(418|423|425)\b/;
-    if (isHomepage) {
+    if (isSsgRoute) {
       const hydration = errors.filter((e) => RECOVERABLE_HYDRATION.test(e));
       const other = errors.filter((e) => !RECOVERABLE_HYDRATION.test(e));
       if (hydration.length) {

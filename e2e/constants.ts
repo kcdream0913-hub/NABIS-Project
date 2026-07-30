@@ -11,3 +11,6 @@ export const THREAD_AB = "9e53b15d-9266-424c-9803-9becbca829b1";
 
 // Private DM-attachment bucket. Object path = {thread_id}/{uploader_id}/{name}.
 export const ATTACHMENT_BUCKET = "message-attachments";
+
+// Post-media bucket (feed images/video + posters). Object path = {uploader_id}/{name}.
+export const POST_MEDIA_BUCKET = "post-media";

@@ -182,7 +182,7 @@ export default function Composer({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-3">
+    <div data-testid="composer" className="rounded-lg border border-border bg-surface p-3">
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
