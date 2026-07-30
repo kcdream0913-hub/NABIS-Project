@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Check, ChevronLeft, ChevronRight, MapPin, Video, Users } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, MapPin, Plus, Video, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { VIEW_META } from "@/lib/data";
 import { readPreferences } from "@/lib/preferences";
@@ -21,6 +21,7 @@ type EventRow = {
   location: string | null;
   view: string | null;
   description: string | null;
+  status: string | null;
   host_id: string | null;
   profiles: { name: string | null } | { name: string | null }[] | null;
 };
@@ -78,7 +79,7 @@ export default function EventsPage() {
 
       const { data: ev } = await supabase
         .from("events")
-        .select("id, title, date, time, starts_at, event_tz, mode, location, view, description, host_id, profiles:host_id ( name )")
+        .select("id, title, date, time, starts_at, event_tz, mode, location, view, description, status, host_id, profiles:host_id ( name )")
         .order("starts_at", { ascending: true, nullsFirst: false })
         .order("date", { ascending: true });
       setEvents((ev as EventRow[] | null) ?? []);
@@ -167,6 +168,9 @@ export default function EventsPage() {
           <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-primary" />
           {t("myEvents")}
         </label>
+        <Link href="/events/new" className="ml-auto flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-pressed">
+          <Plus size={15} /> {t("hostEvent")}
+        </Link>
       </div>
 
       {loading ? (
@@ -178,13 +182,15 @@ export default function EventsPage() {
           <div className="mt-5 space-y-3">
             {visible.map((e) => {
               const going = rsvps.has(e.id);
+              const cancelled = e.status === "cancelled";
               const host = Array.isArray(e.profiles) ? e.profiles[0] : e.profiles;
               const chipView = e.view && e.view in VIEW_META ? (e.view as View) : null;
               return (
                 <article key={e.id} className="flex gap-4 rounded-lg border border-border bg-surface p-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Link href={`/events/${e.id}`} className="text-sm font-semibold hover:text-primary">{e.title}</Link>
+                      <Link href={`/events/${e.id}`} className={`text-sm font-semibold hover:text-primary ${cancelled ? "text-ink-soft line-through" : ""}`}>{e.title}</Link>
+                      {cancelled && <span className="rounded bg-accent/10 px-1.5 py-0.5 text-meta font-semibold text-accent">{t("cancelledBadge")}</span>}
                       {chipView && (
                         <span className={`rounded px-1.5 py-0.5 text-meta font-semibold ${VIEW_META[chipView].chip}`}>{tView(`${chipView}Short`)}</span>
                       )}
@@ -202,8 +208,8 @@ export default function EventsPage() {
                   </div>
                   <button
                     onClick={() => toggleRsvp(e.id)}
-                    disabled={!userId}
-                    className={`h-fit shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    disabled={!userId || cancelled}
+                    className={`h-fit shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
                       going ? "bg-primary text-on-primary" : "border border-border hover:bg-bg"
                     }`}
                   >

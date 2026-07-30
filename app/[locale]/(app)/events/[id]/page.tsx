@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarPlus, Check, MapPin, Users, Video } from "lucide-react";
+import { CalendarPlus, Check, MapPin, Pencil, Users, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import Avatar from "@/components/Avatar";
@@ -18,7 +18,9 @@ type EventRow = {
   id: string; title: string; date: string | null; time: string | null;
   starts_at: string | null; ends_at: string | null; event_tz: string | null;
   mode: string | null; location: string | null; view: string | null; description: string | null;
-  host_id: string | null; profiles: Host | Host[] | null;
+  status: string | null; host_id: string | null; host_business_id: string | null;
+  profiles: Host | Host[] | null;
+  businesses: { id: string; name: string } | { id: string; name: string }[] | null;
 };
 
 function formatWhen(e: EventRow, tz: string, locale: string): string {
@@ -58,7 +60,7 @@ export default function EventDetailPage() {
 
       const { data: ev } = await supabase
         .from("events")
-        .select("id, title, date, time, starts_at, ends_at, event_tz, mode, location, view, description, host_id, profiles:host_id ( id, name, avatar_url, verification_status, bridge )")
+        .select("id, title, date, time, starts_at, ends_at, event_tz, mode, location, view, description, status, host_id, host_business_id, profiles:host_id ( id, name, avatar_url, verification_status, bridge ), businesses:host_business_id ( id, name )")
         .eq("id", id)
         .single();
       if (!ev) {
@@ -133,13 +135,24 @@ export default function EventDetailPage() {
     );
 
   const host = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles;
+  const hostBusiness = Array.isArray(event.businesses) ? event.businesses[0] : event.businesses;
+  const cancelled = event.status === "cancelled";
+  const isHost = !!userId && userId === event.host_id;
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link href="/events" className="text-sm text-ink-soft hover:text-ink">← {t("backToEvents")}</Link>
+      <div className="flex items-center justify-between gap-2">
+        <Link href="/events" className="text-sm text-ink-soft hover:text-ink">← {t("backToEvents")}</Link>
+        {isHost && (
+          <Link href={`/events/${event.id}/edit`} className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-ink-soft hover:bg-bg">
+            <Pencil size={14} /> {t("editEvent")}
+          </Link>
+        )}
+      </div>
 
       <div className="mt-3 rounded-lg border border-border bg-surface p-5">
-        <h1 className="text-xl font-semibold tracking-tight">{event.title}</h1>
+        {cancelled && <div className="mb-3 rounded-md bg-accent/10 px-3 py-2 text-sm font-medium text-accent">{t("cancelledBanner")}</div>}
+        <h1 className={`text-xl font-semibold tracking-tight ${cancelled ? "text-ink-soft line-through" : ""}`}>{event.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-soft">
           <span>{formatWhen(event, tz, locale)}</span>
           <span className="flex items-center gap-1">
@@ -155,12 +168,14 @@ export default function EventDetailPage() {
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             onClick={toggleRsvp}
-            disabled={!userId}
+            disabled={!userId || cancelled}
             className={`rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
               going ? "border border-border text-ink hover:bg-bg" : "bg-primary text-on-primary hover:bg-primary-pressed"
             }`}
           >
-            {going ? (
+            {cancelled ? (
+              t("rsvpClosed")
+            ) : going ? (
               <span className="flex items-center gap-1"><Check size={14} /> {t("cancelRsvp")}</span>
             ) : (
               t("rsvp")
@@ -191,6 +206,7 @@ export default function EventDetailPage() {
                 <p className="text-sm font-semibold">{host.name ?? t("member")}</p>
                 <TrustBadge tier={trustTier(host)} label={tCommon(trustTier(host) === "bridge" ? "bridgeVerified" : "verified")} />
               </div>
+              {hostBusiness && <p className="mt-0.5 text-xs text-ink-soft">{t("hostingAs", { name: hostBusiness.name })}</p>}
             </div>
           </Link>
         </div>
