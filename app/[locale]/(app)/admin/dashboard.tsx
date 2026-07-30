@@ -96,7 +96,17 @@ export default function AdminDashboard() {
       supabase
         .from("verification_records")
         .select(
-          "id, subject_id, provider, document_type, document_country, checks, policy_track, created_at, profiles:subject_id ( name, sectors, country )"
+          // NO `profiles:subject_id ( … )` embed here — subject_id has NO
+          // foreign key (only reviewer_id does; verified live against prod
+          // 2026-07-30), so PostgREST cannot resolve the relationship and the
+          // WHOLE query errored with "Could not find a relationship between
+          // 'verification_records' and 'subject_id'", leaving the
+          // profile-verification queue permanently empty behind an error
+          // banner. Adding the FK is NOT the fix: subject_id is polymorphic —
+          // this same file inserts subject_type "business" rows whose
+          // subject_id is a business id, which an FK to profiles would 23503.
+          // The profile fields are stitched in with a second query below. (D-073)
+          "id, subject_id, provider, document_type, document_country, checks, policy_track, created_at"
         )
         .eq("subject_type", "user")
         .eq("status", "pending"),
@@ -106,13 +116,31 @@ export default function AdminDashboard() {
         .eq("status", "open")
         .order("created_at", { ascending: false }),
     ]);
+    // Stitch subject profiles onto the pending verifications (see the comment on
+    // the select above for why this is a second query, not an embed). Profiles
+    // are directory-readable under RLS, so no privileged client is needed.
+    let verWithProfiles: PendingVerification[] = (ver ?? []).map((v) => ({ ...v, profiles: null }));
+    let profError: { message: string } | null = null;
+    if (verWithProfiles.length > 0) {
+      const ids = [...new Set(verWithProfiles.map((v) => v.subject_id))];
+      const { data: profs, error } = await supabase
+        .from("profiles")
+        .select("id, name, sectors, country")
+        .in("id", ids);
+      profError = error;
+      const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+      verWithProfiles = verWithProfiles.map((v) => {
+        const p = byId.get(v.subject_id);
+        return p ? { ...v, profiles: { name: p.name, sectors: p.sectors, country: p.country } } : v;
+      });
+    }
     // Surface load failures. A silently-swallowed error here is exactly how the
     // businesses tab spent weeks reporting "nothing pending" while its query was
     // asking for a column that no longer existed.
-    const loadError = bizError ?? verError ?? repError;
+    const loadError = bizError ?? verError ?? repError ?? profError;
     if (loadError) setActionError(loadError.message);
     setBusinesses(biz ?? []);
-    setVerifications(ver ?? []);
+    setVerifications(verWithProfiles);
     setReports(rep ?? []);
     setLoading(false);
   }
