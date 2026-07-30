@@ -898,8 +898,6 @@
     "loading": "Loading…"
   },
   "admin": {
-    "adminsOnlyTitle": "Admins only",
-    "adminsOnlyBody": "This area is restricted. If you believe you should have access, ask an existing admin to grant it.",
     "eyebrow": "Admin",
     "title": "Review queue",
     "businessVerification": "Business verification",

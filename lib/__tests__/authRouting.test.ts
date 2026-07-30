@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripLocale, withLocalePrefix, isPublicPath } from "../authRouting";
+import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath } from "../authRouting";
 
 // This is the exact logic that decides where an unauthenticated or
 // already-logged-in user gets redirected, per locale. A bug here means
@@ -96,6 +96,40 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/guidelines#data")).toBe(true);
     // but not an arbitrary deep path
     expect(isPublicPath("/members")).toBe(false);
+  });
+});
+
+// The middleware gates /admin* on an admin_users row. isAdminPath decides which
+// requests trigger that DB check — it must catch /admin and every sub-route, and
+// must NOT catch a lookalike like /administrators. It runs on the locale-stripped
+// path, so callers pass stripLocale(pathname).path.
+describe("isAdminPath", () => {
+  it("matches the admin root and its sub-routes", () => {
+    expect(isAdminPath("/admin")).toBe(true);
+    expect(isAdminPath("/admin/")).toBe(true);
+    expect(isAdminPath("/admin/reports")).toBe(true);
+    expect(isAdminPath("/admin/businesses/123")).toBe(true);
+  });
+
+  it("does not match unrelated or lookalike paths", () => {
+    expect(isAdminPath("/")).toBe(false);
+    expect(isAdminPath("/members")).toBe(false);
+    // must not prefix-false-positive on a route that merely starts with 'admin'
+    expect(isAdminPath("/administrators")).toBe(false);
+    expect(isAdminPath("/admins")).toBe(false);
+  });
+
+  it("resolves under both locales via the middleware pipeline", () => {
+    // The middleware feeds stripLocale(pathname).path into isAdminPath.
+    expect(isAdminPath(stripLocale("/admin").path)).toBe(true);
+    expect(isAdminPath(stripLocale("/ne/admin").path)).toBe(true);
+    expect(isAdminPath(stripLocale("/ne/admin/reports").path)).toBe(true);
+  });
+
+  it("admin paths are protected, never public (logged-out => /login upstream)", () => {
+    // /admin is NOT public, so the !user && !isPublicPath branch still redirects a
+    // logged-out visitor to /login before the admin check ever runs.
+    expect(isPublicPath("/admin")).toBe(false);
   });
 });
 

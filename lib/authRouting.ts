@@ -40,3 +40,11 @@ export function isPublicPath(path: string): boolean {
   if (path === "/") return true;
   return PUBLIC_PATHS.some((p) => path.startsWith(p));
 }
+
+// The admin area (and any future /admin/* sub-route). Kept locale-stripped —
+// callers pass the path from stripLocale, so "/admin" and "/ne/admin" both
+// resolve to "/admin" here. Used by the middleware to gate admin access before
+// any admin code runs.
+export function isAdminPath(path: string): boolean {
+  return path === "/admin" || path.startsWith("/admin/");
+}
