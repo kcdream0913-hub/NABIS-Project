@@ -36,6 +36,14 @@ const postBtn = (page: Page) => page.getByRole("button", { name: "Post", exact: 
 // getByRole("alert") is ambiguous — scope to the <p>).
 const composerError = (page: Page) => page.locator('p[role="alert"]');
 
+// The verified composer's root (data-testid="composer"). SCOPE the "Remove" (staged-media
+// delete) count to it: the home page renders the Feed below the composer, and a bookmarked
+// post's "Remove from bookmarks" button is a SUBSTRING match on an unscoped name:"Remove"
+// locator. post_bookmarks is keyed by user_id, so a bookmark set by the (chromium-only)
+// social suite is visible to EVERY project's feed as account A — a cross-project race that
+// inflated the count to 3 on chromium-360. Scoping makes the count composer-only.
+const composer = (page: Page) => page.getByTestId("composer");
+
 // Stage the given file(s) on the composer's hidden input (fires onChange → onPick),
 // then wait for the upload to FINISH and the media to be staged. The reliable signal
 // is the staged thumbnails: the composer renders one "Remove" control per item only
@@ -44,7 +52,7 @@ const composerError = (page: Page) => page.locator('p[role="alert"]');
 // onPick flips `busy`, letting a post publish with empty media.
 async function stageAndWait(page: Page, files: string | string[], expected: number) {
   await fileInput(page).setInputFiles(files);
-  await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(expected, { timeout: 30_000 });
+  await expect(composer(page).getByRole("button", { name: "Remove" })).toHaveCount(expected, { timeout: 30_000 });
   await expect(composerError(page)).toHaveCount(0);
 }
 
@@ -98,7 +106,7 @@ test.describe("feed media path (authenticated)", () => {
     await expect(alert).toBeVisible({ timeout: 30_000 });
     await expect(alert).toContainText(/90 seconds/i);
     // Nothing was staged (rejected before upload) → no "Remove" control appears.
-    await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(0);
+    await expect(composer(page).getByRole("button", { name: "Remove" })).toHaveCount(0);
   });
 
   // 24 — the post action bar stays a single row (the 5 icons never wrap). Uses a per-run
