@@ -17,12 +17,30 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    // D-071: Supabase's /auth/v1/verify redirect (the PKCE code-exchange flow
+    // resetPasswordForEmail uses) only appends `code` to redirect_to on
+    // success — it does NOT forward a `type=recovery` marker the way the
+    // token_hash-based /auth/confirm pattern in Supabase's own docs does.
+    // /auth/callback's D-069 fix depends on reading `type` from its query
+    // string to route recovery to /update-password instead of `next`; without
+    // this, `type` is always null there and every recovery link fell through
+    // to `next` ("/") again — confirmed live 2026-07-30 (Vercel logs: /auth/
+    // callback 307 -> GET / 200, no /update-password hit). Baking type=recovery
+    // into redirectTo itself works because GoTrue preserves existing query
+    // params on redirect_to and just adds `code` alongside them.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/auth/callback`,
+      redirectTo: `${location.origin}/auth/callback?type=recovery`,
     });
     setLoading(false);
-    if (error) setError(error.message);
-    else setSent(true);
+    if (error) {
+      // over_email_send_rate_limit is Supabase's built-in-mailer project-wide
+      // cap (see D-071 CLAUDE.md note) — surfacing the raw "email rate limit
+      // exceeded" string reads as a broken app, not a "try again shortly"
+      // condition. Every other error.message still passes through unchanged.
+      setError(error.code === "over_email_send_rate_limit" ? t("errResetRateLimited") : error.message);
+    } else {
+      setSent(true);
+    }
   }
 
   return (
