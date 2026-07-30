@@ -459,6 +459,7 @@
     "errCountryRequired": "Please select your country.",
     "errPasswordShort": "Password must be at least 8 characters.",
     "errPasswordMismatch": "Passwords don't match.",
+    "errResetRateLimited": "We're sending a lot of reset emails right now. Please wait a few minutes and try again.",
     "errAgree": "Please agree to the Terms and Privacy Policy to continue.",
     "newPassword": "New password",
     "updatePasswordTitle": "Set a new password",
