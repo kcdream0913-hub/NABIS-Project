@@ -381,7 +381,6 @@ export default function TripPlannerPage() {
           <Map size={20} />
         </span>
         <div>
-          <p className="eyebrow text-primary">{t("phaseEyebrow")}</p>
           <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
         </div>
       </div>
