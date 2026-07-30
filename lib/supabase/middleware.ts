@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { stripLocale, withLocalePrefix, isPublicPath } from "@/lib/authRouting";
+import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath } from "@/lib/authRouting";
 
 export async function updateSession(request: NextRequest, response: NextResponse) {
   // Reuse the response next-intl already produced (it carries the locale
@@ -36,6 +36,25 @@ export async function updateSession(request: NextRequest, response: NextResponse
     const url = request.nextUrl.clone();
     url.pathname = withLocalePrefix(locale, "/login");
     return NextResponse.redirect(url);
+  }
+
+  // Admin gate: a signed-in non-admin must be turned away BEFORE any admin code
+  // renders. The DB round-trip is scoped to /admin* only (never on other routes),
+  // and it fails CLOSED — a missing admin_users row OR a query error leaves
+  // adminRow null and redirects home. Reuses the admin_users_select_self RLS
+  // policy (user_id = auth.uid()) exactly as the old in-page check did; the
+  // /admin/layout.tsx server component mirrors this as a defense-in-depth layer.
+  if (user && isAdminPath(path)) {
+    const { data: adminRow } = await supabase
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!adminRow) {
+      const url = request.nextUrl.clone();
+      url.pathname = withLocalePrefix(locale, "/");
+      return NextResponse.redirect(url);
+    }
   }
 
   // Logged-out visitors at "/" get the marketing homepage, served in place via a
