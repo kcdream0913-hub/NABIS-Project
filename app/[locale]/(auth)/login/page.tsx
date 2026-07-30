@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isSafeNextPath } from "@/lib/authRouting";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -24,7 +25,14 @@ export default function LoginPage() {
       setError(error.message);
       return;
     }
-    router.push("/");
+    // Return-to: the middleware saves the protected path a logged-out visitor
+    // was bounced from in ?next; send them back there. Read from the live URL at
+    // submit time (no useSearchParams Suspense boundary needed) and re-validate
+    // the untrusted param with the same guard the middleware wrote it under —
+    // same-origin path only, never an open redirect. router (next-intl) re-adds
+    // the locale, so `next` is the locale-stripped path.
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(isSafeNextPath(next) ? next : "/");
     router.refresh();
   }
 

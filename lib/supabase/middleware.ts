@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath } from "@/lib/authRouting";
+import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath, isSafeNextPath } from "@/lib/authRouting";
 
 export async function updateSession(request: NextRequest, response: NextResponse) {
   // Reuse the response next-intl already produced (it carries the locale
@@ -35,6 +35,13 @@ export async function updateSession(request: NextRequest, response: NextResponse
   if (!user && !isPublicPath(path)) {
     const url = request.nextUrl.clone();
     url.pathname = withLocalePrefix(locale, "/login");
+    // Return-to: remember the protected destination so the login page can send
+    // them back (the locale-stripped path; the login page re-applies the locale).
+    // `path` here is always a same-origin "/…", but isSafeNextPath is the
+    // open-redirect guard that ALSO gates the login page's read of this
+    // untrusted param. Drop any incoming query so /login only carries `next`.
+    url.search = "";
+    if (isSafeNextPath(path)) url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 

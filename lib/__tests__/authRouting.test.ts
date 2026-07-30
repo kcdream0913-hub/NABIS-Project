@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath } from "../authRouting";
+import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath, isSafeNextPath } from "../authRouting";
 
 // This is the exact logic that decides where an unauthenticated or
 // already-logged-in user gets redirected, per locale. A bug here means
@@ -130,6 +130,34 @@ describe("isAdminPath", () => {
     // /admin is NOT public, so the !user && !isPublicPath branch still redirects a
     // logged-out visitor to /login before the admin check ever runs.
     expect(isPublicPath("/admin")).toBe(false);
+  });
+});
+
+// D-072 return-to guard. The middleware writes ?next=<protected path> on the
+// logged-out redirect and the login page reads it back from an UNTRUSTED query
+// string, so this must accept same-origin paths and REJECT anything that could
+// send the user off-site after login (open redirect).
+describe("isSafeNextPath", () => {
+  it("accepts same-origin absolute paths", () => {
+    expect(isSafeNextPath("/admin")).toBe(true);
+    expect(isSafeNextPath("/admin/reports")).toBe(true);
+    expect(isSafeNextPath("/members")).toBe(true);
+    expect(isSafeNextPath("/ne/admin")).toBe(true); // a locale-prefixed path is still same-origin
+  });
+
+  it("rejects off-site and malformed targets (open-redirect guard)", () => {
+    expect(isSafeNextPath("//evil.com")).toBe(false); // protocol-relative
+    expect(isSafeNextPath("/\\evil.com")).toBe(false); // backslash trick some browsers treat as //
+    expect(isSafeNextPath("https://evil.com")).toBe(false); // absolute URL
+    expect(isSafeNextPath("http://evil.com")).toBe(false);
+    expect(isSafeNextPath("evil.com")).toBe(false); // no leading slash
+    expect(isSafeNextPath("admin")).toBe(false);
+  });
+
+  it("rejects empty / missing values (login falls back to '/')", () => {
+    expect(isSafeNextPath(null)).toBe(false);
+    expect(isSafeNextPath(undefined)).toBe(false);
+    expect(isSafeNextPath("")).toBe(false);
   });
 });
 

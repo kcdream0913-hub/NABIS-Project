@@ -48,3 +48,19 @@ export function isPublicPath(path: string): boolean {
 export function isAdminPath(path: string): boolean {
   return path === "/admin" || path.startsWith("/admin/");
 }
+
+// A "next" / return-to path is safe to redirect to only if it's a SAME-ORIGIN
+// absolute path: it must start with a single "/". This rejects protocol-relative
+// ("//evil.com") and backslash-tricked ("/\evil.com") values that browsers can
+// treat as off-site, and absolute URLs ("https://evil.com") — an open-redirect
+// guard. The middleware writes this param from the (already same-origin) request
+// path; the login page reads it back from an UNTRUSTED query string, so both
+// sides gate on this. It is a type guard so callers narrow `string | null`.
+export function isSafeNextPath(next: string | null | undefined): next is string {
+  return (
+    typeof next === "string" &&
+    next.startsWith("/") &&
+    !next.startsWith("//") &&
+    !next.startsWith("/\\")
+  );
+}

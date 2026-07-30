@@ -27,10 +27,15 @@ const ADMIN_PATHS = ["/admin", "/admin/reports"] as const;
 
 test.describe("admin gate — logged-out visitor is turned away to /login", () => {
   for (const p of ADMIN_PATHS) {
-    test(`GET ${p} (no session) -> 307 /login, no admin body`, async ({ request }) => {
+    test(`GET ${p} (no session) -> 307 /login?next=${p}, no admin body`, async ({ request }) => {
       const res = await request.get(p, { maxRedirects: 0 });
       expect(res.status()).toBe(307);
-      expect(res.headers()["location"] ?? "").toContain("/login");
+      const loc = res.headers()["location"] ?? "";
+      expect(loc).toContain("/login");
+      // D-072: the return-to destination is preserved so login can send them back
+      // (the base is a dummy — we only read the query, and it handles a relative
+      // or absolute Location; %2Fadmin decodes back to the requested path).
+      expect(new URL(loc, "http://localhost").searchParams.get("next")).toBe(p);
       expect(await res.text()).not.toMatch(ADMIN_CONTENT);
     });
   }
