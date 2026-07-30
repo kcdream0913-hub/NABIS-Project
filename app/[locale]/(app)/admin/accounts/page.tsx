@@ -144,14 +144,19 @@ export default function AdminAccounts() {
         setError(t("ownerNotFound"));
         return;
       }
-      await createBusiness(supabase, {
+      const created = await createBusiness(supabase, {
         name: bizName.trim(),
         primary_sector: bizSector,
         country_of_registration: bizCountry.trim(),
         owner_user_id: ownerId,
         business_email: bizEmail.trim(),
       });
-      await logAction("admin_business_created", "business", ownerId, { name: bizName.trim() });
+      // target_id must be the CREATED BUSINESS's id (target_type is "business"),
+      // not the owner's user id — the owner is recorded in metadata instead.
+      await logAction("admin_business_created", "business", created.id, {
+        name: bizName.trim(),
+        owner_user_id: ownerId,
+      });
       setShowCreateBusiness(false);
       setBizName("");
       setBizSector("");

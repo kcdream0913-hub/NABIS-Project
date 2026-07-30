@@ -79,18 +79,26 @@ export async function listBusinesses(supabase: SupabaseClient): Promise<Business
 // to authenticated would re-open that oracle for the entire user base. The local
 // lookup reuses admin-gated data instead, so no new grant/endpoint is needed.
 
+// Returns the new row's id — the caller needs it to audit-log the CREATED
+// BUSINESS as the target (target_type "business" must carry a business id,
+// not the owner's user id; see the hub's D-068 verification note).
 export async function createBusiness(
   supabase: SupabaseClient,
   input: { name: string; primary_sector: string; country_of_registration: string; owner_user_id: string; business_email?: string }
-): Promise<void> {
-  const { error } = await supabase.from("businesses").insert({
-    name: input.name,
-    primary_sector: input.primary_sector,
-    country_of_registration: input.country_of_registration,
-    owner_user_id: input.owner_user_id,
-    business_email: input.business_email || null,
-  });
+): Promise<{ id: string }> {
+  const { data, error } = await supabase
+    .from("businesses")
+    .insert({
+      name: input.name,
+      primary_sector: input.primary_sector,
+      country_of_registration: input.country_of_registration,
+      owner_user_id: input.owner_user_id,
+      business_email: input.business_email || null,
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  return { id: data.id };
 }
 
 export async function deleteBusiness(supabase: SupabaseClient, businessId: string): Promise<void> {
