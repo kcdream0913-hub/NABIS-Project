@@ -459,7 +459,12 @@
     "errCountryRequired": "कृपया आफ्नो देश छान्नुहोस्।",
     "errPasswordShort": "पासवर्ड कम्तिमा ८ वर्णको हुनुपर्छ।",
     "errPasswordMismatch": "पासवर्डहरू मिलेनन्।",
-    "errAgree": "जारी राख्न कृपया सर्त र गोपनीयता नीतिमा सहमत हुनुहोस्।"
+    "errAgree": "जारी राख्न कृपया सर्त र गोपनीयता नीतिमा सहमत हुनुहोस्।",
+    "newPassword": "नयाँ पासवर्ड",
+    "updatePasswordTitle": "नयाँ पासवर्ड सेट गर्नुहोस्",
+    "updatePasswordSubtitle": "आफ्नो खाताको लागि नयाँ पासवर्ड छान्नुहोस्।",
+    "updatingPassword": "अपडेट गर्दै…",
+    "updatePasswordCta": "पासवर्ड अपडेट गर्नुहोस्"
   },
   "home": {
     "feed": "फिड",

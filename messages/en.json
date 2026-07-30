@@ -459,7 +459,12 @@
     "errCountryRequired": "Please select your country.",
     "errPasswordShort": "Password must be at least 8 characters.",
     "errPasswordMismatch": "Passwords don't match.",
-    "errAgree": "Please agree to the Terms and Privacy Policy to continue."
+    "errAgree": "Please agree to the Terms and Privacy Policy to continue.",
+    "newPassword": "New password",
+    "updatePasswordTitle": "Set a new password",
+    "updatePasswordSubtitle": "Choose a new password for your account.",
+    "updatingPassword": "Updating…",
+    "updatePasswordCta": "Update password"
   },
   "home": {
     "feed": "Feed",
