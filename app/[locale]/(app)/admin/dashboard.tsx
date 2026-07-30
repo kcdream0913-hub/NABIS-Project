@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logAction } from "@/lib/audit";
 import { useSectors } from "@/lib/useSectors";
@@ -13,7 +14,7 @@ import {
   LIGHT_SIGNALS,
   type LightSignal,
 } from "@/lib/verificationDecision";
-import { Building2, Flag, UserCheck } from "lucide-react";
+import { BarChart3, Building2, Flag, UserCircle, UserCheck } from "lucide-react";
 
 type PendingBusiness = {
   id: string;
@@ -361,8 +362,26 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
-      <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="eyebrow text-ink-soft">{t("eyebrow")}</p>
+          <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t("title")}</h1>
+        </div>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/analytics"
+            className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg"
+          >
+            <BarChart3 size={13} /> {t("analyticsNav")}
+          </Link>
+          <Link
+            href="/admin/accounts"
+            className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg"
+          >
+            <UserCircle size={13} /> {t("accountsNav")}
+          </Link>
+        </div>
+      </div>
 
       <div className="mt-3 flex gap-1 border-b border-border">
         {TABS.map((t) => (
