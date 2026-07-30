@@ -48,8 +48,17 @@ test.describe.serial("feed social actions (authenticated)", () => {
   // 16 — react: like → persists across reload → change kind (picker) → remove.
   test("react: like, persist, change kind, remove", async ({ page }) => {
     const like = targetCard(page).getByRole("button", { name: "Like" });
+    // D-063: wait for the reaction INSERT to PERSIST before reloading. The optimistic
+    // aria-pressed flips instantly, but page.reload() re-reads from the DB — reloading
+    // before the POST lands re-fetches "not reacted" and the persist assertion flakes
+    // (the CI red this fixes). Same write-then-navigate class the repost undo guards.
+    const liked = page.waitForResponse(
+      (r) => r.url().includes("/post_reactions") && r.request().method() === "POST",
+      { timeout: 15_000 },
+    );
     await like.click();
     await expect(like).toHaveAttribute("aria-pressed", "true");
+    await liked;
 
     await page.reload();
     const like2 = targetCard(page).getByRole("button", { name: "Like" });
@@ -124,8 +133,16 @@ test.describe.serial("feed social actions (authenticated)", () => {
     await card.getByRole("menuitem", { name: "Quote" }).click();
     const token = `e2e-quote-${randomUUID()}`;
     await card.getByPlaceholder("Add your thoughts…").fill(token);
+    // D-063: wait for the quote INSERT to land before navigating to the feed — goto("/")
+    // before the POST persists re-fetches a feed without the quote (same write-then-
+    // navigate race as the react reload).
+    const quoted = page.waitForResponse(
+      (r) => r.url().includes("/post_reposts") && r.request().method() === "POST",
+      { timeout: 15_000 },
+    );
     await card.getByRole("button", { name: "Post", exact: true }).click(); // "Post" = postQuote
     await expect(card.getByText("Quote reposted")).toBeVisible();
+    await quoted;
 
     // The quote (view=us) lands in A's default feed; find it by the token.
     await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -138,8 +155,16 @@ test.describe.serial("feed social actions (authenticated)", () => {
   // 20 — bookmark: save → appears at /bookmarks → unsave.
   test("bookmark: save appears at /bookmarks then unsave", async ({ page }) => {
     const save = targetCard(page).getByRole("button", { name: "Save to bookmarks" });
+    // D-063: wait for the bookmark INSERT to land before navigating to /bookmarks — the
+    // button flips optimistically, but /bookmarks re-fetches from the DB, so navigating
+    // before the POST persists shows an empty list (same write-then-navigate race).
+    const bookmarked = page.waitForResponse(
+      (r) => r.url().includes("/post_bookmarks") && r.request().method() === "POST",
+      { timeout: 15_000 },
+    );
     await save.click();
     await expect(targetCard(page).getByRole("button", { name: "Remove from bookmarks" })).toBeVisible();
+    await bookmarked;
 
     await page.goto("/bookmarks", { waitUntil: "domcontentloaded" });
     await expect(page.locator("article")).not.toHaveCount(0);

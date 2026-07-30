@@ -24,6 +24,13 @@ export default defineConfig({
   // quarantined explicitly, by name, on its single assertion in smoke.spec.ts;
   // everything else fails on the first miss.
   retries: 0,
+  // Emit the console `list` AND an HTML report into playwright-report/, so the ci.yml
+  // upload-artifact step (path: playwright-report/) actually has something to upload on
+  // failure. With NO reporter configured Playwright defaults to `list` only, so
+  // playwright-report/ was never created and the on-failure artifact was ALWAYS empty
+  // (which is why the failing run's report couldn't be downloaded). `open: "never"` so
+  // it never tries to spawn a browser in CI/headless. playwright-report/ is gitignored.
+  reporter: [["list"], ["html", { open: "never" }]],
   webServer: {
     // Run the smoke suite against a PRODUCTION build - the same artifact Vercel
     // serves - not `next dev`. This is what catches build-only / hydration
