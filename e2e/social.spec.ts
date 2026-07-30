@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 import { randomUUID } from "node:crypto";
-import { login } from "./_login";
 import { createTargetPost } from "./_target";
 
 // BL-SOCIAL-03b — the 5 feed SOCIAL-ACTION tests, rewritten against the SHIPPED UI
@@ -22,6 +21,13 @@ import { createTargetPost } from "./_target";
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 
+// Reuse the ONE session captured by the "setup" project (auth.setup.ts) instead of
+// login() per test — that per-test login was ~5 concurrent GoTrue sign-ins as A here.
+// File-scoped so smoke + attachments keep their own login/logout contexts. Path is a
+// literal (NOT imported): Playwright forbids a test file importing another test file,
+// and auth.setup.ts is one — it must match `authFile` there.
+test.use({ storageState: "e2e/.auth/user.json" });
+
 let targetId: string; // A's per-run target post; created lazily in the first beforeEach
 const targetCard = (page: Page) => page.locator("article").first(); // permalink = one article
 
@@ -33,7 +39,8 @@ test.describe.serial("feed social actions (authenticated)", () => {
     // across projects on the shared target/account. (360 layout → feed-media test 24.)
     test.skip(testInfo.project.name !== "chromium", "social actions run once on chromium; 360 layout is covered by feed-media");
     if (!targetId) targetId = await createTargetPost("social target"); // once (serial)
-    await login(page);
+    // login() REMOVED — the file-scoped storageState (auth.setup.ts) already carries an
+    // authenticated session; just navigate.
     await page.goto(`/posts/${targetId}`, { waitUntil: "domcontentloaded" });
     await expect(targetCard(page).getByRole("button", { name: "Like" })).toBeVisible({ timeout: 15_000 });
   });

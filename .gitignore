@@ -14,6 +14,9 @@ playwright/.cache/
 # Generated E2E fixtures (built by scripts/gen-e2e-fixtures.mjs at globalSetup):
 # the >50MB oversize file + bidi/Devanagari filenames must never enter git.
 e2e/fixtures/generated/
+# Saved authenticated session (account A) captured by e2e/auth.setup.ts — a LIVE
+# credential-bearing session file, never commit it.
+e2e/.auth/
 
 # Patch files are hand-off artifacts between sessions, never source of record.
 *.patch

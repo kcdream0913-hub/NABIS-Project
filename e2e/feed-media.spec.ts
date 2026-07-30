@@ -1,7 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { login } from "./_login";
 import { createTargetPost } from "./_target";
 
 // BL-SOCIAL-03a — the FEED MEDIA path (BL-SOCIAL-02 tests 21–24), the class of bug
@@ -56,11 +55,19 @@ async function stageAndWait(page: Page, files: string | string[], expected: numb
   await expect(composerError(page)).toHaveCount(0);
 }
 
+// Reuse the ONE session from the "setup" project (auth.setup.ts) instead of login() in
+// every beforeEach — this suite is 4 tests x 2 projects = 8 concurrent sign-ins as A
+// without it. File-scoped so smoke + attachments keep their own login/logout contexts.
+// Path is a literal (NOT imported): Playwright forbids a test file importing another
+// test file, and auth.setup.ts is one — it must match `authFile` there.
+test.use({ storageState: "e2e/.auth/user.json" });
+
 test.describe("feed media path (authenticated)", () => {
   test.skip(!EMAIL || !PASSWORD, "set E2E_EMAIL / E2E_PASSWORD (verified account A) to run");
 
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    // login() REMOVED — the file-scoped storageState (auth.setup.ts) already carries an
+    // authenticated session; just navigate.
     await page.goto("/", { waitUntil: "domcontentloaded" });
     // A is verified + onboarded, so the composer (not the verify-to-post prompt)
     // renders. Its textarea is the anchor the compose tests drive.
