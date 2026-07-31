@@ -9,6 +9,7 @@ import { Compass } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
 import Feed from "@/components/Feed";
 import FeedMessenger from "@/components/FeedMessenger";
+import NepaliAlmanac from "@/components/NepaliAlmanac";
 import FloatingChatDock, { type OpenChat } from "@/components/FloatingChatDock";
 import type { FeedPost } from "@/components/PostCard";
 import { useApp } from "@/lib/store";
@@ -124,6 +125,12 @@ export default function HomePage() {
     // would otherwise add stray top margin to the rail once this is a grid.
     <div className="mx-auto max-w-2xl space-y-3 xl:max-w-none xl:grid xl:grid-cols-[42rem_20rem] xl:items-start xl:gap-6 xl:space-y-0">
       <div className="space-y-3">
+        {/* Nepali-calendar habit anchor. The full card lives in the xl: rail
+            below; this compact chip carries it below xl (the hub's redirect so
+            it isn't desktop-only). One or the other shows, never both. */}
+        <div className="xl:hidden">
+          <NepaliAlmanac variant="chip" />
+        </div>
         <Composer isVerified={isVerified} onPosted={loadFeed} />
 
         {loading ? (
@@ -142,8 +149,10 @@ export default function HomePage() {
       </div>
 
       {/* Feed-only per product decision (not a site-wide rail) — hidden below
-          xl, where there isn't room for a feed column plus a rail. */}
-      <aside className="hidden xl:sticky xl:top-6 xl:block">
+          xl, where there isn't room for a feed column plus a rail. The Nepali
+          almanac card sits above the messenger; below xl it's the inline chip. */}
+      <aside className="hidden space-y-4 xl:sticky xl:top-6 xl:block">
+        <NepaliAlmanac variant="full" />
         <FeedMessenger onOpenThread={openThread} />
       </aside>
 

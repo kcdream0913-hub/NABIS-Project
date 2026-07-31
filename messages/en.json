@@ -517,6 +517,13 @@
     "unread": "Unread",
     "selectConversation": "Select a conversation to read it here"
   },
+  "almanac": {
+    "title": "Nepali calendar",
+    "today": "Today",
+    "upcoming": "Upcoming festivals",
+    "tomorrow": "Tomorrow",
+    "inDays": "in {days} days"
+  },
   "composer": {
     "verifyToPost": "Verify your profile to post to the feed.",
     "verifyNow": "Verify now",
