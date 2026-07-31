@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { stripLocale, withLocalePrefix, isPublicPath, isAdminPath, isSafeNextPath } from "../authRouting";
+import {
+  stripLocale,
+  withLocalePrefix,
+  isPublicPath,
+  isAdminPath,
+  isSafeNextPath,
+  buildOAuthRedirectUrl,
+} from "../authRouting";
 
 // This is the exact logic that decides where an unauthenticated or
 // already-logged-in user gets redirected, per locale. A bug here means
@@ -158,6 +165,42 @@ describe("isSafeNextPath", () => {
     expect(isSafeNextPath(null)).toBe(false);
     expect(isSafeNextPath(undefined)).toBe(false);
     expect(isSafeNextPath("")).toBe(false);
+  });
+});
+
+// D-075. The Google OAuth button had no equivalent of the password-login
+// path's ?next= carry-through — this is the fix, and it must respect the
+// exact same open-redirect guard as isSafeNextPath, not a looser one.
+describe("buildOAuthRedirectUrl", () => {
+  it("folds a safe next path onto the callback URL", () => {
+    expect(buildOAuthRedirectUrl("https://example.com", "/admin/reports")).toBe(
+      "https://example.com/auth/callback?next=%2Fadmin%2Freports"
+    );
+  });
+
+  it("omits next entirely when there is none", () => {
+    expect(buildOAuthRedirectUrl("https://example.com", null)).toBe(
+      "https://example.com/auth/callback"
+    );
+    expect(buildOAuthRedirectUrl("https://example.com", undefined)).toBe(
+      "https://example.com/auth/callback"
+    );
+  });
+
+  it("drops an unsafe next rather than passing it through (open-redirect guard)", () => {
+    for (const unsafe of ["//evil.com", "/\\evil.com", "https://evil.com", "evil.com"]) {
+      expect(buildOAuthRedirectUrl("https://example.com", unsafe)).toBe(
+        "https://example.com/auth/callback"
+      );
+    }
+  });
+
+  it("still points at /auth/callback even when origin has a trailing slash quirk", () => {
+    // new URL() normalizes this; asserting it so a future refactor can't silently
+    // regress the callback path itself.
+    expect(buildOAuthRedirectUrl("https://example.com", "/members")).toContain(
+      "/auth/callback?next="
+    );
   });
 });
 

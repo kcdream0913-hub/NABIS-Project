@@ -64,3 +64,24 @@ export function isSafeNextPath(next: string | null | undefined): next is string 
     !next.startsWith("/\\")
   );
 }
+
+// D-075. The password-login path carries `?next=` through as a literal query
+// param the login page reads back after signInWithPassword resolves (see
+// handleLogin). The Google OAuth path had no equivalent: signInWithOAuth's
+// `redirectTo` was a bare "/auth/callback" with no `next`, so
+// /auth/callback/route.ts always fell back to its own default ("/") — a
+// logged-out visitor bounced to /login?next=/admin/reports who then clicked
+// "Continue with Google" landed on the home feed instead of back on the report
+// they wanted. This builds that same `next` onto the OAuth redirect URL so it
+// survives the round trip: Supabase appends its own `code` (and `type`, for a
+// recovery link) onto `redirectTo` verbatim, so anything set here arrives back
+// at the callback route untouched, which already reads `searchParams.get("next")`.
+// `next` is untrusted (read from the login page's own query string) — gated by
+// the SAME isSafeNextPath guard as the password path, for the same
+// open-redirect reason; an unsafe value is silently dropped rather than passed
+// through, so the callback route's own "/" default takes over.
+export function buildOAuthRedirectUrl(origin: string, next: string | null | undefined): string {
+  const url = new URL("/auth/callback", origin);
+  if (isSafeNextPath(next)) url.searchParams.set("next", next);
+  return url.toString();
+}

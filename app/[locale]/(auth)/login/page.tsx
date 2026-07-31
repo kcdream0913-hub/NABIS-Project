@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { isSafeNextPath } from "@/lib/authRouting";
+import { isSafeNextPath, buildOAuthRedirectUrl } from "@/lib/authRouting";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
@@ -41,9 +41,14 @@ export default function LoginPage() {
   // apple = false). A dead OAuth button is worse than none, so Apple is hidden.
   async function handleGoogle() {
     setError(null);
+    // D-075: carry ?next= through OAuth the same way handleLogin carries it
+    // through password login — read it from the live URL, validate with the
+    // same open-redirect guard, let buildOAuthRedirectUrl fold it onto the
+    // callback URL. See lib/authRouting.ts for why this round-trips safely.
+    const next = new URLSearchParams(window.location.search).get("next");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: buildOAuthRedirectUrl(location.origin, next) },
     });
     if (error) setError(error.message);
   }
