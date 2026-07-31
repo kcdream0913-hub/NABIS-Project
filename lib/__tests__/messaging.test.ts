@@ -8,6 +8,7 @@ import {
   isSeenByOthers,
   messagePreview,
   truncateQuote,
+  buildThreadList,
   EDIT_WINDOW_MS,
   DELETE_EVERYONE_WINDOW_MS,
   type ChatMessage,
@@ -175,5 +176,92 @@ describe("truncateQuote (~90 chars)", () => {
     const out = truncateQuote("x".repeat(200), 90);
     expect(out.length).toBe(90);
     expect(out.endsWith("…")).toBe(true);
+  });
+});
+
+// D-076. buildThreadList is the extracted, single implementation of "what does
+// my inbox look like" — shared by the /messages page AND the new Feed rail so
+// the two can't disagree. These tests are the ones that used to live only as
+// untested inline logic in /messages/page.tsx.
+describe("buildThreadList", () => {
+  const L = { member: "Member", deleted: "This message was deleted", photo: "📷 Photo", document: "📄 Document" };
+
+  it("joins each thread's other participant, latest message preview, and unread state", () => {
+    const list = buildThreadList(
+      [{ thread_id: "t1", last_read_at: null }],
+      [{ thread_id: "t1", profiles: { name: "Jane Doe" } }],
+      [{ thread_id: "t1", body: "hi", sender_id: "them", created_at: "2026-07-31T00:00:00Z", deleted_at: null, attachments: null }],
+      "me",
+      L,
+    );
+    expect(list).toEqual([
+      { id: "t1", otherName: "Jane Doe", lastPreview: "hi", lastAt: "2026-07-31T00:00:00Z", unread: true },
+    ]);
+  });
+
+  it("sorts newest-first by last message time", () => {
+    const list = buildThreadList(
+      [
+        { thread_id: "old", last_read_at: null },
+        { thread_id: "new", last_read_at: null },
+      ],
+      [
+        { thread_id: "old", profiles: { name: "Old Thread" } },
+        { thread_id: "new", profiles: { name: "New Thread" } },
+      ],
+      [
+        { thread_id: "old", body: "a", sender_id: "them", created_at: "2026-07-01T00:00:00Z", deleted_at: null, attachments: null },
+        { thread_id: "new", body: "b", sender_id: "them", created_at: "2026-07-30T00:00:00Z", deleted_at: null, attachments: null },
+      ],
+      "me",
+      L,
+    );
+    expect(list.map((t) => t.id)).toEqual(["new", "old"]);
+  });
+
+  it("falls back to the member label when the other participant has no name", () => {
+    const list = buildThreadList(
+      [{ thread_id: "t1", last_read_at: null }],
+      [{ thread_id: "t1", profiles: { name: null } }],
+      [],
+      "me",
+      L,
+    );
+    expect(list[0].otherName).toBe("Member");
+    expect(list[0].lastPreview).toBeNull();
+    expect(list[0].lastAt).toBeNull();
+  });
+
+  it("is not unread when the last message is my own", () => {
+    const list = buildThreadList(
+      [{ thread_id: "t1", last_read_at: null }],
+      [{ thread_id: "t1", profiles: { name: "Jane Doe" } }],
+      [{ thread_id: "t1", body: "hi", sender_id: "me", created_at: "2026-07-31T00:00:00Z", deleted_at: null, attachments: null }],
+      "me",
+      L,
+    );
+    expect(list[0].unread).toBe(false);
+  });
+
+  it("uses the tombstone/attachment preview labels via messagePreview, not raw body", () => {
+    const list = buildThreadList(
+      [{ thread_id: "t1", last_read_at: null }],
+      [{ thread_id: "t1", profiles: { name: "Jane Doe" } }],
+      [{ thread_id: "t1", body: "should not show", sender_id: "them", created_at: "2026-07-31T00:00:00Z", deleted_at: "2026-07-31T00:00:01Z", attachments: null }],
+      "me",
+      L,
+    );
+    expect(list[0].lastPreview).toBe(L.deleted);
+  });
+
+  it("takes the FIRST profiles entry when Supabase returns an array embed instead of an object", () => {
+    const list = buildThreadList(
+      [{ thread_id: "t1", last_read_at: null }],
+      [{ thread_id: "t1", profiles: [{ name: "Array Shape" }] }],
+      [],
+      "me",
+      L,
+    );
+    expect(list[0].otherName).toBe("Array Shape");
   });
 });

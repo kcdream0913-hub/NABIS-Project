@@ -92,10 +92,16 @@ function ThreadConversationInner({
   threadId,
   onBack,
   initialDraft = "",
+  heightClass = "h-[calc(100vh-8rem)]",
 }: {
   threadId: string;
   onBack?: () => void;
   initialDraft?: string;
+  // D-076: the Feed floating-chat popup renders this same component at a fixed
+  // small height instead of "most of the viewport" — everything else (composer,
+  // attachments, reactions, realtime) is identical, so it's one prop, not a
+  // second component that could drift from this one.
+  heightClass?: string;
 }) {
   const t = useTranslations("thread");
   const format = useFormatter();
@@ -556,7 +562,7 @@ function ThreadConversationInner({
 
   // ── render ──
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col rounded-lg border border-border bg-surface">
+    <div className={`flex ${heightClass} flex-col rounded-lg border border-border bg-surface`}>
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         {onBack && (
           <button onClick={onBack} aria-label={t("back")} className="-ml-1 rounded p-1 text-ink-soft hover:bg-bg lg:hidden">
@@ -830,11 +836,12 @@ export default function ThreadConversation(props: {
   threadId: string;
   onBack?: () => void;
   initialDraft?: string;
+  heightClass?: string;
 }) {
   return (
     <ErrorBoundary
       fallback={
-        <div className="grid h-[calc(100vh-8rem)] place-items-center rounded-lg border border-border bg-surface p-6 text-center text-sm text-ink-soft">
+        <div className={`grid ${props.heightClass ?? "h-[calc(100vh-8rem)]"} place-items-center rounded-lg border border-border bg-surface p-6 text-center text-sm text-ink-soft`}>
           <ThreadError />
         </div>
       }

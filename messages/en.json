@@ -34,7 +34,11 @@
     "selectConversation": "Select a conversation to read it here",
     "photo": "📷 Photo",
     "document": "📄 Document",
-    "deleted": "This message was deleted"
+    "deleted": "This message was deleted",
+    "seeAll": "See all",
+    "minimize": "Minimize",
+    "expand": "Expand conversation",
+    "close": "Close"
   },
   "card": {
     "message": "Message",

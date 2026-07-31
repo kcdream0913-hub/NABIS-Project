@@ -6,15 +6,7 @@ import { MessagesSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import EmptyState from "@/components/EmptyState";
 import ThreadConversation from "@/components/ThreadConversation";
-import { isUnread, messagePreview, type Attachment } from "@/lib/messaging";
-
-type Thread = {
-  id: string;
-  otherName: string;
-  lastPreview: string | null;
-  lastAt: string | null;
-  unread: boolean;
-};
+import { buildThreadList, type Thread } from "@/lib/messaging";
 
 // Standalone Messages inbox (own sidebar destination): thread list left,
 // conversation right on desktop; stacked on mobile. DMs only — channels live
@@ -42,9 +34,6 @@ export default function MessagesPage() {
       .select("thread_id, last_read_at")
       .eq("user_id", user.id);
     const threadIds = (mine ?? []).map((r) => r.thread_id);
-    const readMap: Record<string, string | null> = Object.fromEntries(
-      (mine ?? []).map((r) => [r.thread_id, r.last_read_at])
-    );
     if (threadIds.length === 0) {
       setThreads([]);
       setLoading(false);
@@ -62,34 +51,12 @@ export default function MessagesPage() {
         .in("thread_id", threadIds)
         .order("created_at", { ascending: false }),
     ]);
-    type Last = {
-      thread_id: string;
-      body: string | null;
-      sender_id: string;
-      created_at: string;
-      deleted_at: string | null;
-      attachments: Attachment[] | null;
-    };
-    const latest: Record<string, Last> = {};
-    for (const m of (lastMsgs ?? []) as Last[]) if (!latest[m.thread_id]) latest[m.thread_id] = m;
-    const previewLabels = { deleted: t("deleted"), photo: t("photo"), document: t("document") };
-    const list: Thread[] = (others ?? []).map((o) => {
-      const p = Array.isArray(o.profiles) ? o.profiles[0] : o.profiles;
-      const lm = latest[o.thread_id];
-      return {
-        id: o.thread_id,
-        otherName: p?.name ?? t("member"),
-        lastPreview: lm
-          ? messagePreview(
-              { body: lm.body, deleted_at: lm.deleted_at, attachments: Array.isArray(lm.attachments) ? lm.attachments : [] },
-              previewLabels,
-            )
-          : null,
-        lastAt: lm?.created_at ?? null,
-        unread: isUnread(lm, readMap[o.thread_id], user.id),
-      };
+    const list = buildThreadList(mine ?? [], others ?? [], lastMsgs ?? [], user.id, {
+      member: t("member"),
+      deleted: t("deleted"),
+      photo: t("photo"),
+      document: t("document"),
     });
-    list.sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""));
     setThreads(list);
     setLoading(false);
   }

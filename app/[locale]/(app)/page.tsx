@@ -8,10 +8,17 @@ import Composer from "./composer";
 import { Compass } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
 import Feed from "@/components/Feed";
+import FeedMessenger from "@/components/FeedMessenger";
+import FloatingChatDock, { type OpenChat } from "@/components/FloatingChatDock";
 import type { FeedPost } from "@/components/PostCard";
 import { useApp } from "@/lib/store";
 import type { PostView } from "@/lib/feed/reposts";
 import { POST_SELECT, buildHydrator, asLang, one, type PostRow } from "@/lib/feed/hydrate";
+
+// D-076. At most this many floating chat popups stay open at once — opening a
+// new one evicts the oldest (front of the array = most recently opened). A
+// Feed-only-scope tradeoff, smaller than real Facebook's stack; see CLAUDE.md.
+const MAX_OPEN_CHATS = 2;
 
 type RepostRow = {
   post_id: string; user_id: string; quote: string | null; quote_lang: string | null;
@@ -31,6 +38,23 @@ export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [openChats, setOpenChats] = useState<OpenChat[]>([]);
+
+  // Opening a thread already open just re-surfaces (un-minimizes) it rather than
+  // duplicating an entry; opening a new one beyond MAX_OPEN_CHATS evicts the
+  // oldest, matching the minimal FB-style stack described above.
+  function openThread(threadId: string, name: string) {
+    setOpenChats((prev) => {
+      const rest = prev.filter((c) => c.threadId !== threadId);
+      return [{ threadId, name, minimized: false }, ...rest].slice(0, MAX_OPEN_CHATS);
+    });
+  }
+  function closeChat(threadId: string) {
+    setOpenChats((prev) => prev.filter((c) => c.threadId !== threadId));
+  }
+  function toggleMinimize(threadId: string) {
+    setOpenChats((prev) => prev.map((c) => (c.threadId === threadId ? { ...c, minimized: !c.minimized } : c)));
+  }
 
   async function loadFeed() {
     const {
@@ -93,22 +117,37 @@ export default function HomePage() {
   }, [view]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3">
-      <Composer isVerified={isVerified} onPosted={loadFeed} />
+    // Single column below xl (unchanged from before D-076); at xl+ a fixed
+    // 42rem (=max-w-2xl) feed column plus a 20rem messenger rail, still capped
+    // by AppShell's own max-w-5xl main so it never grows unbounded on very wide
+    // screens. xl:space-y-0 turns off the base space-y-3 stacking gap, which
+    // would otherwise add stray top margin to the rail once this is a grid.
+    <div className="mx-auto max-w-2xl space-y-3 xl:max-w-none xl:grid xl:grid-cols-[42rem_20rem] xl:items-start xl:gap-6 xl:space-y-0">
+      <div className="space-y-3">
+        <Composer isVerified={isVerified} onPosted={loadFeed} />
 
-      {loading ? (
-        <p className="text-sm text-ink-soft">{t("loading")}</p>
-      ) : items.length === 0 ? (
-        <EmptyState icon={Compass} title={t("feedEmptyTitle")} body={t("feedEmptyBody")} />
-      ) : (
-        <Feed
-          posts={items}
-          locale={locale}
-          currentView={view as PostView}
-          userId={userId}
-          renderAction={(fp) => <ReportButton targetType="post" targetId={fp.id} />}
-        />
-      )}
+        {loading ? (
+          <p className="text-sm text-ink-soft">{t("loading")}</p>
+        ) : items.length === 0 ? (
+          <EmptyState icon={Compass} title={t("feedEmptyTitle")} body={t("feedEmptyBody")} />
+        ) : (
+          <Feed
+            posts={items}
+            locale={locale}
+            currentView={view as PostView}
+            userId={userId}
+            renderAction={(fp) => <ReportButton targetType="post" targetId={fp.id} />}
+          />
+        )}
+      </div>
+
+      {/* Feed-only per product decision (not a site-wide rail) — hidden below
+          xl, where there isn't room for a feed column plus a rail. */}
+      <aside className="hidden xl:sticky xl:top-6 xl:block">
+        <FeedMessenger onOpenThread={openThread} />
+      </aside>
+
+      <FloatingChatDock chats={openChats} onClose={closeChat} onToggleMinimize={toggleMinimize} />
     </div>
   );
 }

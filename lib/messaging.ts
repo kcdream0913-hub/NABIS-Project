@@ -128,3 +128,69 @@ export function truncateQuote(s: string, max = 90): string {
   const t = s.replace(/\s+/g, " ").trim();
   return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
 }
+
+// D-076. A DM thread row as shown in any inbox surface — the full /messages
+// page and the Feed rail both render this same shape.
+export type Thread = {
+  id: string;
+  otherName: string;
+  lastPreview: string | null;
+  lastAt: string | null;
+  unread: boolean;
+};
+
+type ThreadParticipantRow = { thread_id: string; last_read_at: string | null };
+type OtherParticipantRow = {
+  thread_id: string;
+  profiles: { name: string | null } | { name: string | null }[] | null;
+};
+type LastMessageRow = {
+  thread_id: string;
+  body: string | null;
+  sender_id: string;
+  created_at: string;
+  deleted_at: string | null;
+  attachments: Attachment[] | null;
+};
+
+/** Builds the sorted `Thread[]` an inbox surface renders, from the three raw
+ *  query results every surface fetches the same way (my participant rows, the
+ *  OTHER participant + name on each of my threads, and the latest message per
+ *  thread). Pulled out of the /messages page so the Feed rail (D-076) doesn't
+ *  reimplement — and risk drifting from — the one true "what does my inbox
+ *  look like" rule; `isUnread` above is the equivalent extraction for a single
+ *  thread's read state, this is its list-level counterpart. Pure: no
+ *  network/Supabase calls, so it's unit-testable without a client or a DOM. */
+export function buildThreadList(
+  mine: ThreadParticipantRow[],
+  others: OtherParticipantRow[],
+  lastMsgs: LastMessageRow[],
+  userId: string,
+  labels: { member: string; deleted: string; photo: string; document: string },
+): Thread[] {
+  const readMap: Record<string, string | null> = Object.fromEntries(
+    mine.map((r) => [r.thread_id, r.last_read_at]),
+  );
+  const latest: Record<string, LastMessageRow> = {};
+  for (const m of lastMsgs) if (!latest[m.thread_id]) latest[m.thread_id] = m;
+
+  const previewLabels = { deleted: labels.deleted, photo: labels.photo, document: labels.document };
+  const list: Thread[] = others.map((o) => {
+    const p = Array.isArray(o.profiles) ? o.profiles[0] : o.profiles;
+    const lm = latest[o.thread_id];
+    return {
+      id: o.thread_id,
+      otherName: p?.name ?? labels.member,
+      lastPreview: lm
+        ? messagePreview(
+            { body: lm.body, deleted_at: lm.deleted_at, attachments: Array.isArray(lm.attachments) ? lm.attachments : [] },
+            previewLabels,
+          )
+        : null,
+      lastAt: lm?.created_at ?? null,
+      unread: isUnread(lm, readMap[o.thread_id], userId),
+    };
+  });
+  list.sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""));
+  return list;
+}
