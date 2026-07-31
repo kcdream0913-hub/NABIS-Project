@@ -2,14 +2,17 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { User, Shield, Palette, Smartphone, Download, LifeBuoy, type LucideIcon } from "lucide-react";
+import { User, Shield, Bell, Palette, Smartphone, Download, LifeBuoy, type LucideIcon } from "lucide-react";
 
 type NavItem = { href: string; key: string; icon: LucideIcon };
 
-// Phase A sections only. Notifications/Security (Phase B) and Blocked/Business
-// (Phase C) are intentionally absent — no dead links until they're built.
+// Notifications (BL-ENGAGE-01 Step 1) surfaces the existing preferences.notifications
+// model — a real, functional preference center (choices persist), not a dead link;
+// email DELIVERY is switched on later (the page says so). Security (Phase B) and
+// Blocked/Business (Phase C) remain intentionally absent until they're built.
 const ITEMS: NavItem[] = [
   { href: "/settings/account", key: "account", icon: User },
+  { href: "/settings/notifications", key: "notifications", icon: Bell },
   { href: "/settings/privacy", key: "privacy", icon: Shield },
   { href: "/settings/appearance", key: "appearance", icon: Palette },
   { href: "/settings/devices", key: "devices", icon: Smartphone },

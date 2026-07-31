@@ -60,6 +60,7 @@
     "nav": {
       "aria": "Settings sections",
       "account": "Account",
+      "notifications": "Notifications",
       "privacy": "Privacy & Data",
       "appearance": "Appearance",
       "devices": "Devices",
@@ -99,6 +100,33 @@
       "pwSameAsCurrent": "New password must be different from your current one.",
       "pwMismatch": "New passwords don't match.",
       "emailPending": "Pending change to {email} — confirm from both inboxes to finish."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose what BridgeLink emails you about, and how often.",
+      "deliveryNote": "Your choices are saved now. Email delivery is being switched on soon — until then these settings are stored and ready.",
+      "frequency": "Email frequency",
+      "frequencyHint": "How often we bundle your notifications into email.",
+      "freq": {
+        "immediate": "Immediate",
+        "daily": "Daily digest",
+        "off": "Off"
+      },
+      "emailHeading": "Email me about",
+      "email": {
+        "messages": "Direct messages",
+        "messagesHint": "When you get a new message while you're away.",
+        "events": "Event reminders",
+        "eventsHint": "Before an event you've RSVP'd to.",
+        "connections": "New members & connections",
+        "connectionsHint": "New members and businesses in your sectors.",
+        "verification": "Verification updates",
+        "verificationHint": "When your verification status changes."
+      },
+      "loginAlerts": "New sign-in alerts",
+      "loginAlertsHint": "Email me when my account signs in on a new device.",
+      "save": "Save",
+      "saved": "Saved"
     },
     "verification": {
       "title": "Verification status & history",
