@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 import { isUnread } from "@/lib/messaging";
 import { badgeLabel } from "@/lib/notifications";
 import Avatar from "./Avatar";
-import NotificationBell from "./NotificationBell";
 import { OnlineDot } from "./OnlineDot";
 import { NAV_ICON, type NavIconName } from "./icons";
 
@@ -272,11 +271,12 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
         </button>
       )}
 
-      {/* Activity bell — mounted OUTSIDE the overflow-y-auto nav below, because its
-          panel flies out to the right and nav's overflow would clip it. */}
-      <div className="px-2.5 pb-1">
-        <NotificationBell labelClass={LABEL} />
-      </div>
+      {/* D-079: Activity used to live here (its own row, `variant="rail"`,
+          outside the scrolling nav because its panel flies out to the right).
+          Moved to the Topbar's top-right cluster instead, merged with the
+          `variant="topbar"` bell that already existed there for mobile — KC
+          wanted one Activity/Notifications entry point, top-right, not two.
+          See Topbar.tsx. */}
 
       <nav className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-2.5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {GROUPS.map((g) => (

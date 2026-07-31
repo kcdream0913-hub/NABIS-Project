@@ -36,12 +36,13 @@ export default function Topbar() {
           {/* Language switch — back in the topbar so the locale is reachable on
               mobile (Settings is behind the hamburger). Path-based /ne + cookie. */}
           <LocaleSwitch />
-          {/* Activity bell — the real BL-NOTIF-01 panel. Shown only below md: on
-              desktop the sidebar rail carries the bell, so this avoids two bells.
-              On mobile the rail is hidden, so this is the one-tap access point. */}
-          <div className="md:hidden">
-            <NotificationBell variant="topbar" />
-          </div>
+          {/* Activity bell — the real BL-NOTIF-01 panel. D-079: now the ONLY
+              Activity/Notifications entry point, shown at every width. It used
+              to be `md:hidden` (desktop had a second bell on the Sidebar rail
+              instead) — KC asked to merge them into one, top-right, so the
+              Sidebar's copy was removed (see Sidebar.tsx) and this one is no
+              longer breakpoint-gated. */}
+          <NotificationBell variant="topbar" />
 
           <button
             disabled

@@ -76,6 +76,28 @@ describe("app shell renders without a client-side exception", () => {
       expect(() => render(<Shell locale={locale}><Sidebar expanded /></Shell>)).not.toThrow();
     });
 
+    it(`Activity/Notifications bell lives ONLY in the Topbar now, not the Sidebar (D-079) in ${locale}`, () => {
+      // KC asked to move Activity to the top-right and merge it with the
+      // existing topbar bell instead of keeping two (one on the Sidebar rail,
+      // one — mobile-only — in the Topbar). Both variants share the same
+      // aria-label (`notifications.bellAria`), so absence/presence of that
+      // label is what distinguishes "removed from Sidebar" from "still there".
+      const { getByLabelText, unmount } = render(<Shell locale={locale}><Topbar /></Shell>);
+      const bell = getByLabelText(MESSAGES[locale].notifications.bellAria);
+      // Was `md:hidden` pre-D-079 (desktop relied on the Sidebar's copy
+      // instead); must not be breakpoint-gated behind ANY hidden-at-desktop
+      // ancestor now that it's the only copy.
+      let node: HTMLElement | null = bell;
+      while (node) {
+        expect(node.className).not.toContain("md:hidden");
+        node = node.parentElement;
+      }
+      unmount();
+
+      const { queryByLabelText: queryInSidebar } = render(<Shell locale={locale}><Sidebar expanded /></Shell>);
+      expect(queryInSidebar(MESSAGES[locale].notifications.bellAria)).toBeNull();
+    });
+
     it(`Messages nav row hides at xl: on the Feed page (D-077, where the Feed rail covers it) but Feed's own row does not, in ${locale}`, () => {
       // Matched by visible label text, not href — the i18n Link prefixes hrefs
       // with the locale (e.g. /ne/messages), so an exact-href match would be
