@@ -3,7 +3,19 @@
 // vitest.config.ts. Provides just the hooks/functions next-intl + the app use.
 import { vi } from "vitest";
 
-export const usePathname = () => "/";
+// D-078: mutable so a test can simulate being on a non-Feed route (the exact
+// case D-077's original, unpathname-gated `xl:hidden` got wrong). Defaults to
+// "/" so every existing test that doesn't touch this keeps its prior behavior
+// unchanged. Tests that call __setTestPathname MUST reset it (afterEach or a
+// try/finally) so they don't leak state into later tests.
+let _pathname = "/";
+export const usePathname = () => _pathname;
+export function __setTestPathname(path: string) {
+  _pathname = path;
+}
+export function __resetTestPathname() {
+  _pathname = "/";
+}
 export const useRouter = () => ({
   replace: vi.fn(),
   push: vi.fn(),

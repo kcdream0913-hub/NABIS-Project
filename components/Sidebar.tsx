@@ -19,12 +19,15 @@ type Item = { href: string; icon: NavIconName; labelKey: string };
 // lives in; Tools = utilities + the register-business action. Messages is its
 // own destination (chat icon). Sector channels stay in Community as the backbone.
 //
-// D-077: the Messages row hides at `xl:` and up — exactly the breakpoint where
-// the Feed's own Messenger rail (D-076) is showing the same destination with
-// live previews and unread state, so the nav wouldn't otherwise offer two
-// entry points to the identical place. It stays in the nav below `xl:` and on
-// every OTHER page at any width — the Feed rail is Feed-only (KC's own D-076
-// scope decision), so nav is still the ONLY way to reach /messages there.
+// D-077 (gating corrected in D-078): the Messages row hides at `xl:` and up
+// ONLY on the Feed page (`pathname === "/"`) — exactly where, and only where,
+// the Feed's own Messenger rail (D-076, itself Feed-only per KC's D-076 scope
+// decision) is showing the same destination with live previews and unread
+// state. D-077's first cut hid it at `xl:` on EVERY page, which left
+// Members/Channels/Events/Messages-itself with zero way to reach /messages at
+// that width — a dead end, caught in hub verification, not by design. With
+// the pathname gate, nav is the only way to reach /messages everywhere except
+// the Feed page at `xl:` width, where the rail covers it.
 const GROUPS: { groupKey: string; items: Item[] }[] = [
   { groupKey: "groupCommunity", items: [
     { href: "/", icon: "feed", labelKey: "feed" },
@@ -193,9 +196,10 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
     icon: NavIconName;
     label: string;
     badge?: string | null;
-    // D-077: currently only "xl:hidden", for the Messages row once the Feed
-    // rail covers the same destination at that breakpoint. Optional so every
-    // other row's className stays byte-identical to before.
+    // D-077/D-078: currently only "xl:hidden", for the Messages row, and only
+    // when the Feed rail actually covers the same destination (see the D-078
+    // pathname gate below). Optional so every other row's className stays
+    // byte-identical to before.
     extraClassName?: string;
   }) => {
     const active = pathname === href;
@@ -285,7 +289,10 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
                 icon={it.icon}
                 label={t(it.labelKey)}
                 badge={it.href === "/messages" ? badgeLabel(dmCount) : undefined}
-                extraClassName={it.href === "/messages" ? "xl:hidden" : undefined}
+                // D-078: gate on pathname too, not just href — D-077 hid this row
+                // at `xl:` on every page, but the Feed rail that's supposed to
+                // cover it only exists on the Feed page itself.
+                extraClassName={it.href === "/messages" && pathname === "/" ? "xl:hidden" : undefined}
               />
             ))}
           </div>

@@ -49,6 +49,10 @@ import AppShell from "@/components/AppShell";
 import Topbar from "@/components/Topbar";
 import Sidebar from "@/components/Sidebar";
 import ErrorBoundary from "@/components/ErrorBoundary";
+// D-078: lets a test simulate being on a non-Feed route, to catch the exact
+// regression D-077 shipped (Messages hidden at `xl:` on EVERY page, not just
+// Feed, because the hide logic checked only href with no pathname gate).
+import { __setTestPathname, __resetTestPathname } from "@/test/stubs/next-navigation";
 
 const MESSAGES: Record<string, typeof en> = { en, ne: ne as typeof en };
 
@@ -72,15 +76,37 @@ describe("app shell renders without a client-side exception", () => {
       expect(() => render(<Shell locale={locale}><Sidebar expanded /></Shell>)).not.toThrow();
     });
 
-    it(`Messages nav row hides at xl: (D-077, where the Feed rail covers it) but Feed's own row does not, in ${locale}`, () => {
+    it(`Messages nav row hides at xl: on the Feed page (D-077, where the Feed rail covers it) but Feed's own row does not, in ${locale}`, () => {
       // Matched by visible label text, not href — the i18n Link prefixes hrefs
       // with the locale (e.g. /ne/messages), so an exact-href match would be
       // locale-fragile in a way the rendered label text isn't.
-      const { getByText } = render(<Shell locale={locale}><Sidebar expanded /></Shell>);
-      const messagesLink = getByText(MESSAGES[locale].nav.messages).closest("a");
-      const feedLink = getByText(MESSAGES[locale].nav.feed).closest("a");
-      expect(messagesLink?.className).toContain("xl:hidden");
-      expect(feedLink?.className).not.toContain("xl:hidden");
+      // Stub defaults to "/" (the Feed page) — explicit here so this test
+      // still says what it means if that default ever changes.
+      __setTestPathname("/");
+      try {
+        const { getByText } = render(<Shell locale={locale}><Sidebar expanded /></Shell>);
+        const messagesLink = getByText(MESSAGES[locale].nav.messages).closest("a");
+        const feedLink = getByText(MESSAGES[locale].nav.feed).closest("a");
+        expect(messagesLink?.className).toContain("xl:hidden");
+        expect(feedLink?.className).not.toContain("xl:hidden");
+      } finally {
+        __resetTestPathname();
+      }
+    });
+
+    it(`Messages nav row does NOT hide at xl: on a non-Feed page (D-078 regression guard) in ${locale}`, () => {
+      // D-077 originally hid Messages at `xl:` on every page — the Feed
+      // Messenger rail it was deferring to only exists on the Feed page, so
+      // this left Members/Channels/Events/Messages-itself with no way to
+      // reach /messages at that width. Simulate being on /members.
+      __setTestPathname("/members");
+      try {
+        const { getByText } = render(<Shell locale={locale}><Sidebar expanded /></Shell>);
+        const messagesLink = getByText(MESSAGES[locale].nav.messages).closest("a");
+        expect(messagesLink?.className).not.toContain("xl:hidden");
+      } finally {
+        __resetTestPathname();
+      }
     });
 
     it(`two Sidebars (rail + drawer) on one client do not collide on the realtime channel in ${locale}`, () => {
