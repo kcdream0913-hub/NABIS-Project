@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSafeNextPath } from "@/lib/authRouting";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -87,8 +88,8 @@ export default function LoginPage() {
               {t("forgotPassword")}
             </Link>
           </span>
-          <input
-            type="password"
+          <PasswordInput
+            autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import PasswordInput from "@/components/PasswordInput";
 
 // Landing page for the password-recovery flow. /auth/callback routes a
 // type=recovery code exchange here instead of home — see that route's
@@ -58,8 +59,7 @@ export default function UpdatePasswordPage() {
       <form onSubmit={submit} className="space-y-3">
         <label className="block text-sm">
           <span className="eyebrow text-ink-soft">{t("newPassword")}</span>
-          <input
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             required
             value={password}
@@ -70,8 +70,7 @@ export default function UpdatePasswordPage() {
         </label>
         <label className="block text-sm">
           <span className="eyebrow text-ink-soft">{t("confirmPassword")}</span>
-          <input
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             required
             value={confirm}

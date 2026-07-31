@@ -417,6 +417,8 @@
     "or": "वा",
     "emailOrPhone": "इमेल वा फोन",
     "password": "पासवर्ड",
+    "showPassword": "पासवर्ड देखाउनुहोस्",
+    "hidePassword": "पासवर्ड लुकाउनुहोस्",
     "creatingAccount": "खाता बन्दैछ…",
     "createAccount": "खाता बनाउनुहोस्",
     "loggingIn": "लगइन हुँदैछ…",

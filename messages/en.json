@@ -417,6 +417,8 @@
     "or": "or",
     "emailOrPhone": "Email or phone",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "creatingAccount": "Creating account…",
     "createAccount": "Create account",
     "loggingIn": "Logging in…",
