@@ -42,31 +42,33 @@ export function toNepaliDigits(value: number | string): string {
 }
 
 /**
- * Run `fn` with Date's LOCAL calendar getters (getFullYear/getMonth/getDate)
- * temporarily routed to their UTC equivalents, restored in a finally.
+ * Run `fn` with the process timezone forced to UTC, restored in a finally.
  *
- * Why this is necessary: bikram-sambat-js builds internal reference dates by
- * UTC-parsing "YYYY-MM-DD" strings (`new Date(str)`) and then reads their LOCAL
- * `.getDate()`, so its AD→BS result is only correct when the JS runtime is UTC.
- * Verified wrong by one day in BOTH America/New_York AND Asia/Kathmandu — the two
- * timezones this app actually runs in — e.g. Nepali New Year 2026-04-14 converts
- * to Baishakh 2 instead of Baishakh 1. A browser can't set its timezone, so we
- * neutralise the locality for the duration of the conversion instead. The call is
- * synchronous and never awaits, and JS is single-threaded, so nothing else
- * observes the swap. Verified identical across UTC / New_York / Kathmandu / LA.
+ * Why this is necessary: bikram-sambat-js's toBS()/toAD() build intermediate
+ * dates with the LOCAL-time multi-arg constructor `new Date(y, m, d)` and mutate
+ * them with `adDate.setDate(adDate.getDate() + n)`, so the conversion only lands
+ * correctly when local time equals UTC — verified off by one/two days in every
+ * non-UTC zone (e.g. Nepali New Year 2026-04-14 → Baishakh 2 instead of 1). We
+ * force a single frame by overriding `process.env.TZ` for the duration of the
+ * (synchronous, non-awaiting) call instead of patching Date methods: patching
+ * only the getters left the constructor and setDate in local time, which netted
+ * to zero for western offsets but +2 for eastern ones (Kathmandu, Kolkata) — the
+ * zones this feature is FOR. Making local === UTC removes the frame entirely, so
+ * there is no mismatch to get wrong. Verified identical + correct across UTC /
+ * New_York / Kathmandu / Kolkata / Los_Angeles / Kiritimati (see the tests).
+ *
+ * NOTE: this is a Node-frame mechanism — `process.env.TZ` has no effect on a
+ * browser's Date. See the browser caveat raised on this branch before relying on
+ * this for a client-rendered "today".
  */
 function inUtcFrame<T>(fn: () => T): T {
-  const proto = Date.prototype;
-  const saved = { getFullYear: proto.getFullYear, getMonth: proto.getMonth, getDate: proto.getDate };
-  proto.getFullYear = proto.getUTCFullYear;
-  proto.getMonth = proto.getUTCMonth;
-  proto.getDate = proto.getUTCDate;
+  const saved = process.env.TZ;
+  process.env.TZ = "UTC";
   try {
     return fn();
   } finally {
-    proto.getFullYear = saved.getFullYear;
-    proto.getMonth = saved.getMonth;
-    proto.getDate = saved.getDate;
+    if (saved === undefined) delete process.env.TZ;
+    else process.env.TZ = saved;
   }
 }
 
