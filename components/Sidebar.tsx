@@ -18,6 +18,13 @@ type Item = { href: string; icon: NavIconName; labelKey: string };
 // Grouped backbone. Community = the daily social surfaces the founding cohort
 // lives in; Tools = utilities + the register-business action. Messages is its
 // own destination (chat icon). Sector channels stay in Community as the backbone.
+//
+// D-077: the Messages row hides at `xl:` and up — exactly the breakpoint where
+// the Feed's own Messenger rail (D-076) is showing the same destination with
+// live previews and unread state, so the nav wouldn't otherwise offer two
+// entry points to the identical place. It stays in the nav below `xl:` and on
+// every OTHER page at any width — the Feed rail is Feed-only (KC's own D-076
+// scope decision), so nav is still the ONLY way to reach /messages there.
 const GROUPS: { groupKey: string; items: Item[] }[] = [
   { groupKey: "groupCommunity", items: [
     { href: "/", icon: "feed", labelKey: "feed" },
@@ -175,7 +182,22 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
     router.refresh();
   }
 
-  const Row = ({ href, icon, label, badge }: { href: string; icon: NavIconName; label: string; badge?: string | null }) => {
+  const Row = ({
+    href,
+    icon,
+    label,
+    badge,
+    extraClassName,
+  }: {
+    href: string;
+    icon: NavIconName;
+    label: string;
+    badge?: string | null;
+    // D-077: currently only "xl:hidden", for the Messages row once the Feed
+    // rail covers the same destination at that breakpoint. Optional so every
+    // other row's className stays byte-identical to before.
+    extraClassName?: string;
+  }) => {
     const active = pathname === href;
     const Icon = NAV_ICON[icon];
     return (
@@ -183,7 +205,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         aria-current={active ? "page" : undefined}
-        className={`flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors
+        className={`flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors ${extraClassName ?? ""}
           ${active ? "bg-active-soft text-active" : "text-ink-soft hover:bg-surface-2 hover:text-ink"}`}
       >
         <span className="relative shrink-0">
@@ -256,7 +278,16 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
         {GROUPS.map((g) => (
           <div key={g.groupKey} className="space-y-0.5">
             <p className={`px-2.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink-soft/70 ${LABEL}`}>{t(g.groupKey)}</p>
-            {g.items.map((it) => <Row key={it.href} href={it.href} icon={it.icon} label={t(it.labelKey)} badge={it.href === "/messages" ? badgeLabel(dmCount) : undefined} />)}
+            {g.items.map((it) => (
+              <Row
+                key={it.href}
+                href={it.href}
+                icon={it.icon}
+                label={t(it.labelKey)}
+                badge={it.href === "/messages" ? badgeLabel(dmCount) : undefined}
+                extraClassName={it.href === "/messages" ? "xl:hidden" : undefined}
+              />
+            ))}
           </div>
         ))}
         {isAdmin && (

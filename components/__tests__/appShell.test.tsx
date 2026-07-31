@@ -72,6 +72,17 @@ describe("app shell renders without a client-side exception", () => {
       expect(() => render(<Shell locale={locale}><Sidebar expanded /></Shell>)).not.toThrow();
     });
 
+    it(`Messages nav row hides at xl: (D-077, where the Feed rail covers it) but Feed's own row does not, in ${locale}`, () => {
+      // Matched by visible label text, not href — the i18n Link prefixes hrefs
+      // with the locale (e.g. /ne/messages), so an exact-href match would be
+      // locale-fragile in a way the rendered label text isn't.
+      const { getByText } = render(<Shell locale={locale}><Sidebar expanded /></Shell>);
+      const messagesLink = getByText(MESSAGES[locale].nav.messages).closest("a");
+      const feedLink = getByText(MESSAGES[locale].nav.feed).closest("a");
+      expect(messagesLink?.className).toContain("xl:hidden");
+      expect(feedLink?.className).not.toContain("xl:hidden");
+    });
+
     it(`two Sidebars (rail + drawer) on one client do not collide on the realtime channel in ${locale}`, () => {
       // The production crash: both Sidebars subscribed the same-named channel on
       // the singleton browser client, so the second mount's `.on()` threw. Mount
