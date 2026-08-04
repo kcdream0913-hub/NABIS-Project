@@ -1011,6 +1011,8 @@
     "placeholder": "What's wrong? (optional)",
     "cancel": "Cancel",
     "submit": "Submit report",
+    "submitting": "Sending…",
+    "error": "Couldn't send your report. Please try again.",
     "report": "Report"
   },
   "business": {

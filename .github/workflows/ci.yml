@@ -93,3 +93,44 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  policy-lint:
+    name: Column-blind write lint (RLS)
+    runs-on: ubuntu-latest
+    # DORMANT until the E2E baseline lands (BL-E2E-SPLIT-01 / D-085). The lint must run against a
+    # PROD-EQUIVALENT schema; a local `supabase db start` only reproduces prod once the baseline dump
+    # is committed. Against today's incomplete migrations it would give false results, so the `gate`
+    # step below activates the real work only once the baseline file exists — not before.
+    # (`hashFiles` can't gate at the JOB level — it evaluates before checkout — so the gate is a
+    # step that sets an output.) NOTE: this harness is UNTESTED until it activates (GitHub Actions
+    # can't run in the dev sandbox); the lint + positive-control SQL are proven against prod (D-088).
+    steps:
+      - uses: actions/checkout@v4
+      - id: gate
+        run: |
+          if [ -f supabase/migrations/00000000000001_baseline_2026_08_04.sql ]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "baseline not committed yet — policy-lint is dormant (BL-E2E-SPLIT-01 / D-085)"
+          fi
+      - if: steps.gate.outputs.active == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - if: steps.gate.outputs.active == 'true'
+        name: Start a local Postgres reproduced from the baseline
+        run: supabase db start
+      - if: steps.gate.outputs.active == 'true'
+        name: Positive control — the lint MUST detect a known-bad table, or the lint is broken (D-058)
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/lint/column_blind_writes.control.sql
+      - if: steps.gate.outputs.active == 'true'
+        name: Lint — fail the job if any table has a column-blind write policy
+        run: |
+          rows=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -t -A -f supabase/lint/column_blind_writes.sql)
+          if [ -n "$rows" ]; then
+            echo "::error::column-blind write policy found — guard it (BEFORE INSERT trigger / drop the policy) or allow-list it with a reason in supabase/lint/column_blind_writes.sql:"
+            echo "$rows"
+            exit 1
+          fi
+          echo "column-blind write lint: clean (0 rows)"

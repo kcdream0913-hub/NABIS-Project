@@ -18,24 +18,42 @@ export default function ReportButton({
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from("reports").insert({
+    if (!user) {
+      setError(t("error"));
+      setBusy(false);
+      return;
+    }
+    // Capture the insert result — swallowing it (the D-084 avatar-delete bug) would show "sent"
+    // for a report that never landed. Only log + show success once the row is actually written.
+    const { error: insErr } = await supabase.from("reports").insert({
       target_type: targetType,
       target_id: targetId,
       reporter_id: user.id,
       reason: reason.trim() || null,
     });
+    if (insErr) {
+      setError(t("error"));
+      setBusy(false);
+      return;
+    }
     await logAction("report_submitted", targetType, targetId);
     setSent(true);
     setTimeout(() => {
       setOpen(false);
       setSent(false);
       setReason("");
+      setError(null);
+      setBusy(false);
     }, 1200);
   }
 
@@ -59,10 +77,19 @@ export default function ReportButton({
               <button onClick={() => setOpen(false)} className="text-ink-soft hover:underline">
                 {t("cancel")}
               </button>
-              <button onClick={submit} className="font-medium text-accent hover:underline">
-                {t("submit")}
+              <button
+                onClick={submit}
+                disabled={busy}
+                className="font-medium text-accent hover:underline disabled:opacity-60"
+              >
+                {busy ? t("submitting") : t("submit")}
               </button>
             </div>
+            {error && (
+              <p role="alert" className="mt-1.5 text-accent">
+                {error}
+              </p>
+            )}
           </>
         )}
       </div>
@@ -73,6 +100,8 @@ export default function ReportButton({
     <button
       onClick={(e) => {
         e.stopPropagation();
+        setError(null);
+        setBusy(false);
         setOpen(true);
       }}
       aria-label={t("report")}
