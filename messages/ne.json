@@ -1249,6 +1249,8 @@
     "commentsSection": "टिप्पणीहरू",
     "commentPlaceholder": "टिप्पणी लेख्नुहोस्…",
     "commentSubmit": "टिप्पणी",
+    "verifyToComment": "टिप्पणी गर्न आफ्नो प्रोफाइल प्रमाणित गर्नुहोस्।",
+    "verifyNow": "अहिले प्रमाणित गर्नुहोस्",
     "replyPlaceholder": "जवाफ लेख्नुहोस्…",
     "noComments": "अहिलेसम्म कुनै टिप्पणी छैन। कुराकानी सुरु गर्नुहोस्।",
     "showReplies": "{count} जवाफहरू हेर्नुहोस्",

@@ -40,6 +40,12 @@ export default function CommentThread({
 
   const [rows, setRows] = useState<Row[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  // Verification gate — mirrors the post composer (page.tsx): commenting/replying is a
+  // post_comments INSERT, which BL-TRUST-01 gates server-side to verified authors. Without
+  // this the box shows but the insert 403s silently. Same `verified` signal the composer
+  // uses; the RLS admin branch (verified OR admin) is a DB-layer safety net, so the sole
+  // admin (KC) sees "verify to comment" here exactly as they see "verify to post" today.
+  const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
   const [visibleTop, setVisibleTop] = useState(TOP_PAGE);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -59,7 +65,13 @@ export default function CommentThread({
   }, [postId, supabase, onCountChange]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? null;
+      setUserId(uid);
+      if (!uid) return;
+      const { data: prof } = await supabase.from("profiles").select("verification_status").eq("id", uid).single();
+      setIsVerified(prof?.verification_status === "verified");
+    });
     setNow(Date.now());
     load();
     // realtime only while open (§4.2)
@@ -119,7 +131,16 @@ export default function CommentThread({
 
   return (
     <section className="border-t border-border px-4 py-3" aria-label={t("commentsSection")}>
-      <Composer onSubmit={(b) => submit(b, null)} inputRef={composerRef} placeholder={t("commentPlaceholder")} submitLabel={t("commentSubmit")} />
+      {isVerified ? (
+        <Composer onSubmit={(b) => submit(b, null)} inputRef={composerRef} placeholder={t("commentPlaceholder")} submitLabel={t("commentSubmit")} />
+      ) : (
+        <div className="rounded-lg border border-dashed border-border bg-bg p-3 text-sm text-ink-soft">
+          {t("verifyToComment")}{" "}
+          <a href="/profile/verify" className="font-medium text-primary hover:text-primary-pressed">
+            {t("verifyNow")}
+          </a>
+        </div>
+      )}
 
       {loading ? (
         <p className="mt-3 text-sm text-ink-soft">{t("loading")}</p>
@@ -142,6 +163,7 @@ export default function CommentThread({
                   now={now}
                   locale={locale}
                   canReply
+                  isVerified={isVerified}
                   onReply={(body) => submit(body, resolveParentId(c))}
                   onSaveEdit={(body) => saveEdit(c.id, body)}
                   onDelete={() => softDelete(c.id)}
@@ -168,6 +190,7 @@ export default function CommentThread({
                               now={now}
                               locale={locale}
                               canReply={false}
+                              isVerified={isVerified}
                               onSaveEdit={(body) => saveEdit(r.id, body)}
                               onDelete={() => softDelete(r.id)}
                             />
@@ -205,6 +228,7 @@ function CommentRow({
   now,
   locale,
   canReply,
+  isVerified,
   onReply,
   onSaveEdit,
   onDelete,
@@ -216,6 +240,7 @@ function CommentRow({
   now: number;
   locale: string;
   canReply: boolean;
+  isVerified: boolean;
   onReply?: (body: string) => void;
   onSaveEdit: (body: string) => void;
   onDelete: () => void;
@@ -237,7 +262,7 @@ function CommentRow({
   const canEdit = userId ? canEditComment(row, userId, now) : false;
   const canDelete = userId ? canDeleteOwnComment(row, userId) : false;
   const canRemove = userId ? canModerateComment(row, postAuthorId, userId) : false;
-  const replyOk = canReply && canReplyTo(row);
+  const replyOk = canReply && canReplyTo(row) && isVerified;
 
   return (
     <div className="flex items-start gap-2.5">

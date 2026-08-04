@@ -1249,6 +1249,8 @@
     "commentsSection": "Comments",
     "commentPlaceholder": "Write a comment…",
     "commentSubmit": "Comment",
+    "verifyToComment": "Verify your profile to comment.",
+    "verifyNow": "Verify now",
     "replyPlaceholder": "Write a reply…",
     "noComments": "No comments yet. Start the conversation.",
     "showReplies": "Show {count} replies",
