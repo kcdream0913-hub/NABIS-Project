@@ -14,7 +14,7 @@ import {
   LIGHT_SIGNALS,
   type LightSignal,
 } from "@/lib/verificationDecision";
-import { BarChart3, Building2, Flag, UserCircle, UserCheck } from "lucide-react";
+import { BarChart3, Building2, Flag, MessageSquare, UserCircle, UserCheck } from "lucide-react";
 
 type PendingBusiness = {
   id: string;
@@ -67,6 +67,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
+  // BL-FEEDBACK-02: a small, isolated new-feedback count for the nav badge — deliberately NOT
+  // folded into loadAll (which owns the KYC/report queue) so this can never break that flow.
+  const [feedbackNew, setFeedbackNew] = useState(0);
 
   const decisionFor = (id: string, inferredTrack: PolicyTrack | null): Decision =>
     decisions[id] ?? {
@@ -147,6 +150,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from("feedback")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new");
+      if (!cancelled) setFeedbackNew(count ?? 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -407,6 +425,17 @@ export default function AdminDashboard() {
             className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg"
           >
             <UserCircle size={13} /> {t("accountsNav")}
+          </Link>
+          <Link
+            href="/admin/feedback"
+            className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg"
+          >
+            <MessageSquare size={13} /> {t("feedbackNav")}
+            {feedbackNew > 0 && (
+              <span className="ml-0.5 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-on-primary">
+                {feedbackNew}
+              </span>
+            )}
           </Link>
         </div>
       </div>
