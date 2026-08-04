@@ -1,6 +1,6 @@
 # BASELINE_FINGERPRINT — the strong equivalence check for the E2E restore (D-085)
 
-Counts (35 tables, 95+10 policies, 7+23 functions, 15 triggers, 3 buckets) are a NECESSARY but
+Counts (36 tables, 98+10 policies, 7+24 functions, 16 triggers, 3 buckets) are a NECESSARY but
 WEAK check: all seven pass if `posts_select` restores as `using (false)` instead of `using
 (true)`, if a `with check` is dropped, a generated column comes back plain, a `security definer`
 function comes back `invoker`, or a CHECK vanishes. That is exactly the silent-drift this task
@@ -11,21 +11,29 @@ Run the query below on `sangamline-e2e` after the restore (files `00000000000001
 `00000000000002`, and the pre-restore privilege trap — see the runbook). **Nine matches = the
 schema is the same schema.**
 
-## Expected (captured from prod `dhnggnxwjgqvghbxelvw` 2026-08-04; the coding session
-## independently re-ran this query the same day and confirmed all nine match — this is a
-## verified value, not a transcribed one)
+## ⚠ THESE HASHES CHANGE ON EVERY APPLIED MIGRATION — re-capture + commit in the SAME change
 
-| part | expected md5 |
-|---|---|
-| `buckets` | `61d0c44ed7fb18045b9a1c128411f012` |
-| `columns` | `7d06e9de3c4ad8ff3eee25c4dfb4032e` |
-| `constraints` | `00a17f24f3cd178014909178628b01e5` |
-| `enums` | `d41d8cd98f00b204e9800998ecf8427e` |
-| `functions` | `ace4b454ea861a487ee368fc118d466b` |
-| `indexes` | `8fd939b70d6fee2592d634929aeda682` |
-| `policies` | `433f6a306216051546bf3d79a3f68a90` |
-| `rls_flags` | `bc259b4aeade88d60d73e25cd4e227cd` |
-| `triggers` | `cddd0f03218ec669e014b725e6447411` |
+**Any** migration applied to prod invalidates the hashes below; leave them stale and the E2E
+restore check fails for a bookkeeping reason and reads as a broken restore. So whenever a migration
+is applied to prod, re-run the query (below) and commit the new hashes in the same change. (This
+bit once already: `bl_feedback_02_pilot_feedback_capture`, applied 2026-08-04, bumped 7 of 9 — a
+table-only change, so `buckets` + `enums` did NOT move, which is the fingerprint checking itself.)
+
+## Expected (captured from prod `dhnggnxwjgqvghbxelvw` 2026-08-04, AFTER
+## `bl_feedback_02_pilot_feedback_capture`; the coding session independently re-ran this query the
+## same day and confirmed all nine — a verified value, not a transcribed one)
+
+| part | expected md5 | |
+|---|---|---|
+| `buckets` | `61d0c44ed7fb18045b9a1c128411f012` | unchanged by bl_feedback_02 |
+| `columns` | `0d0e8bdce70928d20a773977aee730c6` | |
+| `constraints` | `dd98727909c2de720cc60a5337845d40` | |
+| `enums` | `d41d8cd98f00b204e9800998ecf8427e` | unchanged (md5 of '') |
+| `functions` | `56036b423f5a1e24adf46119175b2376` | |
+| `indexes` | `1da83391a20b6415f1827829412a345e` | |
+| `policies` | `9aee018cf3998b42e3448df4aa7cbe85` | |
+| `rls_flags` | `5e6823fe1606b72e640bec0c83cb0f18` | |
+| `triggers` | `fd70065a3d626a97864dda2c2d14256b` | |
 
 **`enums` = `d41d8cd9…` is md5 of the empty string** — there are NO custom enum types in `public`
 or `private`. Every constrained field is `text` + a CHECK, which is why `body_lang='xx'` raised

@@ -32,6 +32,12 @@ supabase db dump -f supabase/migrations/00000000000001_baseline_2026_08_04.sql
 #   supabase db dump --db-url "postgresql://…@…:5432/postgres" -f supabase/migrations/00000000000001_baseline_2026_08_04.sql
 ```
 
+> 🔴 **From the moment you take this dump until the E2E restore is verified, apply NOTHING to
+> prod.** Any migration applied in that window bumps the schema, so the committed baseline +
+> `BASELINE_FINGERPRINT.md` no longer describe what prod became — the exact
+> `avatars_select_own`-style drift the baseline exists to freeze out (D-084/D-087). If a migration
+> truly must ship in that window, re-take the dump AND re-capture the fingerprint after it.
+
 ### Step 3b — prove the dump before trusting it
 
 `private` is NOT a managed schema, so it should come through — but prove it. Run against the dump:
