@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES } from "@/lib/countries";
+import AvatarUpload from "@/components/AvatarUpload";
 import { useSectors } from "@/lib/useSectors";
 import {
   LOOKING_FOR,
@@ -34,12 +35,14 @@ export default function EditBusinessPage() {
   // Guided-answer question labels live under the `guided` namespace (GuidedBuilder
   // uses it too) — NOT businessNew, where these four keys don't exist (bl-i18n-01).
   const tg = useTranslations("guided");
+  const ta = useTranslations("avatar");
   const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
   const id = String(useParams().id);
 
   const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [country, setCountry] = useState("United States");
   const [city, setCity] = useState("");
@@ -74,6 +77,7 @@ export default function EditBusinessPage() {
         return;
       }
       const cred = (b.credentials ?? {}) as { looking_for?: unknown };
+      setLogoUrl(b.logo_url ?? null);
       setName(b.name ?? "");
       setCountry(b.country_of_registration ?? "United States");
       setCity(b.city ?? "");
@@ -145,6 +149,7 @@ export default function EditBusinessPage() {
       <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{te("title")}</h1>
 
       <div className="mt-4 space-y-3 rounded-lg border border-border bg-surface p-4">
+        <AvatarUpload kind="business" businessId={id} currentUrl={logoUrl} name={name} label={ta("logoLabel")} shape="rounded" onChange={setLogoUrl} />
         <label className="block text-sm">
           <span className={LABEL}>{t("businessName")}</span>
           <input value={name} onChange={(e) => setName(e.target.value)} className={INPUT} />

@@ -10,6 +10,7 @@ import { markOnboarded } from "@/lib/onboarding";
 import { trustTier } from "@/lib/trust";
 import { TOURISM_SECTOR } from "@/lib/offerings";
 import Avatar from "@/components/Avatar";
+import AvatarUpload from "@/components/AvatarUpload";
 import TrustBadge from "@/components/TrustBadge";
 
 const STEP_COUNT = 3;
@@ -21,12 +22,15 @@ type Suggestion = { key: string; kind: "member" | "business"; id: string; name: 
 export default function WelcomePage() {
   const t = useTranslations("welcome");
   const tCommon = useTranslations("common");
+  const tAvatar = useTranslations("avatar");
   const sectors = useSectors();
   const supabase = createClient();
   const router = useRouter();
 
   const [step, setStep] = useState(1);
   const [userId, setUserId] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [bioNe, setBioNe] = useState("");
   const [city, setCity] = useState("");
@@ -40,8 +44,9 @@ export default function WelcomePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       setUserId(user.id);
-      const { data } = await supabase.from("profiles").select("bio, bio_ne, city, sectors").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("name, bio, bio_ne, city, sectors, avatar_url").eq("id", user.id).maybeSingle();
       if (data) {
+        setUserName(data.name ?? null); setAvatarUrl(data.avatar_url ?? null);
         setBio(data.bio ?? ""); setBioNe(data.bio_ne ?? ""); setCity(data.city ?? "");
         setSelected((data.sectors as string[]) ?? []);
       }
@@ -131,6 +136,9 @@ export default function WelcomePage() {
               <h2 className="text-[15px] font-semibold text-ink">{t("s1Title")}</h2>
               <p className="mt-0.5 text-[13px] text-ink-soft">{t("s1Subtitle")}</p>
             </div>
+            {userId && (
+              <AvatarUpload kind="user" currentUrl={avatarUrl} name={userName} label={tAvatar("photoLabel")} onChange={setAvatarUrl} />
+            )}
             <label className="block text-sm">
               <span className="eyebrow text-ink-soft">{t("bioEn")}</span>
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary" />

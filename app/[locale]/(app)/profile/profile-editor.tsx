@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { ShieldCheck, ShieldQuestion } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSectors } from "@/lib/useSectors";
+import AvatarUpload from "@/components/AvatarUpload";
 
 type Profile = {
   id: string;
@@ -15,6 +16,7 @@ type Profile = {
   city: string | null;
   country: "us" | "nepal" | null;
   sectors: string[] | null;
+  avatar_url: string | null;
   verification_status: "unverified" | "verified";
 } | null;
 
@@ -28,10 +30,12 @@ export default function ProfileEditor({
   profile: Profile;
 }) {
   const t = useTranslations("profile");
+  const tAvatar = useTranslations("avatar");
   const sectors = useSectors();
   const router = useRouter();
   const supabase = createClient();
 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url ?? null);
   const [name, setName] = useState(profile?.name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [bioNe, setBioNe] = useState(profile?.bio_ne ?? "");
@@ -105,6 +109,9 @@ export default function ProfileEditor({
 
       <section className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold">{t("profileHeading")}</h2>
+        <div className="mt-3">
+          <AvatarUpload kind="user" currentUrl={avatarUrl} name={name} label={tAvatar("photoLabel")} onChange={setAvatarUrl} />
+        </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
             <span className="eyebrow text-ink-soft">{t("name")}</span>
