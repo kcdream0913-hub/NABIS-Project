@@ -71,6 +71,22 @@ select set_config('blf.t8_inwindow',
   (select count(*) from public.feedback where user_id='bba57fb8-29c6-4081-bc63-9899f8c30132' and created_at >= now() - interval '1 hour')::text, true);
 select set_config('blf.a3_stranger_sees',
   (select count(*) from public.feedback where id='00000000-0000-4000-8000-00000000fb01')::text, true);
+-- length-bound proof (hub round 3): text columns carry CHECK caps. A realistic ~253-char in-app UA
+-- + ne + a 40-char SHA inserts AND reads back full; a 2 MB user_agent raises 23514 and adds NO row.
+-- D-058: assert the SURVIVING row (count), not the absent one — U now has a4 + attack + this = 3.
+insert into public.feedback (id, user_id, kind, body, user_agent, locale, app_version)
+values ('00000000-0000-4000-8000-00000000fb03','bba57fb8-29c6-4081-bc63-9899f8c30132','idea','realistic long-UA insert control',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/456.0.0.34.109;FBBV/577645170;FBDV/iPhone14,3;FBMD/iPhone;FBSN/iOS;FBSV/17.4.1;FBSS/3;FBID/phone;FBLC/en_US;FBOP/5;FBRV/580524205]',
+  'ne','1234567890abcdef1234567890abcdef12345678');
+select set_config('blf.t9_ua_len',
+  (select char_length(user_agent)::text from public.feedback where id='00000000-0000-4000-8000-00000000fb03'), true);
+do $$ begin
+  insert into public.feedback (user_id, kind, body, user_agent)
+  values ('bba57fb8-29c6-4081-bc63-9899f8c30132','bug','2MB user_agent abuse', repeat('x', 2*1024*1024));
+  perform set_config('blf.t9_abuse','inserted',true);                                  -- BAD if reached
+exception when others then perform set_config('blf.t9_abuse','blocked:'||sqlstate,true); end $$;  -- 23514 = CHECK
+select set_config('blf.t9_count',
+  (select count(*) from public.feedback where user_id='bba57fb8-29c6-4081-bc63-9899f8c30132')::text, true);
 reset role;
 
 -- ── as K (admin): a5 sees all + updates status ───────────────────────────────────────────────
@@ -115,6 +131,10 @@ select * from (values
   (8,'rate limiter sees ALL of a member''s rows (none backdated out of window)',
      current_setting('blf.t8_inwindow')::int = current_setting('blf.t8_total')::int
        and current_setting('blf.t8_total')::int >= 2,
-     'inwindow='||current_setting('blf.t8_inwindow')||' total='||current_setting('blf.t8_total')||' (want equal, >=2)')
+     'inwindow='||current_setting('blf.t8_inwindow')||' total='||current_setting('blf.t8_total')||' (want equal, >=2)'),
+  (9,'realistic long UA inserts + reads back; 2MB UA rejected 23514, count unchanged',
+     current_setting('blf.t9_ua_len')::int >= 200 and current_setting('blf.t9_abuse') like 'blocked%'
+       and current_setting('blf.t9_count')::int = 3,
+     'ua_len='||current_setting('blf.t9_ua_len')||' abuse='||current_setting('blf.t9_abuse')||' count='||current_setting('blf.t9_count')||' (want >=200 / blocked / 3)')
 ) as t(n, label, pass, detail)
 order by n;

@@ -36,7 +36,10 @@
 --   CANNOT be forced — there is no server-side source of truth (User-Agent is client-supplied at
 --   the HTTP layer; a DEFINER RPC would still just RECEIVE it from the caller). They are PROVENANCE
 --   HINTS, not evidence. The /admin/feedback UI says so next to app_version, so nobody triages on
---   the assumption a SHA there is real.
+--   the assumption a SHA there is real. But "unforceable VALUE" is NOT "unbounded LENGTH" — you
+--   cannot control what these columns contain, you CAN control HOW MUCH, so all four carry CHECK
+--   length caps (see the table) and a direct insert cannot fill this append-only table with
+--   megabytes (hub round 3, 2026-08-04 — the same class, quantifier changed from what to how much).
 --
 -- COMMIT this file; DO NOT APPLY it. The hub verifies BL-FEEDBACK-02.verify.sql in a
 -- begin/rollback against prod, then applies.
@@ -46,10 +49,16 @@ create table public.feedback (
   user_id      uuid references auth.users(id) on delete set null,
   kind         text not null check (kind in ('bug','idea','confusing','other')),
   body         text not null check (char_length(btrim(body)) between 10 and 4000),
-  page_path    text,
-  locale       text,
-  user_agent   text,
-  app_version  text,
+  -- Length caps on every text column: the server action's slice() bounds these only on ITS path,
+  -- and a direct PostgREST insert can dump megabytes (measured: one 3.65 MB row; ×5/hr = 428 MB/day
+  -- into an append-only table with no DELETE policy fills a 500 MB free project in a day). The rate
+  -- limit caps ROWS, not BYTES — so the byte bound has to live here. Sizes leave realistic headroom:
+  -- page_path 512 (action slices to 300), locale 32 (en/ne), app_version 64 (a 40-char SHA),
+  -- user_agent 1024 (longest realistic in-app UA is ~234 chars).
+  page_path    text check (char_length(page_path)   <= 512),
+  locale       text check (char_length(locale)      <= 32),
+  user_agent   text check (char_length(user_agent)  <= 1024),
+  app_version  text check (char_length(app_version) <= 64),
   status       text not null default 'new' check (status in ('new','triaged','closed')),
   created_at   timestamptz not null default now()
 );
