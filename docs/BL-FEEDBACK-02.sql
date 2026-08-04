@@ -41,8 +41,11 @@
 --   length caps (see the table) and a direct insert cannot fill this append-only table with
 --   megabytes (hub round 3, 2026-08-04 — the same class, quantifier changed from what to how much).
 --
--- COMMIT this file; DO NOT APPLY it. The hub verifies BL-FEEDBACK-02.verify.sql in a
--- begin/rollback against prod, then applies.
+-- ✅ APPLIED TO PROD 2026-08-04 by the hub as migration `bl_feedback_02_pilot_feedback_capture`
+--   (verified 9/9 in begin/rollback FIRST — RLS + the intake trigger + the four length caps).
+--   Do NOT re-apply: the version is recorded in supabase_migrations. This file stays the canonical,
+--   self-documenting source. The apply bumped 7 of 9 BASELINE_FINGERPRINT hashes (a table-only
+--   change leaves buckets + enums untouched); the fingerprint was re-captured + committed with it.
 
 create table public.feedback (
   id           uuid primary key default gen_random_uuid(),
