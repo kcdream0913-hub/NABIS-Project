@@ -88,9 +88,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Best-effort: remove the previous object, only if it was one of OURS (never a foreign URL).
+  // LOG a failure, never swallow it (D-084): a silent remove() no-op is exactly what leaked
+  // orphans in BL-AVATAR-01. Do NOT fail the request — the column is already updated, so the
+  // photo IS replaced; a 500 here would report an error for a change that actually succeeded.
   const oldPath = avatarPathFromPublicUrl(oldUrl);
   if (oldPath && oldPath !== path) {
-    await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+    const { error: rmErr } = await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+    if (rmErr) console.error("avatar object delete failed (replace)", { path: oldPath, rmErr });
   }
 
   return NextResponse.json({ url: publicUrl });
@@ -130,8 +134,15 @@ export async function DELETE(request: NextRequest) {
   const { error: colErr } = await supabase.from(table).update({ [col]: null }).eq("id", rowId);
   if (colErr) return NextResponse.json({ error: "clear-failed" }, { status: 500 });
 
+  // LOG a failed object delete, never swallow it (D-084) — a silent no-op is what made "Remove
+  // photo" leave the object live at a public URL. Do NOT fail the request: the column is already
+  // cleared, so the photo is gone from the profile; a 500 would leave the column null while the
+  // UI reports an error, which is worse.
   const oldPath = avatarPathFromPublicUrl(oldUrl);
-  if (oldPath) await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+  if (oldPath) {
+    const { error: rmErr } = await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+    if (rmErr) console.error("avatar object delete failed (remove)", { path: oldPath, rmErr });
+  }
 
   return NextResponse.json({ ok: true });
 }

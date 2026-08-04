@@ -72,8 +72,12 @@ grant  execute on function private.can_write_avatar(text) to authenticated;
 --    needed for rendering, and a broad `for select using (bucket_id='avatars')` would let any
 --    authenticated client LIST every object key — enumerating user/business ids, including
 --    those of PRIVATE profiles hidden by can_view_profile (advisor
---    public_bucket_allows_listing). The app never lists avatars. (An owner-scoped SELECT can
---    be added later if a list-own-objects need ever arises.)
+--    public_bucket_allows_listing).
+--    ⚠ SUPERSEDED by BL-AVATAR-02 / D-084: dropping SELECT ENTIRELY silently BROKE DELETION —
+--    the Storage API resolves an object via SELECT before remove(), so the owner saw 0 rows and
+--    remove() no-op'd. BL-AVATAR-02 RESTORED a SCOPED owner-only SELECT (bucket_id='avatars' and
+--    private.can_write_avatar(name)). "never lists" was right for READS; the API DOES need
+--    SELECT to DELETE.
 create policy "avatars_insert_own" on storage.objects
   for insert to authenticated
   with check (bucket_id = 'avatars' and private.can_write_avatar(name));
