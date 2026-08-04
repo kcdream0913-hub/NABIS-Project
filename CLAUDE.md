@@ -1428,6 +1428,22 @@ of bug ships twice.
   mark someone verified, set `us_verification` / `us_verified_at` (or the `np_`
   equivalents); the aggregate + `bridge` recompute automatically (see the 2026-07-23
   ground-truth note). This is exactly how the hub seeded A/B/C for the E2E suite.
+- **Domain / email ops (`sangamline.com`) — the SPF `-all` trap; record BEFORE it bites
+  (BL-FEEDBACK/EMAIL runbook, 2026-08-04).** Human mail is planned on Zoho (Forever Free — 5
+  users, webmail/app only, NO IMAP unless Mail Lite ~$1/user/mo); creating the
+  **`support@sangamline.com`** mailbox is what lets support stop routing to Gmail and closes the
+  D-081 open item (do NOT publish `support@` until the mailbox actually receives mail). **The
+  load-bearing gotcha:** `sangamline.com` must carry **exactly ONE** `v=spf1` TXT record (two is
+  a permanent error, never a merge — EDIT the one, never add a second). Its `-all` means "reject
+  anything not listed," so the moment the app's transactional email is wired (**Resend**, the
+  D-071 open item — password resets / notifications), that sender's include MUST be added to the
+  SAME record: `v=spf1 include:zohomail.com include:_spf.resend.com -all`. Forget it and EVERY
+  app auth email hard-fails **silently** at the recipient's server. Two more: (1) send app
+  transactional mail from a **separate sender / subdomain** (`mail.sangamline.com` / `noreply@`),
+  never the human Zoho mailbox (rate limits + bounce-reputation bleed); (2) keep DMARC at
+  **`p=none`** until Supabase's own auth-mail sender is accounted for — tightening to
+  quarantine/reject first bounces your own mail. Email is off the critical path (does not touch
+  the E2E-split blocker).
 
 ## Decision log
 
