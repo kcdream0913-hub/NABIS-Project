@@ -20,8 +20,11 @@
 --   listing` must STAY CLEAR (the broad predicate is what it flags, not SELECT itself). Public
 --   reads are unaffected either way (a public bucket serves object URLs without RLS).
 --
--- COMMIT this file; DO NOT APPLY it. The hub verifies BL-AVATAR-02.verify.sql in begin/rollback
--- then applies. (There is also 1 orphaned object to sweep — see the report / D-084.)
+-- APPLIED TO PROD 2026-08-04 by the hub (verified BL-AVATAR-02.verify.sql in begin/rollback FIRST —
+-- 5/5 — then applied) as migration `20260804043523_avatars_scoped_select_own`, and the 1 orphaned
+-- object was SWEPT (avatars bucket now 0 objects). Repo provenance for the live policy:
+-- supabase/migrations/20260804043523_avatars_scoped_select_own.sql. This docs file stays the
+-- self-documenting canonical source; do NOT re-apply it.
 
 create policy "avatars_select_own" on storage.objects
   for select to authenticated
