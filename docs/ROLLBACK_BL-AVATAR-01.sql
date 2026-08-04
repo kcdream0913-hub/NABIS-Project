@@ -5,7 +5,6 @@
 -- inside the hub's begin/rollback verify no objects persist, so it is clean there; a real
 -- post-adoption rollback must clear objects first.
 
-drop policy if exists "avatars_select"      on storage.objects;
 drop policy if exists "avatars_insert_own"   on storage.objects;
 drop policy if exists "avatars_update_own"   on storage.objects;
 drop policy if exists "avatars_delete_own"   on storage.objects;

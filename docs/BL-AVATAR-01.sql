@@ -68,12 +68,12 @@ revoke execute on function private.can_write_avatar(text) from public, anon, aut
 grant  execute on function private.can_write_avatar(text) to authenticated;
 
 -- 3. Storage RLS on storage.objects for bucket_id = 'avatars'.
---    SELECT is open (the bucket is public; public URL reads bypass RLS anyway — this only
---    covers authenticated storage-API reads/list).
-create policy "avatars_select" on storage.objects
-  for select
-  using (bucket_id = 'avatars');
-
+--    NO SELECT policy by design: a public bucket serves object URLs WITHOUT RLS, so none is
+--    needed for rendering, and a broad `for select using (bucket_id='avatars')` would let any
+--    authenticated client LIST every object key — enumerating user/business ids, including
+--    those of PRIVATE profiles hidden by can_view_profile (advisor
+--    public_bucket_allows_listing). The app never lists avatars. (An owner-scoped SELECT can
+--    be added later if a list-own-objects need ever arises.)
 create policy "avatars_insert_own" on storage.objects
   for insert to authenticated
   with check (bucket_id = 'avatars' and private.can_write_avatar(name));
