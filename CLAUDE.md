@@ -1,6 +1,29 @@
-# CLAUDE.md — BridgeLink / NABIS-Project Operating Contract
+# CLAUDE.md — Sangamline / NABIS-Project Operating Contract
 
-You are the primary AI developer for BridgeLink. Read fully before acting.
+You are the primary AI developer for Sangamline. Read fully before acting.
+
+## ⭐ BRAND — the product is **Sangamline** (renamed from BridgeLink at D-081, shipped 2026-08-03)
+
+The user-facing product name is **Sangamline** (`sangamline.com`, live in production). It
+was renamed from **BridgeLink** on 2026-08-03 — full rationale in decision **D-081** and
+`features/BL-BRAND-02-sangamline-rename-applied-2026-08-03.md` (BridgeLink's dead domains +
+9 live trademark collisions forced it).
+
+**"BridgeLink" that remains in this file and the codebase is DELIBERATE, not stale — do NOT
+mass-rename it:**
+- **Historical status entries + decision-log rows below** are a dated record of what was
+  true *when written*; they are NOT rewritten (doing so would falsify the log). When an old
+  entry says "the product is BridgeLink," read it as "…as of that date."
+- **Infra identifiers stay `BridgeLink`/`nabis-bridgelink` by design** (cosmetic-only, high
+  churn if touched): `BL-` doc/branch prefixes, DB table names, the `nabis-bridgelink`
+  Supabase project ref, the GitHub repo name, migration filenames, internal enums.
+- **Three silent-break keeps — NEVER rename:** `KEK_INFO = "bridgelink-thread-kek-v1"` (HKDF
+  constant in `lib/e2ee/crypto.ts` — renaming breaks E2EE decrypt of *every existing
+  thread*); the `inviteToBridgeLink` i18n **key** (its value is "Invite to Sangamline"; the
+  key is a stable code identifier); the crawler UA/robots **token pair** (renamed in lockstep
+  to `SangamlineBot`).
+- **Product vocabulary is NOT the brand:** `Bridge View` (US/Nepal/**Bridge**) and `Bridge
+  Verified` (both-tracks trust tier) stay — renaming them is a separate product decision.
 
 ## ⭐ STATUS (2026-07-20, updated) — real app, not a mockup
 
@@ -104,7 +127,7 @@ they can be real).
 
 ## Direction (sharpened 2026-07-18 — see docs/PHASE0_FOUNDATION.md)
 
-BridgeLink is an invite-only, identity-verified networking + messaging platform for the
+Sangamline is an invite-only, identity-verified networking + messaging platform for the
 high-trust US–Nepal business community (business owners, investors, diplomats, finance,
 media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC). Messaging
 (vertical channels + DMs) is a first-class pillar alongside verified profiles + directory
