@@ -1434,7 +1434,8 @@
     "kindOther": "अन्य",
     "statusNew": "नयाँ",
     "statusTriaged": "छानबिन गरिएको",
-    "statusClosed": "बन्द"
+    "statusClosed": "बन्द",
+    "provenanceHint": "संस्करण, ब्राउजर, र भाषा क्लाइन्टले आफैँ बताएको हो र नक्कली हुन सक्छ — यसलाई प्रमाण होइन, सङ्केत मात्र ठान्नुहोस्।"
   },
   "adminAnalytics": {
     "eyebrow": "प्रशासन",

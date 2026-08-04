@@ -21,6 +21,23 @@
 --   change — it deletes the auth.users row and this FK's ON DELETE SET NULL handles the feedback
 --   rows automatically (same as audit_logs.actor_id etc.).
 --
+-- ⚠ THE SERVER ACTION IS NOT THE GATE — RLS IS, and a BEFORE INSERT trigger owns the server-set
+--   columns. feedback_insert_own checks ONLY user_id; every other column is client-assertable via a
+--   direct PostgREST insert (the anon key is public, the session JWT is in the browser). Two
+--   bypasses close via protect_feedback_intake() forcing created_at := now() and status := 'new':
+--     - a backdated created_at is NOT counted by the 5/hr rate-limit window (created_at >= now() -
+--       1h) → the cap becomes unbounded, and this table is append-only (no DELETE policy) so a
+--       flood cannot be mopped from the app;
+--     - a status='closed' insert never enters the admin `new` queue → silent suppression, so KC
+--       would conclude nobody is reporting.
+--   (Hub adversarial pass, 2026-08-04 — same column-blind-write class as F2 / posts_update_own.)
+--
+-- ACCEPTED-AND-UNGUARDED (D-059): user_agent / app_version / locale are ALSO client-assertable and
+--   CANNOT be forced — there is no server-side source of truth (User-Agent is client-supplied at
+--   the HTTP layer; a DEFINER RPC would still just RECEIVE it from the caller). They are PROVENANCE
+--   HINTS, not evidence. The /admin/feedback UI says so next to app_version, so nobody triages on
+--   the assumption a SHA there is real.
+--
 -- COMMIT this file; DO NOT APPLY it. The hub verifies BL-FEEDBACK-02.verify.sql in a
 -- begin/rollback against prod, then applies.
 
@@ -67,3 +84,23 @@ create policy feedback_update_admin on public.feedback
 
 -- DELETE — NO policy on purpose. Feedback is an append-only record; RLS therefore denies every
 -- client delete. Removal, if ever needed, is a service-role / dashboard action.
+
+-- Intake guard (see header). SECURITY INVOKER, mirrors protect_dtp_identity — no DEFINER surface.
+-- BEFORE INSERT only, so the admin triage UPDATE path is untouched. Overwrite (never raise): both
+-- columns are server-owned with sane defaults, so silently forcing them keeps the server action
+-- unchanged and a direct-insert attacker simply can't win the columns.
+create or replace function public.protect_feedback_intake()
+returns trigger
+language plpgsql
+security invoker
+set search_path to 'public'
+as $$
+begin
+  new.created_at := now();       -- closes the backdating bypass (rate-limit window)
+  new.status     := 'new';       -- closes the status='closed' silent-suppression bypass
+  return new;
+end $$;
+
+create trigger trg_protect_feedback_intake
+  before insert on public.feedback
+  for each row execute function public.protect_feedback_intake();

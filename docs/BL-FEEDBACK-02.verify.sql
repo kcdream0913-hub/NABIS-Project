@@ -54,6 +54,21 @@ do $$ begin
   values ('bba57fb8-29c6-4081-bc63-9899f8c30132','confusing','a4 UNVERIFIED member — the gate is deliberately not applied');
   perform set_config('blf.a4', 'inserted', true);
 exception when others then perform set_config('blf.a4', 'blocked:'||sqlstate, true); end $$;
+-- intake-trigger proofs (findings 1+2): U asserts status='closed' AND a backdated created_at;
+-- protect_feedback_intake must OVERWRITE both. D-058: assert the STORED value, not row absence —
+-- the insert SUCCEEDS, what changes is what lands.
+insert into public.feedback (id, user_id, kind, body, status, created_at)
+values ('00000000-0000-4000-8000-00000000fb02','bba57fb8-29c6-4081-bc63-9899f8c30132','bug',
+        'ATTACK asserting status=closed + created_at=1970 — the trigger must overwrite both','closed','1970-01-01T00:00:00Z');
+select set_config('blf.t6_status',
+  (select status from public.feedback where id='00000000-0000-4000-8000-00000000fb02'), true);
+select set_config('blf.t7_recent',
+  (select (created_at > now() - interval '1 minute')::text from public.feedback where id='00000000-0000-4000-8000-00000000fb02'), true);
+-- finding 1 (rate-limit visibility): NONE of U's rows may escape the 1-hour window (a4 + attack = 2).
+select set_config('blf.t8_total',
+  (select count(*) from public.feedback where user_id='bba57fb8-29c6-4081-bc63-9899f8c30132')::text, true);
+select set_config('blf.t8_inwindow',
+  (select count(*) from public.feedback where user_id='bba57fb8-29c6-4081-bc63-9899f8c30132' and created_at >= now() - interval '1 hour')::text, true);
 select set_config('blf.a3_stranger_sees',
   (select count(*) from public.feedback where id='00000000-0000-4000-8000-00000000fb01')::text, true);
 reset role;
@@ -87,9 +102,19 @@ select * from (values
   (4,'UNVERIFIED member CAN insert (gate deliberately not applied)',
      current_setting('blf.a4')='inserted',
      'a4='||current_setting('blf.a4')||' (want inserted)'),
-  (5,'admin CAN read all AND update status',
+  (5,'admin reads all AND triages new->triaged (regression: trigger is BEFORE INSERT only)',
      current_setting('blf.a5_sees')::int = 1 and current_setting('blf.a5_update')='updated'
        and current_setting('blf.a5_status')='triaged',
-     'admin_sees='||current_setting('blf.a5_sees')||' update='||current_setting('blf.a5_update')||' status='||current_setting('blf.a5_status'))
+     'admin_sees='||current_setting('blf.a5_sees')||' update='||current_setting('blf.a5_update')||' status='||current_setting('blf.a5_status')),
+  (6,'intake trigger forces status=new when status=closed is asserted',
+     current_setting('blf.t6_status')='new',
+     't6_status='||current_setting('blf.t6_status')||' (want new)'),
+  (7,'intake trigger forces created_at=now when a backdate is asserted',
+     current_setting('blf.t7_recent')='true',
+     't7_recent='||current_setting('blf.t7_recent')||' (want true)'),
+  (8,'rate limiter sees ALL of a member''s rows (none backdated out of window)',
+     current_setting('blf.t8_inwindow')::int = current_setting('blf.t8_total')::int
+       and current_setting('blf.t8_total')::int >= 2,
+     'inwindow='||current_setting('blf.t8_inwindow')||' total='||current_setting('blf.t8_total')||' (want equal, >=2)')
 ) as t(n, label, pass, detail)
 order by n;

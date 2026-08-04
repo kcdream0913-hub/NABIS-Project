@@ -121,6 +121,10 @@ export default function AdminFeedback() {
         </Link>
       </div>
 
+      {/* Finding 3 (D-087): version / browser / locale are client-asserted and cannot be forced
+          server-side — say so, so nobody triages on the assumption a SHA here is real. */}
+      <p className="mt-2 text-xs italic text-ink-soft">{t("provenanceHint")}</p>
+
       {error && (
         <p role="alert" className="mt-3 rounded-md border border-accent bg-accent-soft px-3 py-2 text-xs text-accent">
           {error}

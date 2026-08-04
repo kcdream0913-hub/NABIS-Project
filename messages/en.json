@@ -1434,7 +1434,8 @@
     "kindOther": "Other",
     "statusNew": "New",
     "statusTriaged": "Triaged",
-    "statusClosed": "Closed"
+    "statusClosed": "Closed",
+    "provenanceHint": "Version, browser, and locale are self-reported by the client and can be spoofed — treat them as hints, not proof."
   },
   "adminAnalytics": {
     "eyebrow": "Admin",
