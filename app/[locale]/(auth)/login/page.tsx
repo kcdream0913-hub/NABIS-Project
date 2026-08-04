@@ -57,7 +57,7 @@ export default function LoginPage() {
     <div>
       <div className="mb-8 text-center">
         <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">
-          B
+          S
         </span>
         <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("welcomeBack")}</h1>
       </div>

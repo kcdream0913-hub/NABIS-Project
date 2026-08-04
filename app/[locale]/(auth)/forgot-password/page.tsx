@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
   return (
     <div>
       <div className="mb-8 text-center">
-        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">S</span>
         <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{t("resetTitle")}</h1>
         <p className="mt-1 text-sm text-ink-soft">{t("resetSubtitle")}</p>
       </div>

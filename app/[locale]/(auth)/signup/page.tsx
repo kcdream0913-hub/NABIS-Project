@@ -97,7 +97,7 @@ export default function SignupPage() {
   if (done) {
     return (
       <div className="text-center">
-        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">S</span>
         <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{t("checkEmailTitle")}</h1>
         <p className="mt-2 text-sm text-ink-soft">{t("checkEmailBody", { email })}</p>
         <button onClick={() => router.push("/login")}
@@ -115,7 +115,7 @@ export default function SignupPage() {
   return (
     <div>
       <div className="mb-6 text-center">
-        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+        <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">S</span>
         <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{t("joinTitle")}</h1>
         <p className="mt-1 text-sm text-ink-soft">{t("joinSubtitle")}</p>
       </div>

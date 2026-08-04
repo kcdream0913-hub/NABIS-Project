@@ -236,7 +236,7 @@ export default function Sidebar({ expanded = false }: { expanded?: boolean }) {
         {/* Logo → the marketing homepage (/home). A signed-in member gets back into
             the app via the "Enter Sangamline" link in the /home header. */}
         <Link href="/home" aria-label={t("brandHome")} className="flex items-center gap-2.5 rounded-lg px-3.5 py-4">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">S</span>
           <span className={`text-[17px] font-semibold tracking-tight text-ink ${LABEL}`}>Sangamline</span>
         </Link>
         {/* Mobile drawer close (D-052): the drawer is always `expanded` and never

@@ -8,7 +8,7 @@ export default async function PairPage() {
   const t = await getTranslations("auth");
   return (
     <div className="text-center">
-      <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">B</span>
+      <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary text-sm font-bold text-on-primary">S</span>
       <div className="mt-4 flex items-center justify-center gap-2">
         <h1 className="text-xl font-semibold tracking-tight text-ink">{t("pairTitle")}</h1>
         <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-soft">{t("beta")}</span>
