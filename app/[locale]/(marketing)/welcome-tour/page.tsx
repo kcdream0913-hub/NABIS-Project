@@ -68,7 +68,7 @@ export default function WelcomeTour() {
             <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--stone)" }} />
             <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--glacier)", marginLeft: -4 }} />
           </span>
-          <b style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em" }}>BridgeLink</b>
+          <b style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em" }}>Sangamline</b>
         </Link>
         <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <Link href="/login" style={{ font: `400 13px/1 ${GEIST}`, color: "var(--ink-faint)" }}>{t("tourSkip")}</Link>

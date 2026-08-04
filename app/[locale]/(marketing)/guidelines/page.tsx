@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("guidelines.metaTitle"),
     description:
-      "The guidelines every BridgeLink member agrees to, and how member data and documents are handled.",
+      "The guidelines every Sangamline member agrees to, and how member data and documents are handled.",
   };
 }
 
@@ -48,7 +48,7 @@ export default async function GuidelinesPage() {
             <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--stone)" }} />
             <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--glacier)", marginLeft: -4 }} />
           </span>
-          <b style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em" }}>BridgeLink</b>
+          <b style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em" }}>Sangamline</b>
         </Link>
         <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MarketingLocaleSwitch />

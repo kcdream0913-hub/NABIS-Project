@@ -1,4 +1,4 @@
-/* BridgeLink marketing — design tokens (ported from bridgelink-site/css/theme.css).
+/* Sangamline marketing — design tokens (ported from bridgelink-site/css/theme.css).
    Light = :root; Dark tokens hang off `.dark` to match the app's theme mechanism
    (ThemeProvider toggles `.dark` on <html>; the app's head boot script sets it
    before paint, so the marketing pages carry the same theme with no boot script

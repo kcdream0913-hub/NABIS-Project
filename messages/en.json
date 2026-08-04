@@ -17,7 +17,7 @@
     "online": "Online",
     "settings": "Settings",
     "bookmarks": "Bookmarks",
-    "brandHome": "BridgeLink home",
+    "brandHome": "Sangamline home",
     "expandMenu": "Expand menu",
     "collapseMenu": "Collapse menu",
     "register": "Register",
@@ -103,7 +103,7 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "Choose what BridgeLink emails you about, and how often.",
+      "description": "Choose what Sangamline emails you about, and how often.",
       "deliveryNote": "Your choices are saved now. Email delivery is being switched on soon — until then these settings are stored and ready.",
       "frequency": "Email frequency",
       "frequencyHint": "How often we bundle your notifications into email.",
@@ -149,7 +149,7 @@
       "history": "History",
       "noHistory": "No verification activity yet.",
       "requestVerification": "Request verification",
-      "requestVerificationHint": "Opens a message to the BridgeLink team.",
+      "requestVerificationHint": "Opens a message to the Sangamline team.",
       "verificationPrefill": "I'd like to get verified — ",
       "requesting": "Opening…",
       "requestErrorFallback": "Couldn't start the request. Please try again."
@@ -170,7 +170,7 @@
       "showPhone": "Show phone on profile",
       "showPhoneHint": "Let other members see your phone number.",
       "dataUsage": "Product improvement",
-      "dataUsageHint": "Allow anonymized usage to improve BridgeLink.",
+      "dataUsageHint": "Allow anonymized usage to improve Sangamline.",
       "save": "Save",
       "saved": "Saved"
     },
@@ -211,7 +211,7 @@
       "codeEmailed": "Sign-in link sent — check your inbox.",
       "otpNote": "The link signs you in on whichever device opens it.",
       "appTitle": "Mobile app",
-      "appDescription": "Pair the BridgeLink mobile app.",
+      "appDescription": "Pair the Sangamline mobile app.",
       "beta": "Beta",
       "appScaffold": "The mobile app isn't generally available yet — pairing will activate here when it ships.",
       "signOutTitle": "Devices & sessions",
@@ -226,7 +226,7 @@
     },
     "data": {
       "title": "Download my data",
-      "description": "Export a copy of your BridgeLink data.",
+      "description": "Export a copy of your Sangamline data.",
       "downloadButton": "Download my data (JSON)",
       "downloadNote": "Includes your profile, businesses, posts, messages you sent, RSVPs, itineraries, and verification records.",
       "legalTitle": "Legal",
@@ -305,7 +305,7 @@
       "membership": "Membership",
       "logIn": "Log in",
       "getStarted": "Get started",
-      "enterApp": "Enter BridgeLink"
+      "enterApp": "Enter Sangamline"
     },
     "hero": {
       "eyebrow": "US ↔ Nepal · Invite only",
@@ -315,14 +315,14 @@
     "culture": {
       "eyebrow": "Culture & continuity",
       "h2": "Trust in this corridor is generational.",
-      "body": "Reputation here is kept the old way — in person, over decades, across families and firms. BridgeLink verifies the people who actually show up: real names, real entities, standing earned on the ground.",
+      "body": "Reputation here is kept the old way — in person, over decades, across families and firms. Sangamline verifies the people who actually show up: real names, real entities, standing earned on the ground.",
       "caption1": "NEWARI COURTYARD · KATHMANDU VALLEY",
       "caption2": "FESTIVAL SEASON · KATHMANDU"
     },
     "bridge": {
       "eyebrow": "The Bridge",
       "h2": "Distance is not the hard part. Trust is.",
-      "body": "Work across this corridor stalls on the same question: you can find someone, but you can't tell whether they're real. BridgeLink starts on the other side of that question — both parties checked, both parties at the same table."
+      "body": "Work across this corridor stalls on the same question: you can find someone, but you can't tell whether they're real. Sangamline starts on the other side of that question — both parties checked, both parties at the same table."
     },
     "verification": {
       "eyebrow": "Bridge Verified",
@@ -387,13 +387,13 @@
       "communityGuidelines": "Community guidelines",
       "dataDocuments": "Data & documents",
       "tagline": "An invite-only professional network for the US–Nepal corridor. Every member verified before entry.",
-      "copyright": "© 2026 BRIDGELINK",
+      "copyright": "© 2026 SANGAMLINE",
       "everyRequestRead": "EVERY REQUEST IS READ"
     },
     "tour": {
       "s1Eyebrow": "Getting started · 1 of 3",
       "s1Title": "One room for the whole corridor.",
-      "s1Lede": "BridgeLink is an invite-only network for people doing real work between the United States and Nepal — operators, investors, diaspora professionals, and tourism leaders.",
+      "s1Lede": "Sangamline is an invite-only network for people doing real work between the United States and Nepal — operators, investors, diaspora professionals, and tourism leaders.",
       "s1P1": "A member directory you can actually trust, organized by sector and side of the corridor.",
       "s1P2": "Events, trips, and working conversations — not a feed of announcements.",
       "s1P3": "Built for people who move capital, projects, and people. Not an audience.",
@@ -411,7 +411,7 @@
       "s3P3": "Request verification; review usually completes within a few days."
     },
     "guidelines": {
-      "metaTitle": "Community guidelines — BridgeLink",
+      "metaTitle": "Community guidelines — Sangamline",
       "eyebrow": "How this room works",
       "h1": "Four rules, applied to everyone.",
       "lede": "The same guidelines every member agrees to when they join the app.",
@@ -441,7 +441,7 @@
     "autoTranslated": "Auto-translated"
   },
   "auth": {
-    "joinTitle": "Join BridgeLink",
+    "joinTitle": "Join Sangamline",
     "joinSubtitle": "The verified network of the US–Nepal corridor.",
     "welcomeBack": "Welcome back",
     "continueGoogle": "Continue with Google",
@@ -467,7 +467,7 @@
     "sending": "Sending…",
     "backToLogin": "Back to sign in",
     "pairTitle": "Pair a device",
-    "pairBody": "Device pairing arrives with the BridgeLink mobile app. There's nothing to pair yet — sign in on the web for now.",
+    "pairBody": "Device pairing arrives with the Sangamline mobile app. There's nothing to pair yet — sign in on the web for now.",
     "beta": "Beta",
     "fullName": "Full name",
     "country": "Country",
@@ -889,7 +889,7 @@
     "title": "Profile & settings",
     "verifiedTitle": "Verified profile",
     "notVerifiedTitle": "Not yet verified",
-    "verifiedBody": "You can post and message across BridgeLink.",
+    "verifiedBody": "You can post and message across Sangamline.",
     "notVerifiedBody": "Verify to unlock posting and messaging.",
     "verifyCta": "Verify your profile",
     "profileHeading": "Profile",
@@ -1000,7 +1000,7 @@
     "memberEmailPlaceholder": "Their email address",
     "canPostAsBusiness": "Can post as this business",
     "removeFromTeam": "Remove from team",
-    "inviteToBridgeLink": "Invite to BridgeLink",
+    "inviteToBridgeLink": "Invite to Sangamline",
     "inviteCreated": "Invite created. Share this link with them:",
     "copyLink": "Copy link",
     "copied": "Copied",
@@ -1016,7 +1016,7 @@
   "onboarding": {
     "step": "Step {current} of {total}",
     "gettingStarted": "Getting started",
-    "welcomeTitle": "You're in. Welcome to BridgeLink.",
+    "welcomeTitle": "You're in. Welcome to Sangamline.",
     "welcomeBody": "The verified network of the US–Nepal corridor — business owners, investors, diplomats, and senior professionals. Three quick steps and you're set up. You can browse right away; verifying your profile later unlocks posting and messaging.",
     "profileTitle": "Set up your profile",
     "profileSubtitle": "This is how members recognize you. Real names work best here.",
@@ -1038,7 +1038,7 @@
     "back": "Back",
     "continue": "Continue",
     "saving": "Saving…",
-    "enter": "Enter BridgeLink",
+    "enter": "Enter Sangamline",
     "inviteJoined": "You've joined the team — check your profile's business page.",
     "inviteInvalid": "That invite link is no longer valid. If you think this is a mistake, ask the business owner to resend it."
   },
@@ -1208,7 +1208,7 @@
   },
   "welcome": {
     "eyebrow": "Getting started",
-    "title": "Welcome to BridgeLink",
+    "title": "Welcome to Sangamline",
     "skip": "Skip for now",
     "s1Title": "Complete your profile",
     "s1Subtitle": "A short bio helps others know who you are and what you do.",

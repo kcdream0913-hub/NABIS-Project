@@ -39,7 +39,7 @@ export async function GET() {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": 'attachment; filename="bridgelink-my-data.json"',
+      "Content-Disposition": 'attachment; filename="sangamline-my-data.json"',
       "Cache-Control": "no-store",
     },
   });

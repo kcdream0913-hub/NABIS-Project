@@ -39,10 +39,10 @@ export function buildIcs(e: CalendarEvent): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//BridgeLink//Events//EN",
+    "PRODID:-//Sangamline//Events//EN",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
-    `UID:${e.id}@bridgelink`,
+    `UID:${e.id}@sangamline`,
     `SUMMARY:${escapeIcs(e.title)}`,
   ];
   if (e.startsAt) lines.push(`DTSTART:${toIcsUtc(e.startsAt)}`);

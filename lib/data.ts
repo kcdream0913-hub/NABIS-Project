@@ -46,7 +46,7 @@ export const CURRENT_USER: Member = {
   role: "Entrepreneur",
   location: "US",
   country: "us",
-  bio: "Founder, BridgeLink. Building the US–Nepal corridor.",
+  bio: "Founder, Sangamline. Building the US–Nepal corridor.",
 };
 
 export const MEMBERS: Member[] = [
@@ -74,8 +74,8 @@ export const SEED_POSTS: Post[] = [
 ];
 
 export const EVENTS: EventItem[] = [
-  { id: "e1", title: "NABIS 2026 — BridgeLink Meetup", date: "2026-09-18", time: "6:00 PM CT", mode: "In person", location: "Dallas, TX", view: "us", description: "Informal meetup for members attending NABIS. Meet the founding cohort in person." },
-  { id: "e2", title: "Greater NY Nepali Chamber Mixer", date: "2026-08-06", time: "6:30 PM ET", mode: "In person", location: "Queens, NY", view: "us", description: "Monthly Chamber networking night. BridgeLink members get introduced as a group." },
+  { id: "e1", title: "NABIS 2026 — Sangamline Meetup", date: "2026-09-18", time: "6:00 PM CT", mode: "In person", location: "Dallas, TX", view: "us", description: "Informal meetup for members attending NABIS. Meet the founding cohort in person." },
+  { id: "e2", title: "Greater NY Nepali Chamber Mixer", date: "2026-08-06", time: "6:30 PM ET", mode: "In person", location: "Queens, NY", view: "us", description: "Monthly Chamber networking night. Sangamline members get introduced as a group." },
   { id: "e3", title: "Vendor Onboarding Workshop", date: "2026-08-12", time: "7:00 PM NPT", mode: "Online", location: "Zoom", view: "nepal", description: "How to present your business in the Vendor Showcase and prepare for the marketplace phase." },
   { id: "e4", title: "Boston Corridor Founders Dinner", date: "2026-08-28", time: "7:00 PM ET", mode: "In person", location: "Boston, MA", view: "bridge", description: "Small dinner for founders working across both markets. Limited to 12 seats." },
 ];

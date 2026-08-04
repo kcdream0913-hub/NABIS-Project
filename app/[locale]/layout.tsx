@@ -30,8 +30,8 @@ export const metadata: Metadata = {
   // but its route file lives at "/[locale]/home", so pages set canonicals against
   // this to avoid the homepage being indexed at both "/" and "/home" (see the
   // home page's generateMetadata).
-  metadataBase: new URL("https://nabis-project.vercel.app"),
-  title: "BridgeLink",
+  metadataBase: new URL("https://sangamline.com"),
+  title: "Sangamline",
   description: "The invite-only professional network for the US–Nepal corridor.",
 };
 

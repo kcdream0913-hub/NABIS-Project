@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isPrivateAddress, assertPublicUrl, robotsDisallows, extractFromHtml } from "../websiteGuards";
+import { isPrivateAddress, assertPublicUrl, robotsDisallows, extractFromHtml, BOT_TOKEN, BOT_UA } from "../websiteGuards";
 
 describe("isPrivateAddress", () => {
   it("flags loopback / private / link-local / CGNAT v4", () => {
@@ -45,6 +45,20 @@ describe("robotsDisallows", () => {
     expect(robotsDisallows("User-agent: *\nDisallow: /private", "/private/x")).toBe(true);
     expect(robotsDisallows("User-agent: *\nDisallow:", "/")).toBe(false);
     expect(robotsDisallows("User-agent: Googlebot\nDisallow: /", "/")).toBe(false);
+  });
+
+  // Regression guard for the brand rename (BridgeLinkBot -> SangamlineBot). The UA
+  // we send and the token we match must stay coupled; if they drift we would ignore
+  // rules a site wrote specifically for us, silently and with no type error.
+  it("honors a Disallow addressed to our own bot by name", () => {
+    expect(robotsDisallows(`User-agent: ${BOT_TOKEN}\nDisallow: /`, "/")).toBe(true);
+    expect(robotsDisallows(`User-agent: ${BOT_TOKEN.toLowerCase()}\nDisallow: /x`, "/x/y")).toBe(true);
+    expect(robotsDisallows(`User-agent: ${BOT_TOKEN}\nDisallow:`, "/")).toBe(false);
+  });
+
+  it("advertises the same token it matches on", () => {
+    expect(BOT_UA).toContain(BOT_TOKEN);
+    expect(robotsDisallows(`User-agent: ${BOT_UA.split("/")[0]}\nDisallow: /`, "/")).toBe(true);
   });
 });
 

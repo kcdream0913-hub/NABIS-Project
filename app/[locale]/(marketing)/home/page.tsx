@@ -28,7 +28,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const canonical = locale === routing.defaultLocale ? "/" : `/${locale}`;
   return {
-    title: "BridgeLink — The US–Nepal corridor, in one room",
+    title: "Sangamline — The US–Nepal corridor, in one room",
     description:
       "An invite-only, verified professional network for the operators, investors, and diaspora professionals moving capital, projects, and people between the United States and Nepal.",
     alternates: { canonical },
@@ -70,7 +70,7 @@ export default async function MarketingHome() {
             <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--stone)" }} />
             <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--btn)", marginLeft: -4 }} />
           </span>
-          <span style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em", color: "var(--ink)" }}>BridgeLink</span>
+          <span style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em", color: "var(--ink)" }}>Sangamline</span>
         </span>
         <span style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "clamp(14px,2vw,28px)", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
           <a href="#bridge" style={{ flex: "0 0 auto", whiteSpace: "nowrap", font: `400 14px/1 ${GEIST}`, color: "var(--ink-mid)" }}>{t("nav.theBridge")}</a>
@@ -287,7 +287,7 @@ export default async function MarketingHome() {
                 <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--stone)" }} />
                 <span style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--btn)", marginLeft: -4 }} />
               </span>
-              <span style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em", color: "var(--ink)" }}>BridgeLink</span>
+              <span style={{ font: `500 16px/1 ${GEIST}`, letterSpacing: "-0.01em", color: "var(--ink)" }}>Sangamline</span>
             </span>
             <p style={{ margin: 0, maxWidth: 320, font: `400 14px/1.65 ${GEIST}`, color: "var(--ink-low)", textWrap: "pretty" }}>{t("footer.tagline")}</p>
           </div>

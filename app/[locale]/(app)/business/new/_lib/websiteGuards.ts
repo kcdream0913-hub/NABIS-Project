@@ -6,6 +6,13 @@
 import net from "node:net";
 import dns from "node:dns/promises";
 
+// Single source of truth for our crawler's identity. The UA we SEND and the token
+// we MATCH in a site's robots.txt must never drift apart: if they do, we keep
+// advertising one name while ignoring the rules a site wrote for that name — a
+// silent failure with no test or type error to catch it. Both derive from here.
+export const BOT_TOKEN = "SangamlineBot";
+export const BOT_UA = `${BOT_TOKEN}/1.0 (+https://sangamline.com/about/bot)`;
+
 function ipv4ToInt(ip: string): number | null {
   const parts = ip.split(".");
   if (parts.length !== 4) return null;
@@ -109,7 +116,7 @@ export function robotsDisallows(robotsTxt: string, path: string): boolean {
     const key = rawKey.toLowerCase();
     const val = rest.join(":").trim();
     if (key === "user-agent") {
-      applies = val === "*" || /bridgelinkbot/i.test(val);
+      applies = val === "*" || val.toLowerCase().includes(BOT_TOKEN.toLowerCase());
     } else if (applies && key === "disallow") {
       if (val === "") continue; // empty Disallow = allow all
       if (path.startsWith(val)) disallowed = true;

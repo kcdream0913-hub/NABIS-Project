@@ -42,8 +42,8 @@ for (const route of MARKETING_ROUTES) {
     //    A regression that made a marketing route non-public would trip this.
     expect(page.url(), `should not redirect ${route.url} to login`).not.toContain("/login");
 
-    // 3. The BridgeLink brand renders on every marketing page (nav / topbar).
-    await expect(page.getByText("BridgeLink").first()).toBeVisible();
+    // 3. The Sangamline brand renders on every marketing page (nav / topbar).
+    await expect(page.getByText("Sangamline").first()).toBeVisible();
 
     // 4. A primary heading rendered (page has real content, not an error shell).
     await expect(page.locator("h1").first()).toBeVisible();

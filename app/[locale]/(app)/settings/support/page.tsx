@@ -2,11 +2,12 @@ import { getTranslations } from "next-intl/server";
 import { Mail, LifeBuoy } from "lucide-react";
 import { SettingsSection, SettingsNote } from "@/components/settings/primitives";
 
-// Pilot support routes to the founder's inbox. NOT support@bridgelink.app — that
-// domain isn't owned, so publishing it would send users' support mail to whoever
-// registers it.
+// Pilot support routes to the founder's inbox. sangamline.com IS now owned, but
+// no support@ mailbox exists on it yet — publishing that address before the
+// mailbox is provisioned would silently drop users' support mail. Switch this to
+// support@sangamline.com only once the mailbox is live and receiving.
 const SUPPORT_EMAIL = "kcdream0913@gmail.com";
-const SUPPORT_SUBJECT = "BridgeLink support request";
+const SUPPORT_SUBJECT = "Sangamline support request";
 
 export default async function SupportPage() {
   const t = await getTranslations("settings.support");

@@ -7,11 +7,11 @@
 // social host is ever fetched (R3). Modes: live | fixture | off; CI runs fixture.
 
 import { createClient } from "@/lib/supabase/server";
-import { assertPublicUrl, extractFromHtml, robotsDisallows, type ImportResult } from "./websiteGuards";
+import { assertPublicUrl, extractFromHtml, robotsDisallows, BOT_UA, type ImportResult } from "./websiteGuards";
 import { WEBSITE_FIXTURE } from "./fixtures";
 
 const MODE = (process.env.WEBSITE_IMPORT_MODE ?? "off") as "live" | "fixture" | "off";
-const UA = "BridgeLinkBot/1.0 (+https://nabis-project.vercel.app/about/bot)";
+const UA = BOT_UA;
 const MAX_BYTES = 1_000_000;
 const TIMEOUT_MS = 5000;
 const MAX_REDIRECTS = 3;
