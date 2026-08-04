@@ -149,6 +149,13 @@ at the baseline), so a fresh restore applies ONLY `00000000000001` + `0000000000
 - the 8 `docs/BL-*.sql` migration files (they remain the self-documenting canonical sources; the
   baseline is now the applyable source of truth).
 
+**The rule for the sweep: every `.sql` file dated on or before the baseline goes — NO exceptions
+for recency.** `20260804043523_avatars_scoped_select_own.sql` is the newest and feels current, so
+it will read as "don't archive this one" — archive it, or `avatars_select_own` is created twice
+(once by `00000000000002`, once by it). **End state:** `supabase/migrations/` holds ONLY
+`00000000000001_baseline_2026_08_04.sql`, `00000000000002_baseline_storage_2026_08_04.sql`, and
+`BASELINE_FINGERPRINT.md` (a reference doc, never applied) — nothing else.
+
 ### 4d — restore order
 
 `00000000000001` (schema, incl. `private` + all public objects) → `00000000000002` (buckets +
@@ -164,10 +171,19 @@ select extname, extversion from pg_extension order by 1;
 
 ---
 
-## Step 5 — verification after restore (assert each SEPARATELY, never one rolled-up number)
+## Step 5 — verification after restore (two layers; the counts are the weak one)
 
-Independently re-verified against prod 2026-08-04. The two storage rows are the ones the dump
-silently drops — a single "105" would let a 10-policy miss hide in a rounding argument.
+**Layer 1 — the counts below (fast sanity gate).** Independently re-verified against prod
+2026-08-04; assert each SEPARATELY (a single "105" lets a 10-policy miss hide in a rounding
+argument). But counts are WEAK: all seven pass even if `posts_select` restored as `using
+(false)`, a `with check` was dropped, a generated column came back plain, or a `security definer`
+came back `invoker`.
+
+**Layer 2 — the definition fingerprint (authoritative): `supabase/migrations/BASELINE_FINGERPRINT.md`.**
+Nine md5 hashes over the PARSED definitions of buckets / columns / constraints / enums /
+functions / indexes / policies / rls_flags / triggers. Run its query on `sangamline-e2e`; **nine
+matches = the schema is the same schema.** Counts can pass on a wrong schema; the fingerprint
+cannot. Run both, trust the fingerprint.
 
 | target | value | query |
 |---|---|---|
