@@ -43,22 +43,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: unit
     concurrency:
-      # Constant group (deliberately NO ${{ github.ref }}): the suite writes to PROD
-      # as the single seeded account A and its teardown deletes A's WHOLE uploader
-      # subtree under THREAD_AB. One e2e job at a time, repo-wide, across every ref.
-      group: e2e-prod
-      # Cancelling an in-flight e2e job skips global-teardown, leaving exactly the
-      # prod residue this is meant to prevent (D-060).
+      # Constant group (deliberately NO ${{ github.ref }}). BL-E2E-SPLIT-01 (D-085): the suite no
+      # longer touches PROD, so this no longer blocks unrelated prod work — but it is KEPT, not
+      # dropped, because WITHIN the dedicated E2E project the suite still shares one account A and
+      # one THREAD_AB, and global-teardown deletes A's whole uploader subtree + tombstones A's
+      # messages inside a window; two concurrent runs would corrupt each other. Serializing E2E
+      # runs among themselves is the cheap fix; per-ref PARALLELISM would need the run-scoped
+      # object/message prefixes D-062 describes (deferred). One e2e run at a time, repo-wide.
+      group: e2e
+      # Cancelling an in-flight e2e job skips global-teardown, leaving residue (D-060).
       cancel-in-progress: false
-      # `queue` defaults to `single`, under which a THIRD run cancels the pending
-      # job rather than queuing it — a merge train would silently lose a run. `max`
-      # allows up to 100 pending.
+      # `queue` defaults to `single` (a THIRD run cancels the pending one — a merge train would
+      # silently lose a run). `max` allows up to 100 pending.
       queue: max
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      # Authenticated suites (social + attachments) run against the hub-seeded pilot
-      # account A; without these they SKIP. Set as repo Actions secrets.
+      # BL-E2E-SPLIT-01 (D-085): the E2E suite runs against a DEDICATED Supabase project
+      # (sangamline-e2e), NOT prod, so a run can never pollute real members' feeds/DMs/storage.
+      # These point at the E2E project; the `unit` job KEEPS the prod NEXT_PUBLIC_* values (build
+      # parity with Vercel). Set E2E_SUPABASE_URL / E2E_SUPABASE_ANON_KEY as new repo secrets, and
+      # update E2E_EMAIL / E2E_PASSWORD / E2E_FOREIGN_ATTACHMENT_PATH to the E2E project's seeded
+      # values (see scripts/seed-e2e.mjs output).
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+      # Authenticated suites (social + attachments) run against E2E account A; without these they
+      # SKIP. Seeded by scripts/seed-e2e.mjs against the E2E project.
       E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
       E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       E2E_FOREIGN_ATTACHMENT_PATH: ${{ secrets.E2E_FOREIGN_ATTACHMENT_PATH }}
