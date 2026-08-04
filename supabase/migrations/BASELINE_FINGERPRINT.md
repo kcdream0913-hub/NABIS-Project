@@ -1,6 +1,6 @@
 # BASELINE_FINGERPRINT — the strong equivalence check for the E2E restore (D-085)
 
-Counts (36 tables, 98+10 policies, 7+24 functions, 16 triggers, 3 buckets) are a NECESSARY but
+Counts (36 tables, 97+10 policies, 7+25 functions, 17 triggers, 3 buckets) are a NECESSARY but
 WEAK check: all seven pass if `posts_select` restores as `using (false)` instead of `using
 (true)`, if a `with check` is dropped, a generated column comes back plain, a `security definer`
 function comes back `invoker`, or a CHECK vanishes. That is exactly the silent-drift this task
@@ -16,12 +16,14 @@ schema is the same schema.**
 **Any** migration applied to prod invalidates the hashes below; leave them stale and the E2E
 restore check fails for a bookkeeping reason and reads as a broken restore. So whenever a migration
 is applied to prod, re-run the query (below) and commit the new hashes in the same change. (This
-bit once already: `bl_feedback_02_pilot_feedback_capture`, applied 2026-08-04, bumped 7 of 9 — a
-table-only change, so `buckets` + `enums` did NOT move, which is the fingerprint checking itself.)
+bit TWICE already on 2026-08-04: `bl_feedback_02_pilot_feedback_capture` bumped 7 of 9 — a
+table-only change, so `buckets` + `enums` did NOT move; then `bl_trust_02_close_column_blind_writes`
+bumped exactly 3 more — `functions`/`policies`/`triggers`, precisely what it touched. Each time,
+only the parts that changed moved — which is the fingerprint checking itself.)
 
 ## Expected (captured from prod `dhnggnxwjgqvghbxelvw` 2026-08-04, AFTER
-## `bl_feedback_02_pilot_feedback_capture`; the coding session independently re-ran this query the
-## same day and confirmed all nine — a verified value, not a transcribed one)
+## `bl_feedback_02_pilot_feedback_capture` + `bl_trust_02_close_column_blind_writes`; the coding
+## session independently re-ran this query and confirmed all nine — a verified value, not transcribed)
 
 | part | expected md5 | |
 |---|---|---|
@@ -29,11 +31,11 @@ table-only change, so `buckets` + `enums` did NOT move, which is the fingerprint
 | `columns` | `0d0e8bdce70928d20a773977aee730c6` | |
 | `constraints` | `dd98727909c2de720cc60a5337845d40` | |
 | `enums` | `d41d8cd98f00b204e9800998ecf8427e` | unchanged (md5 of '') |
-| `functions` | `56036b423f5a1e24adf46119175b2376` | |
+| `functions` | `84f6fa551820c6a36c08dd36d9b70fb3` | changed by bl_trust_02 (+protect_report_intake) |
 | `indexes` | `1da83391a20b6415f1827829412a345e` | |
-| `policies` | `9aee018cf3998b42e3448df4aa7cbe85` | |
+| `policies` | `af71a205a85983bb9518831c4780ecb1` | changed by bl_trust_02 (−access_purchases_insert_own) |
 | `rls_flags` | `5e6823fe1606b72e640bec0c83cb0f18` | |
-| `triggers` | `fd70065a3d626a97864dda2c2d14256b` | |
+| `triggers` | `e0eac6248ad58c1ba9a1ade069458d20` | changed by bl_trust_02 (+trg_protect_report_intake) |
 
 **`enums` = `d41d8cd9…` is md5 of the empty string** — there are NO custom enum types in `public`
 or `private`. Every constrained field is `text` + a CHECK, which is why `body_lang='xx'` raised
