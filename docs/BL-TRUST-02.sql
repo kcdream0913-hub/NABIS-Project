@@ -5,8 +5,11 @@
 -- posts_update_own, post_comments_update_own, and the two below (6). This migration closes the last
 -- two live instances; the standing lint (supabase/lint/column_blind_writes.sql) stops a seventh.
 --
--- COMMIT this file; DO NOT APPLY it. The hub verifies BL-TRUST-02.verify.sql in a begin/rollback
--- against prod, then applies.
+-- ✅ APPLIED TO PROD 2026-08-04 by the hub as migration `bl_trust_02_close_column_blind_writes`
+--   (verified 8/8 in begin/rollback FIRST). Do NOT re-apply; this file stays the canonical source.
+--   Prod counts: policies 98→97, functions 24→25, triggers 16→17, access_purchases policies 2→1.
+--   Advisor: 6 pre-existing DEFINER WARN, zero new. The apply bumped 3 BASELINE_FINGERPRINT hashes
+--   (functions / policies / triggers — exactly what it touches); re-captured + committed with it.
 
 -- ── Task 1: access_purchases — DROP the client INSERT policy (do NOT sanitise it) ──────────────
 -- A purchase is a SERVER-SIDE fact. The ONLY client reference is a SELECT (contact-business.tsx:36,
