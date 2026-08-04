@@ -7,7 +7,7 @@ You are the primary AI developer for Sangamline. Read fully before acting.
 The user-facing product name is **Sangamline** (`sangamline.com`, live in production). It
 was renamed from **BridgeLink** on 2026-08-03 — full rationale in decision **D-081** and
 `features/BL-BRAND-02-sangamline-rename-applied-2026-08-03.md` (BridgeLink's dead domains +
-9 live trademark collisions forced it).
+9 live trademark collisions forced it). **"BridgeLink" is dead as a public name — never reintroduce it into user-facing copy.**
 
 **"BridgeLink" that remains in this file and the codebase is DELIBERATE, not stale — do NOT
 mass-rename it:**
@@ -127,7 +127,7 @@ they can be real).
 
 ## Direction (sharpened 2026-07-18 — see docs/PHASE0_FOUNDATION.md)
 
-Sangamline is an invite-only, identity-verified networking + messaging platform for the
+Sangamline (formerly BridgeLink until 2026-08-03, D-081) is an invite-only, identity-verified networking + messaging platform for the
 high-trust US–Nepal business community (business owners, investors, diplomats, finance,
 media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC). Messaging
 (vertical channels + DMs) is a first-class pillar alongside verified profiles + directory
@@ -565,7 +565,7 @@ media, senior professionals). Launch anchored to NABIS 2026 (Sept 26–27, NYC).
   - **P6 Support** — visible **kcdream0913@gmail.com** ("Pilot support") + mailto
     `?subject=BridgeLink support request`. Deliberately NOT `support@bridgelink.app`
     (domain not owned — publishing it would misroute support mail).
-  - **P7 Naming** — product name is already **BridgeLink** everywhere (metadata
+  - **P7 Naming** — ⚠️ **SUPERSEDED by D-081: the product name is now Sangamline.** (True as written on 2026-07-24.) product name is already **BridgeLink** everywhere (metadata
     title/description); the remaining "NABIS" strings are summit/event references in
     mock `lib/data.ts` / `lib/tripPlannerData.ts`, which is allowed.
   - gates: tsc 0 · vitest 54/54 (i18n parity + 7 new routing) · build 52/52 both
