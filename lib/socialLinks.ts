@@ -92,34 +92,31 @@ export function normalizeSocialLinks(input: Record<string, string>): Partial<Rec
 }
 
 /**
- * Normalize a MEMBER PROFILE's {field: rawUrl} bag into a clean {field: url} object for
- * profiles.links jsonb (BL-PROFILE-01): the six social platforms via the allowlist + the website
- * slot via any-host cleaning; empties + invalid entries dropped. This is the WRITE-path UX guard;
- * because profiles.links is directly client-writable, the load-bearing security guard is the
- * https-only href filter at RENDER time (components/ProfileLinks.tsx).
+ * Normalize a MEMBER PROFILE's link bag into a clean {field: url} object for profiles.links jsonb
+ * (BL-PROFILE-01): the six social platforms via the host allowlist + the website slot via any-host
+ * https cleaning; empties + invalid entries dropped.
+ *
+ * SECURITY (load-bearing): profiles.links is DIRECTLY client-writable (profiles_update_own, no
+ * column scope, no server validation, no trigger), so a member can store ARBITRARY jsonb on their
+ * OWN row, bypassing the editor. This function is therefore run at BOTH write time (UX) AND RENDER
+ * time (components/ProfileLinks.tsx) — the RENDER call is the real boundary. It accepts `unknown`
+ * values (jsonb can hold non-strings), coerces non-strings to "", and re-runs the FULL validator,
+ * which drops TWO attacks a mere https-prefix check would miss:
+ *   - `website: "javascript:alert(1)"` → fails URL parse → dropped (XSS).
+ *   - `linkedin: "https://evil.example/harvest"` → https, but NOT on linkedin's allowlist → dropped.
+ *      A platform chip renders the platform's icon + name, so a wrong-host value is a PHISHING /
+ *      brand-spoof vector, not merely a bad link. (The website slot is any-host by design — it is
+ *      labelled "Website", carries no platform branding, and is rel=nofollow.)
+ * Do NOT weaken this back to a scheme-prefix check.
  */
-export function normalizeProfileLinks(input: Record<string, string>): Partial<Record<ProfileLinkField, string>> {
+export function normalizeProfileLinks(input: Record<string, unknown>): Partial<Record<ProfileLinkField, string>> {
+  const asStr = (v: unknown): string => (typeof v === "string" ? v : "");
   const out: Partial<Record<ProfileLinkField, string>> = {};
   for (const p of SOCIAL_PLATFORMS) {
-    const v = normalizeSocialLink(p, input[p] ?? "");
+    const v = normalizeSocialLink(p, asStr(input[p]));
     if (v) out[p] = v;
   }
-  const w = normalizeWebsite(input.website ?? "");
+  const w = normalizeWebsite(asStr(input.website));
   if (w) out.website = w;
   return out;
-}
-
-/**
- * The RENDER-time security boundary (BL-PROFILE-01). profiles.links is directly client-writable
- * (profiles_update_own, no column scope, no server validation), so a member can store arbitrary
- * jsonb on their OWN row — including a `javascript:`/`data:` value that would execute if rendered
- * as an href. This returns only the fields whose stored value is a string beginning with
- * "https://" (the shape normalizeProfileLinks always produces), in render order. Anything else —
- * a non-string, an http/javascript/data URL, an unknown key — is dropped. Do not relax this.
- */
-export function visibleProfileLinkFields(links: Record<string, unknown> | null | undefined): ProfileLinkField[] {
-  return PROFILE_LINK_FIELDS.filter((f) => {
-    const v = links?.[f];
-    return typeof v === "string" && v.startsWith("https://");
-  });
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeWebsite, normalizeProfileLinks, visibleProfileLinkFields } from "../socialLinks";
+import { normalizeWebsite, normalizeProfileLinks } from "../socialLinks";
 
 // BL-PROFILE-01. Only the NEW profile helpers are tested here — the existing social-platform
 // suite (business/new/_lib/__tests__/socialLinks.test.ts) covers normalizeSocialLink[s] and still
@@ -70,27 +70,44 @@ describe("normalizeProfileLinks — {field: url} shape (matches businesses.socia
   });
 });
 
-describe("visibleProfileLinkFields — the render-time https-only guard (security boundary)", () => {
-  it("returns only https string fields, in render order", () => {
+// The render-time boundary: components/ProfileLinks re-runs normalizeProfileLinks on the raw,
+// client-writable profiles.links jsonb, so the FULL validator (allowlist for platforms, any-host
+// https for website) — not a scheme-prefix check — decides what renders. These cover the attacks a
+// mere https-prefix check would MISS.
+describe("normalizeProfileLinks as the render re-validator (untrusted stored jsonb)", () => {
+  it("neutralises the exact adversarial payload — brand-spoof linkedin + javascript website", () => {
+    // linkedin on evil.example is https (a prefix check would pass it) but renders with LinkedIn's
+    // icon+name → phishing → dropped. javascript website → dropped. Nothing renders.
     expect(
-      visibleProfileLinkFields({ website: "https://a.example", linkedin: "https://linkedin.com/in/x" }),
-    ).toEqual(["linkedin", "website"]); // SOCIAL_PLATFORMS order, then website
-  });
-
-  it("DROPS javascript:/data:/http: and non-string values (self-stored XSS defense)", () => {
-    expect(
-      visibleProfileLinkFields({
+      normalizeProfileLinks({
+        linkedin: "https://evil.example/harvest",
         website: "javascript:alert(1)",
-        facebook: "http://facebook.com/x", // not https → dropped
-        instagram: "data:text/html,evil",
-        linkedin: 12345 as unknown as string, // non-string → dropped
       }),
-    ).toEqual([]);
+    ).toEqual({});
   });
 
-  it("ignores unknown keys and null input", () => {
-    expect(visibleProfileLinkFields({ bogus: "https://x.com/a" })).toEqual([]);
-    expect(visibleProfileLinkFields(null)).toEqual([]);
-    expect(visibleProfileLinkFields(undefined)).toEqual([]);
+  it("drops a wrong-host platform link, data:, non-string, and object jsonb values", () => {
+    expect(
+      normalizeProfileLinks({
+        facebook: "https://not-facebook.evil/x", // https but wrong host → dropped
+        instagram: "data:text/html,evil", // unparseable → dropped
+        x: 12345, // non-string → coerced to "" → dropped
+        youtube: { u: "https://youtube.com/@x" }, // object → dropped
+      }),
+    ).toEqual({});
+  });
+
+  it("keeps genuine allowlisted platform links (upgrading http→https) and an any-host website", () => {
+    expect(
+      normalizeProfileLinks({
+        linkedin: "https://www.linkedin.com/in/x",
+        facebook: "http://facebook.com/x", // http on an allowlisted host → upgraded, kept
+        website: "https://my.site",
+      }),
+    ).toEqual({
+      facebook: "https://facebook.com/x",
+      linkedin: "https://www.linkedin.com/in/x",
+      website: "https://my.site/",
+    });
   });
 });
