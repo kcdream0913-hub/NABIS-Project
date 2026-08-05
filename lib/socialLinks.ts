@@ -47,8 +47,14 @@ function cleanHttpsUrl(raw: string): { url: URL; out: string } | null {
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") return null;
 
-  // Force https, drop query + hash (tracking), keep the path.
+  // Force https, strip embedded credentials, drop query + hash (tracking), keep the path.
+  // Clearing userinfo (`user:pass@`) both closes a stored-credential leak and removes a hover-text
+  // that reads like a spoof even when the host is allowlisted (BL-PROFILE-01 residual #1). The host
+  // is unchanged, so the allowlist decision is unaffected; this also hardens the business links,
+  // which share this cleaner.
   url.protocol = "https:";
+  url.username = "";
+  url.password = "";
   url.search = "";
   url.hash = "";
   const out = url.toString();

@@ -22,6 +22,12 @@ describe("normalizeWebsite — any https host, same cleaning as social links", (
     expect(normalizeWebsite("https://acme.example/x?utm_source=y#top")).toBe("https://acme.example/x");
   });
 
+  it("strips embedded credentials (userinfo) from the URL", () => {
+    // BL-PROFILE-01 residual #1: a pasted user:pass@ must not survive into the stored/rendered href.
+    expect(normalizeWebsite("https://user:pass@acme.example/x")).toBe("https://acme.example/x");
+    expect(normalizeWebsite("https://user@acme.example/x")).toBe("https://acme.example/x");
+  });
+
   it("rejects the dangerous schemes (javascript:, data:) that fail to parse as https", () => {
     // javascript:/data: prepend to "https://javascript:alert(1)" etc., which has an invalid port
     // and throws → null. normalizeWebsite is otherwise DELIBERATELY permissive: prepending https://
@@ -109,5 +115,11 @@ describe("normalizeProfileLinks as the render re-validator (untrusted stored jso
       linkedin: "https://www.linkedin.com/in/x",
       website: "https://my.site/",
     });
+  });
+
+  it("keeps an allowlisted-host link but strips its embedded credentials", () => {
+    expect(
+      normalizeProfileLinks({ linkedin: "https://user:pass@www.linkedin.com/in/x" }),
+    ).toEqual({ linkedin: "https://www.linkedin.com/in/x" });
   });
 });

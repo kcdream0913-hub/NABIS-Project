@@ -20,9 +20,11 @@
 -- 120-char cap at CREATION, not after: every uncapped text column shipped this
 -- week became a finding (BL-FEEDBACK-02 round 3 measured 3.65 MB in a single row).
 -- A headline is one line; 120 is generous. `links` values are bounded by the
--- client normalizer (300-char cap in lib/socialLinks.ts) — but note that column is
--- client-writable, so the load-bearing guard for links is the RENDER-time
--- https-only href filter (components/ProfileLinks.tsx), not the write path.
+-- client normalizer (300-char cap in lib/socialLinks.ts) — but that column is
+-- client-writable, so the load-bearing guard for links is a RENDER-time re-run of
+-- the FULL validator (normalizeProfileLinks on the raw jsonb — allowlist for
+-- platform links, any-host https for the website slot, in components/ProfileLinks.tsx),
+-- NOT a scheme-prefix check and NOT the write path.
 --
 -- NOT APPLIED — the hub verifies in begin/rollback (BL-PROFILE-01.verify.sql) then
 -- applies. Run the column_blind_writes lint after: `headline`/`links` are not in
