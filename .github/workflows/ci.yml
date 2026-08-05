@@ -107,8 +107,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: gate
+        # Date-independent: match the baseline by its fixed 00000000000001_baseline_ prefix, NOT a
+        # hardcoded date. A pinned date (…_2026_08_04.sql) would never match the real file
+        # (…_2026_08_05.sql) → the gate stays false and policy-lint passes green forever, dormant.
         run: |
-          if [ -f supabase/migrations/00000000000001_baseline_2026_08_04.sql ]; then
+          if ls supabase/migrations/00000000000001_baseline_*.sql >/dev/null 2>&1; then
             echo "active=true" >> "$GITHUB_OUTPUT"
           else
             echo "active=false" >> "$GITHUB_OUTPUT"
