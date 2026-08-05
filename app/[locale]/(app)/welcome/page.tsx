@@ -12,6 +12,8 @@ import { TOURISM_SECTOR } from "@/lib/offerings";
 import Avatar from "@/components/Avatar";
 import AvatarUpload from "@/components/AvatarUpload";
 import TrustBadge from "@/components/TrustBadge";
+import ProfileLinksEditor from "@/components/ProfileLinksEditor";
+import { normalizeProfileLinks } from "@/lib/socialLinks";
 
 const STEP_COUNT = 3;
 
@@ -31,9 +33,11 @@ export default function WelcomePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
   const [bioNe, setBioNe] = useState("");
   const [city, setCity] = useState("");
+  const [linksInput, setLinksInput] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<string[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
@@ -44,11 +48,13 @@ export default function WelcomePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       setUserId(user.id);
-      const { data } = await supabase.from("profiles").select("name, bio, bio_ne, city, sectors, avatar_url").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("name, headline, bio, bio_ne, city, sectors, avatar_url, links").eq("id", user.id).maybeSingle();
       if (data) {
         setUserName(data.name ?? null); setAvatarUrl(data.avatar_url ?? null);
+        setHeadline(data.headline ?? "");
         setBio(data.bio ?? ""); setBioNe(data.bio_ne ?? ""); setCity(data.city ?? "");
         setSelected((data.sectors as string[]) ?? []);
+        setLinksInput({ ...((data.links as Record<string, string>) ?? {}) });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,7 +93,8 @@ export default function WelcomePage() {
 
   async function saveProfile() {
     if (!userId) return;
-    await supabase.from("profiles").update({ bio, bio_ne: bioNe, city }).eq("id", userId);
+    // links normalised here (UX); the render-time https-only guard is the security boundary.
+    await supabase.from("profiles").update({ headline: headline.trim() || null, bio, bio_ne: bioNe, city, links: normalizeProfileLinks(linksInput) }).eq("id", userId);
   }
   async function saveSectors() {
     if (!userId) return;
@@ -140,8 +147,12 @@ export default function WelcomePage() {
               <AvatarUpload kind="user" currentUrl={avatarUrl} name={userName} label={tAvatar("photoLabel")} onChange={setAvatarUrl} />
             )}
             <label className="block text-sm">
+              <span className="eyebrow text-ink-soft">{t("headline")}</span>
+              <input value={headline} onChange={(e) => setHeadline(e.target.value)} maxLength={120} placeholder={t("headlinePlaceholder")} className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary" />
+            </label>
+            <label className="block text-sm">
               <span className="eyebrow text-ink-soft">{t("bioEn")}</span>
-              <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary" />
+              <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder={t("bioEnPlaceholder")} className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary" />
             </label>
             <label className="block text-sm">
               <span className="eyebrow text-ink-soft">{t("bioNe")}</span>
@@ -151,6 +162,7 @@ export default function WelcomePage() {
               <span className="eyebrow text-ink-soft">{t("city")}</span>
               <input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("cityPlaceholder")} className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary" />
             </label>
+            <ProfileLinksEditor value={linksInput} onChange={setLinksInput} />
           </div>
         )}
 

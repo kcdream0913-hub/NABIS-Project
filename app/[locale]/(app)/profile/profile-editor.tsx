@@ -6,16 +6,20 @@ import { useRouter } from "@/i18n/navigation";
 import { ShieldCheck, ShieldQuestion } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSectors } from "@/lib/useSectors";
+import { normalizeProfileLinks } from "@/lib/socialLinks";
 import AvatarUpload from "@/components/AvatarUpload";
+import ProfileLinksEditor from "@/components/ProfileLinksEditor";
 
 type Profile = {
   id: string;
   name: string | null;
+  headline: string | null;
   bio: string | null;
   bio_ne: string | null;
   city: string | null;
   country: "us" | "nepal" | null;
   sectors: string[] | null;
+  links: Record<string, string> | null;
   avatar_url: string | null;
   verification_status: "unverified" | "verified";
 } | null;
@@ -37,9 +41,11 @@ export default function ProfileEditor({
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url ?? null);
   const [name, setName] = useState(profile?.name ?? "");
+  const [headline, setHeadline] = useState(profile?.headline ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [bioNe, setBioNe] = useState(profile?.bio_ne ?? "");
   const [city, setCity] = useState(profile?.city ?? "");
+  const [linksInput, setLinksInput] = useState<Record<string, string>>(() => ({ ...(profile?.links ?? {}) }));
   const [country, setCountry] = useState<"us" | "nepal">(profile?.country ?? "us");
   const [selectedSectors, setSelectedSectors] = useState<string[]>(profile?.sectors ?? []);
   const [saving, setSaving] = useState(false);
@@ -58,8 +64,19 @@ export default function ProfileEditor({
     await supabase
       .from("profiles")
       // Saving through the editor = the owner has taken ownership of the Nepali
-      // bio, so it's no longer an unreviewed machine draft.
-      .update({ name, bio, bio_ne: bioNe, bio_ne_auto: false, city, country, sectors: selectedSectors })
+      // bio, so it's no longer an unreviewed machine draft. links is normalised
+      // here (UX); the render-time https-only guard is the security boundary.
+      .update({
+        name,
+        headline: headline.trim() || null,
+        bio,
+        bio_ne: bioNe,
+        bio_ne_auto: false,
+        city,
+        country,
+        sectors: selectedSectors,
+        links: normalizeProfileLinks(linksInput),
+      })
       .eq("id", userId);
     setSaving(false);
     setSaved(true);
@@ -133,6 +150,16 @@ export default function ProfileEditor({
             </select>
           </label>
           <label className="block text-sm sm:col-span-2">
+            <span className="eyebrow text-ink-soft">{t("headline")}</span>
+            <input
+              value={headline}
+              onChange={(e) => setHeadline(e.target.value)}
+              maxLength={120}
+              placeholder={t("headlinePlaceholder")}
+              className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
+            />
+          </label>
+          <label className="block text-sm sm:col-span-2">
             <span className="eyebrow text-ink-soft">{t("city")}</span>
             <input
               value={city}
@@ -146,6 +173,7 @@ export default function ProfileEditor({
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={3}
+              placeholder={t("bioEnPlaceholder")}
               className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
             />
           </label>
@@ -159,6 +187,9 @@ export default function ProfileEditor({
               className="mt-1 w-full rounded-md border border-border-input px-3 py-2 text-sm focus:border-primary"
             />
           </label>
+        </div>
+        <div className="mt-4">
+          <ProfileLinksEditor value={linksInput} onChange={setLinksInput} />
         </div>
       </section>
 

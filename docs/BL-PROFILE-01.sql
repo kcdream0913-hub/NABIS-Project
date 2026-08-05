@@ -1,0 +1,32 @@
+-- BL-PROFILE-01 (D-090) — Tier-1 professional member profile.
+-- ONE new column: public.profiles.headline.
+--
+-- `public.profiles.links` (jsonb) ALREADY EXISTS (0/36 rows populated, wired to
+-- nothing before this task) — this migration does NOT recreate it. The app now
+-- reads/writes it as a {field: url} bag (BL-PROFILE-01), matching
+-- businesses.social_links so one renderer serves both.
+--
+-- NO new RLS policy, by design:
+--   * profiles_update_own is ROW-level (id = auth.uid(), no column scope), so the
+--     owner already writes headline + links — exactly how preferences was added
+--     (2026-07-24). Nothing else may write another member's row.
+--   * trg_protect_profile_trust (BEFORE INSERT OR UPDATE) already forces the
+--     trust columns (verification_status/verified_at/bridge) and is unaffected by
+--     these two presentation columns.
+--   * headline/links are member-owned PRESENTATION, the same ungated class as
+--     `bio`. Deliberately NOT verification-gated (D-083 reasoning: a member must
+--     be able to complete the very profile they are being verified on).
+--
+-- 120-char cap at CREATION, not after: every uncapped text column shipped this
+-- week became a finding (BL-FEEDBACK-02 round 3 measured 3.65 MB in a single row).
+-- A headline is one line; 120 is generous. `links` values are bounded by the
+-- client normalizer (300-char cap in lib/socialLinks.ts) — but note that column is
+-- client-writable, so the load-bearing guard for links is the RENDER-time
+-- https-only href filter (components/ProfileLinks.tsx), not the write path.
+--
+-- NOT APPLIED — the hub verifies in begin/rollback (BL-PROFILE-01.verify.sql) then
+-- applies. Run the column_blind_writes lint after: `headline`/`links` are not in
+-- the server-owned list, so the flag list must stay (none).
+
+alter table public.profiles
+  add column headline text check (char_length(headline) <= 120);

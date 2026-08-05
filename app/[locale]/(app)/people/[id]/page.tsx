@@ -7,6 +7,8 @@ import Avatar from "@/components/Avatar";
 import TrustBadge from "@/components/TrustBadge";
 import BioText from "@/components/BioText";
 import OfferingsSection from "@/components/OfferingsSection";
+import ProfileLinks from "@/components/ProfileLinks";
+import { SectorChip } from "@/components/chips";
 import { trustTier } from "@/lib/trust";
 import { pickBio, isAutoBio } from "@/lib/bilingual";
 import { canPublishOfferings } from "@/lib/offerings";
@@ -32,6 +34,25 @@ export default async function PersonPage({
   const prefs = readPreferences(person.preferences);
   const showPhone = prefs.sharing_defaults.show_phone && !!person.phone;
 
+  // Sector chips — labelled from the i18n `sectors` map (falls back to the raw slug for a
+  // non-sector value), same as the business page. Empty renders nothing.
+  const tSectors = await getTranslations("sectors");
+  const sectorName = (slug: string) => {
+    try {
+      return tSectors(`${slug}.name`);
+    } catch {
+      return slug;
+    }
+  };
+  const sectorChips: { slug: string; name: string }[] = (person.sectors ?? []).map((slug: string) => ({
+    slug,
+    name: sectorName(slug),
+  }));
+  // "Member since {Mon YYYY}" from created_at (NOT NULL in prod, but guarded).
+  const memberSince = person.created_at
+    ? new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(person.created_at))
+    : null;
+
   return (
     <div className="mx-auto max-w-xl">
       <div className="rounded-lg border border-border bg-surface p-5">
@@ -49,9 +70,27 @@ export default async function PersonPage({
                 <ReportButton targetType="profile" targetId={person.id} />
               </span>
             </div>
+            {person.headline && (
+              <p className="mt-0.5 text-sm font-medium text-ink">{person.headline}</p>
+            )}
             <p className="mt-0.5 text-sm text-ink-soft">{localizeCity(locale, person.city)}</p>
           </div>
         </div>
+
+        {sectorChips.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {sectorChips.map((s) => (
+              <SectorChip key={s.slug} label={s.name} />
+            ))}
+          </div>
+        )}
+
+        <ProfileLinks links={person.links} />
+
+        {memberSince && (
+          <p className="mt-3 text-xs text-ink-soft">{t("memberSince", { date: memberSince })}</p>
+        )}
+
         {bio && <BioText text={bio.text} origin={bio.origin} auto={isAutoBio(locale, bio, person.bio_ne_auto)} className="mt-4 text-sm leading-relaxed" />}
         {showPhone && (
           <p className="mt-3 text-sm text-ink-soft">
