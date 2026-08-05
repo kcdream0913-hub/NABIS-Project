@@ -6,10 +6,12 @@ WEAK check: all pass if `posts_select` restores as `using (false)` instead of `u
 back `invoker`, or a CHECK vanishes. That is exactly the silent-drift this task exists to prevent,
 in the one database whose job is telling you whether RLS works.
 
-This fingerprint is nine md5 hashes over the **parsed definitions** of every object that matters.
-Run the query below on `sangamline-e2e` after the restore (files `00000000000001` +
-`00000000000002`, and the pre-restore privilege trap — see the runbook). **Nine matches = the
-schema is the same schema.**
+This fingerprint is **ten** md5 hashes over the **parsed definitions** of every object that matters.
+Run the query below on the restore target (a local `supabase start` stack, or a dedicated project)
+after the restore (files `00000000000001` + `00000000000002`, and the pre-restore privilege trap —
+see the runbook). **Ten matches = the schema is the same schema.** The tenth part (`ext_triggers`)
+was added after nine proved passable on a database where signup silently fails to create a profile
+(the `auth`-schema trigger the dump drops) — see the caveat at the bottom.
 
 ## ⚠ LOCATION + the re-capture rule (D-090 — the finding that created this file on `main`)
 
@@ -48,7 +50,8 @@ Every applied migration moves only the parts it touches, which is the fingerprin
 | `indexes` | `1da83391a20b6415f1827829412a345e` | |
 | `policies` | `af71a205a85983bb9518831c4780ecb1` | unchanged since bl_trust_02 (headline adds NO policy) |
 | `rls_flags` | `5e6823fe1606b72e640bec0c83cb0f18` | |
-| `triggers` | `e0eac6248ad58c1ba9a1ade069458d20` | unchanged since bl_trust_02 |
+| `triggers` | `e0eac6248ad58c1ba9a1ade069458d20` | unchanged since bl_trust_02 (public+private) |
+| `ext_triggers` | `9132f713c52a5727870df7112d5373e1` | auth+storage — catches the on_auth_user_created drop (see caveat) |
 
 **`enums` = `d41d8cd9…` is md5 of the empty string** — there are NO custom enum types in `public`
 or `private`. Every constrained field is `text` + a CHECK, which is why `body_lang='xx'` raised
@@ -112,6 +115,15 @@ with cols as (
   select string_agg(format('%s.%s=%s', n.nspname, t.typname, e.enumlabel), E'\n' order by n.nspname, t.typname, e.enumsortorder) as v
   from pg_type t join pg_enum e on e.enumtypid=t.oid join pg_namespace n on n.oid=t.typnamespace
   where n.nspname in ('public','private')
+), ext_trg as (
+  -- D-090 / BL-E2E-SPLIT-01: triggers in the EXCLUDED schemas (auth, storage). `supabase db dump`
+  -- drops these, so the other nine parts (scoped public+private) CANNOT see them — most critically
+  -- auth.users/on_auth_user_created, which fires public.handle_new_user() to create the profiles
+  -- row on signup. Without it a restored DB accepts signups but never makes a profile (silent). The
+  -- excluded-schema baseline half recreates it; this part is how a restore that forgot it FAILS.
+  select string_agg(pg_get_triggerdef(t.oid), E'\n' order by pg_get_triggerdef(t.oid)) as v
+  from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
+  where n.nspname in ('auth','storage') and not t.tgisinternal
 )
 select 'buckets' as part, md5(coalesce((select v from buckets),'')) as fp union all
 select 'columns',     md5(coalesce((select v from cols),''))    union all
@@ -121,7 +133,8 @@ select 'functions',   md5(coalesce((select v from fns),''))     union all
 select 'indexes',     md5(coalesce((select v from idx),''))     union all
 select 'policies',    md5(coalesce((select v from pol),''))     union all
 select 'rls_flags',   md5(coalesce((select v from rls),''))     union all
-select 'triggers',    md5(coalesce((select v from trg),''))
+select 'triggers',    md5(coalesce((select v from trg),''))     union all
+select 'ext_triggers',md5(coalesce((select v from ext_trg),''))
 order by 1;
 ```
 
@@ -140,3 +153,11 @@ the raw outputs — the hash names WHICH category broke, the raw text names WHIC
   fingerprint first** and diff the raw output — a `pg_dump`-side rename of an unnamed constraint
   is the most likely benign cause. `policies`, `functions`, `rls_flags`, `triggers` have NO such
   benign failure mode: a mismatch there is real.
+- **`ext_triggers` mixes ours and Supabase's.** Of its five, only `auth.users/on_auth_user_created`
+  is ours (recreated by the excluded-schema baseline half `00000000000002`); the other four are
+  Supabase-managed `storage.*` triggers that ship with the storage schema. So on a mismatch, DIFF
+  THE RAW OUTPUT: a difference in `on_auth_user_created` is a REAL defect (the excluded-schema half
+  didn't recreate it → signup won't create profiles); a difference in a managed `storage.*` trigger
+  is Supabase version skew (benign, same class as the excluded storage-TABLE structure). The five
+  captured 2026-08-05: `on_auth_user_created` + `enforce_bucket_name_length_trigger` +
+  `protect_buckets_delete` + `protect_objects_delete` + `update_objects_updated_at`.
