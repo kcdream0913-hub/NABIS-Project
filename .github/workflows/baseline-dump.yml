@@ -1,0 +1,98 @@
+# .github/workflows/baseline-dump.yml
+#
+# Produce the prod schema baseline WITHOUT Docker on anyone's laptop.
+# `supabase db dump` runs pg_dump inside a container from the Supabase Postgres
+# image (Supabase docs, "Restore a Platform Project to Self-Hosted"), so it needs
+# a Docker daemon. GitHub runners have one; KC's Windows machine does not.
+#
+# Manual-only (workflow_dispatch). Never runs on push.
+#
+# Secrets required (GitHub -> Settings -> Secrets and variables -> Actions):
+#   SUPABASE_ACCESS_TOKEN   - supabase.com/dashboard/account/tokens -> Generate new token
+#   PRODUCTION_DB_PASSWORD  - the database password (Project Settings -> Database -> Reset)
+#
+# Note: `supabase link` in CLI v2 succeeds WITHOUT the DB password (it links via the
+# access token). `db dump` is the step that actually needs it. So a clean `link` is
+# NOT evidence you have the password.
+
+name: Baseline schema dump (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: "Target file under supabase/migrations/"
+        required: true
+        default: "00000000000001_baseline_2026_08_05.sql"
+
+permissions:
+  contents: write
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
+      PROJECT_REF: dhnggnxwjgqvghbxelvw
+      OUT: supabase/migrations/${{ inputs.filename }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link to prod
+        run: supabase link --project-ref "$PROJECT_REF"
+
+      - name: Dump (schema-only by default — do NOT add --data-only)
+        run: supabase db dump -f "$OUT"
+
+      # A dump that silently produced a near-empty or wrong-shaped file looks
+      # identical to a good one until the restore fails hours later. Assert the
+      # things we KNOW must be in it (measured against prod 2026-08-05).
+      - name: Assert the dump is real
+        run: |
+          set -euo pipefail
+          test -s "$OUT" || { echo "::error::dump file is empty"; exit 1; }
+          lines=$(wc -l < "$OUT")
+          echo "lines: $lines"
+          [ "$lines" -gt 500 ] || { echo "::error::dump is only $lines lines — implausibly small"; exit 1; }
+
+          fail=0
+          # grep -qE (extended regex) so the private-schema check can be quote-agnostic. pg_dump may
+          # emit `private` UNQUOTED (lowercase, non-reserved), so a literal '"private"' would
+          # false-FAIL a good dump. The bare-word checks below are valid EREs, unchanged in meaning.
+          check() { grep -qE "$1" "$OUT" || { echo "::error::missing from dump: $2"; fail=1; }; }
+          check 'SCHEMA "?private"?|"?private"?\.' 'the private schema (is_admin helpers — fingerprint depends on it)'
+          check 'handle_new_user'    'public.handle_new_user (the trigger fn the auth trigger calls)'
+          check 'protect_profile_trust' 'the trust-column guard trigger fn'
+          check 'protect_report_intake' 'BL-TRUST-02 report intake guard'
+          check 'protect_feedback_intake' 'BL-FEEDBACK-02 feedback intake guard'
+          check 'headline'           'profiles.headline (BL-PROFILE-01, applied 2026-08-05)'
+          exit $fail
+
+      # Negative assertion, bound to the positives above (D-058): the excluded
+      # schemas must NOT have been dumped. If storage/auth objects appear here,
+      # the exclusion list changed and the excluded-schema half will double-create.
+      # Quote-agnostic (pg_dump may not quote a lowercase schema), so it can actually
+      # catch an exclusion-list change in either output style.
+      - name: Assert the excluded schemas really are excluded
+        run: |
+          set -euo pipefail
+          if grep -qE 'CREATE TABLE [^;]*"?(storage|auth)"?\.' "$OUT"; then
+            echo "::error::dump contains storage/auth tables — exclusion list changed"; exit 1
+          fi
+          echo "storage + auth correctly absent (the excluded-schema half supplies them)"
+
+      - name: Push to a branch for review
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "baseline-dump-${GITHUB_RUN_ID}"
+          git add "$OUT"
+          git commit -m "chore(baseline): prod schema dump via CI (no local Docker) — $OUT"
+          git push origin "baseline-dump-${GITHUB_RUN_ID}"
+          echo "::notice::pushed branch baseline-dump-${GITHUB_RUN_ID}"
