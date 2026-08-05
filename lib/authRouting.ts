@@ -85,3 +85,34 @@ export function buildOAuthRedirectUrl(origin: string, next: string | null | unde
   if (isSafeNextPath(next)) url.searchParams.set("next", next);
   return url.toString();
 }
+
+// D-089. `nabis-project.vercel.app` is the project's CLEAN Vercel production
+// alias. Vercel Deployment Protection cannot retire it: Standard Protection
+// (`all_except_custom_domains`) EXCLUDES production URLs, so this alias serves the
+// real app to anonymous clients (verified live — 307 to /login, no auth wall),
+// and the only scope that WOULD cover it (All Deployments) also walls the custom
+// domain www.sangamline.com — not an option. So the alias is retired in code: any
+// request arriving on it is 308'd (permanent, method-preserving) to the canonical
+// origin, so an old bookmark or stale link never starts a session on a non-brand
+// host. www is canonical — the apex sangamline.com 308s to www at the Vercel edge
+// (verified) and www is the only origin Supabase Auth redirects to — so targeting
+// www lands in ONE hop.
+//
+// EXACT host match only, and it MUST stay exact: the account-scoped alias
+// (nabis-project-<hash>-<team>.vercel.app) is already walled by Standard
+// Protection (verified — 302 to vercel.com/sso-api), and preview/git aliases
+// (nabis-project-git-*.vercel.app) must keep working, so a prefix/substring match
+// would break them. The canonical host can never equal LEGACY_HOST, so this can
+// never loop — the failure mode a canonical-host redirect must avoid. Returns the
+// canonical-origin URL to redirect to, or null to pass through.
+export const LEGACY_HOST = "nabis-project.vercel.app";
+export const CANONICAL_ORIGIN = "https://www.sangamline.com";
+
+export function legacyHostRedirect(
+  host: string | null,
+  pathname: string,
+  search: string
+): string | null {
+  if (host !== LEGACY_HOST) return null;
+  return new URL(pathname + search, CANONICAL_ORIGIN).toString();
+}

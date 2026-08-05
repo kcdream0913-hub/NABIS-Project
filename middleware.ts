@@ -1,11 +1,27 @@
 import createMiddleware from "next-intl/middleware";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { updateSession } from "@/lib/supabase/middleware";
+import { legacyHostRedirect } from "@/lib/authRouting";
 
 const intlMiddleware = createMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
+  // Retire the old Vercel production alias BEFORE any locale/auth handling: a
+  // request on nabis-project.vercel.app is 308'd to the canonical origin so a
+  // stale bookmark or link never starts a session on a non-brand host. Vercel
+  // Deployment Protection structurally can't do this (Standard Protection excludes
+  // production URLs; the only scope that would cover it also walls
+  // www.sangamline.com). See D-089 / legacyHostRedirect. The matcher already
+  // excludes /auth/callback, so an in-flight OAuth code exchange is never
+  // redirected mid-swap.
+  const legacyTarget = legacyHostRedirect(
+    request.headers.get("host"),
+    request.nextUrl.pathname,
+    request.nextUrl.search
+  );
+  if (legacyTarget) return NextResponse.redirect(legacyTarget, 308);
+
   // next-intl first: resolves/rewrites the locale segment so "/members" and
   // "/ne/members" both reach app/[locale]/members. Its response (including
   // the internal rewrite) is then reused, not replaced, by the auth check.

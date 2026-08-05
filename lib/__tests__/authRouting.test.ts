@@ -6,6 +6,8 @@ import {
   isAdminPath,
   isSafeNextPath,
   buildOAuthRedirectUrl,
+  legacyHostRedirect,
+  CANONICAL_ORIGIN,
 } from "../authRouting";
 
 // This is the exact logic that decides where an unauthenticated or
@@ -201,6 +203,47 @@ describe("buildOAuthRedirectUrl", () => {
     expect(buildOAuthRedirectUrl("https://example.com", "/members")).toContain(
       "/auth/callback?next="
     );
+  });
+});
+
+// D-089. nabis-project.vercel.app is the CLEAN Vercel production alias; Standard
+// Protection can't wall it (it excludes production URLs — verified live), so the
+// middleware 308s it to the canonical origin. Two failure modes this guards:
+// (1) an infinite loop if the canonical host ever matched, (2) breaking preview /
+// git / account-scoped aliases if the match were a prefix instead of exact.
+describe("legacyHostRedirect", () => {
+  it("redirects the legacy alias to the canonical origin, preserving path + query", () => {
+    expect(legacyHostRedirect("nabis-project.vercel.app", "/en/login", "?next=%2Fadmin")).toBe(
+      `${CANONICAL_ORIGIN}/en/login?next=%2Fadmin`
+    );
+    expect(legacyHostRedirect("nabis-project.vercel.app", "/", "")).toBe(`${CANONICAL_ORIGIN}/`);
+    // locale prefix is part of the path and must survive the redirect
+    expect(legacyHostRedirect("nabis-project.vercel.app", "/ne/members", "")).toBe(
+      `${CANONICAL_ORIGIN}/ne/members`
+    );
+  });
+
+  it("passes through the canonical host and apex — never loops", () => {
+    // A canonical-host redirect that matches the canonical host is an infinite
+    // loop that takes the site down. The canonical host can never equal the
+    // legacy alias, so this returns null and falls through.
+    expect(legacyHostRedirect("www.sangamline.com", "/en/login", "?next=%2Fadmin")).toBeNull();
+    expect(legacyHostRedirect("sangamline.com", "/", "")).toBeNull();
+  });
+
+  it("passes through preview, git, and account-scoped aliases (EXACT match only)", () => {
+    expect(legacyHostRedirect("nabis-project-git-main-team.vercel.app", "/", "")).toBeNull();
+    expect(legacyHostRedirect("nabis-project-abc123-team.vercel.app", "/", "")).toBeNull();
+    // substring / suffix lookalikes must not match (spoofed Host header)
+    expect(legacyHostRedirect("evil-nabis-project.vercel.app", "/", "")).toBeNull();
+    expect(legacyHostRedirect("nabis-project.vercel.app.evil.com", "/", "")).toBeNull();
+  });
+
+  it("passes through localhost and a null host (E2E runs on localhost; malformed reqs)", () => {
+    // playwright.config.ts serves the E2E build on localhost, a host this never
+    // matches — so the suite is unaffected.
+    expect(legacyHostRedirect("localhost:3000", "/", "")).toBeNull();
+    expect(legacyHostRedirect(null, "/", "")).toBeNull();
   });
 });
 
