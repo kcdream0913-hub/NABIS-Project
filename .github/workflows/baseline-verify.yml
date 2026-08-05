@@ -1,0 +1,73 @@
+# .github/workflows/baseline-verify.yml
+#
+# Prove the baseline REBUILDS prod, not just describes it. `supabase db start` needs Docker
+# (same reason as the dump workflow), which KC's Windows machine lacks — so the restore + the
+# ten fingerprint hashes run here, on a runner.
+#
+# Rebuilds a local Postgres from ONLY the two baseline halves in supabase/migrations/
+# (00000000000001 dump + 00000000000002 excluded-schema half), then runs the fingerprint from
+# supabase/migrations/BASELINE_FINGERPRINT.md and asserts all TEN parts match.
+#
+# Manual-only. Point `ref` at the branch carrying the baseline halves. Nothing is written back —
+# this only reads + reports. The bar is 10/10; do NOT merge the baseline to main below that.
+
+name: Baseline restore verify (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch/ref carrying the baseline halves to verify"
+        required: true
+        default: "baseline-dump-30998114625"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Boots local Postgres AND applies supabase/migrations/ in order. auth.users + the storage
+      # schema come from the db-start bootstrap BEFORE the migrations, so file 2's trigger + storage
+      # policies resolve. If the excluded-schema half were mis-ordered or referenced a missing
+      # object, THIS step fails loudly (it won't pass silently).
+      - name: Rebuild prod locally from the two baseline halves
+        run: supabase db start
+
+      - name: Fingerprint the restore and assert TEN matches vs BASELINE_FINGERPRINT.md
+        run: |
+          set -euo pipefail
+          FP=supabase/migrations/BASELINE_FINGERPRINT.md
+          DB="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+
+          # Single source of truth: the query AND the expected hashes both come from the committed
+          # fingerprint file, so this check can never lag the schema (D-090). The query is the fenced
+          # ```sql block; the expected values are the `part` | `md5` table rows.
+          awk '/^```sql/{f=1;next} /^```/{if(f)exit} f' "$FP" > /tmp/fingerprint.sql
+          test -s /tmp/fingerprint.sql || { echo "::error::could not extract the fingerprint query from $FP"; exit 1; }
+
+          sed -nE 's/^\| `([a-z_]+)` \| `([0-9a-f]{32})`.*/\1 \2/p' "$FP" | sort > /tmp/expected.txt
+          exp_n=$(wc -l < /tmp/expected.txt)
+          [ "$exp_n" -eq 10 ] || { echo "::error::expected 10 fingerprint rows in $FP, found $exp_n"; cat /tmp/expected.txt; exit 1; }
+
+          # Actual, from the restored DB (part<space>hash), same sort order.
+          psql "$DB" -v ON_ERROR_STOP=1 -t -A -F' ' -f /tmp/fingerprint.sql | sed '/^[[:space:]]*$/d' | sort > /tmp/actual.txt
+
+          echo "--- expected (BASELINE_FINGERPRINT.md) ---"; cat /tmp/expected.txt
+          echo "--- actual (restored DB) ---";              cat /tmp/actual.txt
+
+          if diff -u /tmp/expected.txt /tmp/actual.txt; then
+            echo "::notice::10/10 fingerprint parts match — the restore reproduces prod. Baseline is safe to merge to main."
+          else
+            echo "::error::fingerprint MISMATCH — the restore does NOT reproduce prod (diff above). Which part failed tells you what: a difference under on_auth_user_created is a REAL defect in the excluded-schema half; a managed storage.* trigger under ext_triggers is Supabase version skew (see the ext_triggers caveat in the fingerprint file)."
+            exit 1
+          fi
